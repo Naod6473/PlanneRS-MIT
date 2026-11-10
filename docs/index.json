@@ -1,0 +1,1651 @@
+{
+  "generated": "npm run docs:index",
+  "categories": [
+    "Sommaire",
+    "Démarrage",
+    "Utilisation",
+    "Réseaux sociaux",
+    "Stockage",
+    "Notifications",
+    "Référence"
+  ],
+  "pages": [
+    {
+      "path": "README.md",
+      "title": "Documentation de PlanneRs",
+      "description": "Sommaire de la documentation, classée par catégorie, avec les mots-clés de chaque page.",
+      "category": "Sommaire",
+      "tags": [
+        "sommaire",
+        "index",
+        "documentation"
+      ],
+      "order": 0,
+      "updated": "2026-11-10",
+      "headings": [
+        {
+          "level": 2,
+          "text": "Démarrage",
+          "anchor": "démarrage"
+        },
+        {
+          "level": 2,
+          "text": "Utilisation",
+          "anchor": "utilisation"
+        },
+        {
+          "level": 2,
+          "text": "Réseaux sociaux",
+          "anchor": "réseaux-sociaux"
+        },
+        {
+          "level": 2,
+          "text": "Stockage des médias",
+          "anchor": "stockage-des-médias"
+        },
+        {
+          "level": 2,
+          "text": "Notifications",
+          "anchor": "notifications"
+        },
+        {
+          "level": 2,
+          "text": "Référence",
+          "anchor": "référence"
+        },
+        {
+          "level": 2,
+          "text": "Liens officiels utiles",
+          "anchor": "liens-officiels-utiles"
+        }
+      ]
+    },
+    {
+      "path": "demarrage/installation.md",
+      "title": "Installation sur Cloudflare",
+      "description": "Installer PlanneRs sur un Worker Cloudflare avec une base D1, protéger l'accès avec Cloudflare Access et le mettre en ligne sur son domaine.",
+      "category": "Démarrage",
+      "tags": [
+        "installation",
+        "cloudflare",
+        "worker",
+        "d1",
+        "access",
+        "domaine",
+        "wrangler",
+        "déploiement"
+      ],
+      "order": 1,
+      "updated": "2026-11-10",
+      "headings": [
+        {
+          "level": 2,
+          "text": "Le plus simple : le bouton « Deploy to Cloudflare »",
+          "anchor": "le-plus-simple--le-bouton--deploy-to-cloudflare-"
+        },
+        {
+          "level": 2,
+          "text": "Méthode A : sans terminal, depuis GitHub",
+          "anchor": "méthode-a--sans-terminal-depuis-github"
+        },
+        {
+          "level": 2,
+          "text": "Méthode B : en ligne de commande",
+          "anchor": "méthode-b--en-ligne-de-commande"
+        },
+        {
+          "level": 3,
+          "text": "1. Récupérer le code",
+          "anchor": "1-récupérer-le-code"
+        },
+        {
+          "level": 3,
+          "text": "2. Créer la base de données",
+          "anchor": "2-créer-la-base-de-données"
+        },
+        {
+          "level": 3,
+          "text": "3. Secret de chiffrement",
+          "anchor": "3-secret-de-chiffrement"
+        },
+        {
+          "level": 3,
+          "text": "4. Déployer",
+          "anchor": "4-déployer"
+        },
+        {
+          "level": 2,
+          "text": "Utiliser ton propre domaine",
+          "anchor": "utiliser-ton-propre-domaine"
+        },
+        {
+          "level": 2,
+          "text": "Protéger l'accès avec Cloudflare Access",
+          "anchor": "protéger-laccès-avec-cloudflare-access"
+        },
+        {
+          "level": 2,
+          "text": "Passer en publication réelle",
+          "anchor": "passer-en-publication-réelle"
+        },
+        {
+          "level": 2,
+          "text": "Développement local",
+          "anchor": "développement-local"
+        },
+        {
+          "level": 2,
+          "text": "Essayer sans rien installer",
+          "anchor": "essayer-sans-rien-installer"
+        },
+        {
+          "level": 2,
+          "text": "Étape suivante",
+          "anchor": "étape-suivante"
+        }
+      ]
+    },
+    {
+      "path": "demarrage/premiers-pas.md",
+      "title": "Premiers pas",
+      "description": "Configurer son espace après l'installation, connecter un premier compte, créer et programmer un premier post, puis passer en publication réelle.",
+      "category": "Démarrage",
+      "tags": [
+        "démarrage",
+        "espace",
+        "créneaux",
+        "premier post",
+        "validation",
+        "simulation"
+      ],
+      "order": 2,
+      "updated": "2026-11-10",
+      "headings": [
+        {
+          "level": 2,
+          "text": "Visite guidée",
+          "anchor": "visite-guidée"
+        },
+        {
+          "level": 2,
+          "text": "1. Nommer l'espace",
+          "anchor": "1-nommer-lespace"
+        },
+        {
+          "level": 2,
+          "text": "2. Définir les créneaux",
+          "anchor": "2-définir-les-créneaux"
+        },
+        {
+          "level": 2,
+          "text": "3. Choisir les règles d'envoi",
+          "anchor": "3-choisir-les-règles-denvoi"
+        },
+        {
+          "level": 2,
+          "text": "4. Connecter un premier compte",
+          "anchor": "4-connecter-un-premier-compte"
+        },
+        {
+          "level": 2,
+          "text": "5. Ranger les médias",
+          "anchor": "5-ranger-les-médias"
+        },
+        {
+          "level": 2,
+          "text": "6. Créer et programmer un post",
+          "anchor": "6-créer-et-programmer-un-post"
+        },
+        {
+          "level": 2,
+          "text": "7. Passer en publication réelle",
+          "anchor": "7-passer-en-publication-réelle"
+        },
+        {
+          "level": 2,
+          "text": "Sur le téléphone",
+          "anchor": "sur-le-téléphone"
+        },
+        {
+          "level": 2,
+          "text": "Et ensuite",
+          "anchor": "et-ensuite"
+        }
+      ]
+    },
+    {
+      "path": "utilisation/aujourdhui.md",
+      "title": "Aujourd'hui",
+      "description": "L'écran d'accueil de PlanneRs, avec les indicateurs, ce qui est au programme, la liste « À faire », les publications manquées et les raccourcis.",
+      "category": "Utilisation",
+      "tags": [
+        "aujourd'hui",
+        "tableau de bord",
+        "à faire",
+        "manqués",
+        "raccourcis",
+        "idée",
+        "dépôt de fichiers",
+        "kpi"
+      ],
+      "order": 1,
+      "updated": "2026-11-10",
+      "headings": [
+        {
+          "level": 2,
+          "text": "Les quatre indicateurs",
+          "anchor": "les-quatre-indicateurs"
+        },
+        {
+          "level": 2,
+          "text": "Au programme",
+          "anchor": "au-programme"
+        },
+        {
+          "level": 2,
+          "text": "À faire",
+          "anchor": "à-faire"
+        },
+        {
+          "level": 2,
+          "text": "Raccourcis",
+          "anchor": "raccourcis"
+        }
+      ]
+    },
+    {
+      "path": "utilisation/calendrier.md",
+      "title": "Calendrier",
+      "description": "Voir et déplacer ses publications en vue Semaine par créneaux, Mois ou grille du profil Instagram, à la souris ou au doigt, avec confirmation.",
+      "category": "Utilisation",
+      "tags": [
+        "calendrier",
+        "semaine",
+        "mois",
+        "grille du profil",
+        "glisser-déposer",
+        "déplacer",
+        "créneaux",
+        "confirmation",
+        "téléphone"
+      ],
+      "order": 2,
+      "updated": "2026-11-10",
+      "headings": [
+        {
+          "level": 2,
+          "text": "Les vues",
+          "anchor": "les-vues"
+        },
+        {
+          "level": 2,
+          "text": "Déplacer un post",
+          "anchor": "déplacer-un-post"
+        },
+        {
+          "level": 3,
+          "text": "Confirmation",
+          "anchor": "confirmation"
+        },
+        {
+          "level": 2,
+          "text": "Créneau libre",
+          "anchor": "créneau-libre"
+        },
+        {
+          "level": 2,
+          "text": "Bon à savoir",
+          "anchor": "bon-à-savoir"
+        }
+      ]
+    },
+    {
+      "path": "utilisation/contenus.md",
+      "title": "Contenus",
+      "description": "Le tableau Kanban de production (Idée, Écriture, Médias, Légende, Prêt, Programmé, Publié), ses verrous, la fiche d'un post et l'aperçu Instagram.",
+      "category": "Utilisation",
+      "tags": [
+        "contenus",
+        "kanban",
+        "idée",
+        "légende",
+        "validation",
+        "verrou",
+        "fiche",
+        "aperçu instagram",
+        "reel",
+        "carrousel"
+      ],
+      "order": 3,
+      "updated": "2026-11-10",
+      "headings": [
+        {
+          "level": 2,
+          "text": "Le tableau",
+          "anchor": "le-tableau"
+        },
+        {
+          "level": 3,
+          "text": "Déplacer une carte",
+          "anchor": "déplacer-une-carte"
+        },
+        {
+          "level": 2,
+          "text": "La liste",
+          "anchor": "la-liste"
+        },
+        {
+          "level": 3,
+          "text": "Modifier plusieurs posts d'un coup",
+          "anchor": "modifier-plusieurs-posts-dun-coup"
+        },
+        {
+          "level": 2,
+          "text": "Les médias",
+          "anchor": "les-médias"
+        },
+        {
+          "level": 2,
+          "text": "La fiche d'un post",
+          "anchor": "la-fiche-dun-post"
+        },
+        {
+          "level": 3,
+          "text": "Aperçu sur chaque réseau",
+          "anchor": "aperçu-sur-chaque-réseau"
+        },
+        {
+          "level": 3,
+          "text": "Vérifier les liens",
+          "anchor": "vérifier-les-liens"
+        },
+        {
+          "level": 3,
+          "text": "Une légende par réseau",
+          "anchor": "une-légende-par-réseau"
+        },
+        {
+          "level": 3,
+          "text": "Description des images",
+          "anchor": "description-des-images"
+        },
+        {
+          "level": 3,
+          "text": "Premier commentaire",
+          "anchor": "premier-commentaire"
+        },
+        {
+          "level": 3,
+          "text": "Reprendre un post qui a bien marché",
+          "anchor": "reprendre-un-post-qui-a-bien-marché"
+        },
+        {
+          "level": 3,
+          "text": "Répéter un post",
+          "anchor": "répéter-un-post"
+        },
+        {
+          "level": 2,
+          "text": "Stories",
+          "anchor": "stories"
+        }
+      ]
+    },
+    {
+      "path": "utilisation/stats.md",
+      "title": "Stats",
+      "description": "Les statistiques Instagram et Facebook dans PlanneRs, avec les chiffres affichés, leur fréquence de mise à jour et les autorisations nécessaires.",
+      "category": "Utilisation",
+      "tags": [
+        "stats",
+        "statistiques",
+        "insights",
+        "abonnés",
+        "vues",
+        "portée",
+        "likes",
+        "commentaires",
+        "meilleur reel"
+      ],
+      "order": 4,
+      "updated": "2026-11-10",
+      "headings": [
+        {
+          "level": 2,
+          "text": "Ce qui est affiché",
+          "anchor": "ce-qui-est-affiché"
+        },
+        {
+          "level": 2,
+          "text": "Bilan du mois",
+          "anchor": "bilan-du-mois"
+        },
+        {
+          "level": 2,
+          "text": "Mise à jour",
+          "anchor": "mise-à-jour"
+        },
+        {
+          "level": 2,
+          "text": "Autorisations nécessaires",
+          "anchor": "autorisations-nécessaires"
+        }
+      ]
+    },
+    {
+      "path": "utilisation/activite-et-reglages.md",
+      "title": "Activité et réglages",
+      "description": "Le journal d'activité, l'état des comptes et du robot, puis chaque rubrique des réglages (comptes, stockage, créneaux, règles, notifications, espace).",
+      "category": "Utilisation",
+      "tags": [
+        "activité",
+        "journal",
+        "robot",
+        "réglages",
+        "créneaux",
+        "règles",
+        "notifications",
+        "espace",
+        "import",
+        "export",
+        "sauvegarde"
+      ],
+      "order": 5,
+      "updated": "2026-11-10",
+      "headings": [
+        {
+          "level": 2,
+          "text": "Activité",
+          "anchor": "activité"
+        },
+        {
+          "level": 2,
+          "text": "Réglages",
+          "anchor": "réglages"
+        },
+        {
+          "level": 3,
+          "text": "Comptes",
+          "anchor": "comptes"
+        },
+        {
+          "level": 3,
+          "text": "Stockage et médias",
+          "anchor": "stockage-et-médias"
+        },
+        {
+          "level": 3,
+          "text": "Créneaux",
+          "anchor": "créneaux"
+        },
+        {
+          "level": 3,
+          "text": "Modèles",
+          "anchor": "modèles"
+        },
+        {
+          "level": 3,
+          "text": "Règles et contrôles",
+          "anchor": "règles-et-contrôles"
+        },
+        {
+          "level": 3,
+          "text": "Notifications",
+          "anchor": "notifications"
+        },
+        {
+          "level": 3,
+          "text": "Espace",
+          "anchor": "espace"
+        }
+      ]
+    },
+    {
+      "path": "utilisation/equipe-et-client.md",
+      "title": "Équipe et validation client",
+      "description": "Travailler à plusieurs (accès, validateurs, commentaires) et faire valider des légendes par un client grâce à un lien sans compte.",
+      "category": "Utilisation",
+      "tags": [
+        "équipe",
+        "validateurs",
+        "commentaires",
+        "client",
+        "lien de validation",
+        "cloudflare access",
+        "bypass"
+      ],
+      "order": 6,
+      "updated": "2026-11-10",
+      "headings": [
+        {
+          "level": 2,
+          "text": "Donner accès à d'autres personnes",
+          "anchor": "donner-accès-à-dautres-personnes"
+        },
+        {
+          "level": 2,
+          "text": "Choisir qui valide",
+          "anchor": "choisir-qui-valide"
+        },
+        {
+          "level": 2,
+          "text": "Commenter un post",
+          "anchor": "commenter-un-post"
+        },
+        {
+          "level": 2,
+          "text": "Faire valider par un client",
+          "anchor": "faire-valider-par-un-client"
+        },
+        {
+          "level": 3,
+          "text": "Laisser passer le lien dans Cloudflare Access",
+          "anchor": "laisser-passer-le-lien-dans-cloudflare-access"
+        }
+      ]
+    },
+    {
+      "path": "reseaux/meta.md",
+      "title": "Application Meta et jetons",
+      "description": "Créer une application Meta et obtenir un jeton de Page sans expiration, commun à Instagram et à la Page Facebook, avec les bonnes autorisations.",
+      "category": "Réseaux sociaux",
+      "tags": [
+        "meta",
+        "facebook",
+        "instagram",
+        "application",
+        "jeton",
+        "token",
+        "page access token",
+        "graph api explorer",
+        "autorisations",
+        "permissions"
+      ],
+      "order": 1,
+      "updated": "2026-11-10",
+      "headings": [
+        {
+          "level": 2,
+          "text": "Avant de commencer",
+          "anchor": "avant-de-commencer"
+        },
+        {
+          "level": 2,
+          "text": "1. Créer l'application",
+          "anchor": "1-créer-lapplication"
+        },
+        {
+          "level": 2,
+          "text": "2. Autorisations à demander",
+          "anchor": "2-autorisations-à-demander"
+        },
+        {
+          "level": 2,
+          "text": "3. Obtenir un jeton de Page sans expiration",
+          "anchor": "3-obtenir-un-jeton-de-page-sans-expiration"
+        },
+        {
+          "level": 3,
+          "text": "Variante : utilisateur système",
+          "anchor": "variante--utilisateur-système"
+        },
+        {
+          "level": 2,
+          "text": "4. Coller dans PlanneRs",
+          "anchor": "4-coller-dans-planners"
+        },
+        {
+          "level": 2,
+          "text": "Changer ou révoquer le jeton",
+          "anchor": "changer-ou-révoquer-le-jeton"
+        },
+        {
+          "level": 2,
+          "text": "Erreurs fréquentes",
+          "anchor": "erreurs-fréquentes"
+        }
+      ]
+    },
+    {
+      "path": "reseaux/instagram.md",
+      "title": "Instagram",
+      "description": "Connecter un compte Instagram professionnel pour publier automatiquement Reels, carrousels, images et stories, et relever les statistiques.",
+      "category": "Réseaux sociaux",
+      "tags": [
+        "instagram",
+        "reel",
+        "carrousel",
+        "story",
+        "publication",
+        "graph api",
+        "jeton",
+        "compte professionnel",
+        "hashtags"
+      ],
+      "order": 2,
+      "updated": "2026-11-10",
+      "headings": [
+        {
+          "level": 2,
+          "text": "Champs dans PlanneRs",
+          "anchor": "champs-dans-planners"
+        },
+        {
+          "level": 2,
+          "text": "Médias",
+          "anchor": "médias"
+        },
+        {
+          "level": 2,
+          "text": "Comment se passe un envoi",
+          "anchor": "comment-se-passe-un-envoi"
+        },
+        {
+          "level": 2,
+          "text": "Légende",
+          "anchor": "légende"
+        },
+        {
+          "level": 2,
+          "text": "Premier commentaire",
+          "anchor": "premier-commentaire"
+        },
+        {
+          "level": 2,
+          "text": "Stories interactives",
+          "anchor": "stories-interactives"
+        },
+        {
+          "level": 2,
+          "text": "Documentation officielle",
+          "anchor": "documentation-officielle"
+        }
+      ]
+    },
+    {
+      "path": "reseaux/facebook.md",
+      "title": "Page Facebook",
+      "description": "Connecter une Page Facebook pour y relayer automatiquement les publications, le plus souvent celles d'Instagram, sans risque de doublon.",
+      "category": "Réseaux sociaux",
+      "tags": [
+        "facebook",
+        "page",
+        "relais",
+        "publication",
+        "jeton de page",
+        "meta",
+        "doublon"
+      ],
+      "order": 3,
+      "updated": "2026-11-10",
+      "headings": [
+        {
+          "level": 2,
+          "text": "Champs dans PlanneRs",
+          "anchor": "champs-dans-planners"
+        },
+        {
+          "level": 2,
+          "text": "Pas de doublon",
+          "anchor": "pas-de-doublon"
+        },
+        {
+          "level": 2,
+          "text": "Réactions et commentaires dans Stats",
+          "anchor": "réactions-et-commentaires-dans-stats"
+        },
+        {
+          "level": 2,
+          "text": "Documentation officielle",
+          "anchor": "documentation-officielle"
+        }
+      ]
+    },
+    {
+      "path": "reseaux/threads.md",
+      "title": "Threads",
+      "description": "Connecter un compte Threads pour publier texte, images, vidéos et carrousels, avec un jeton de 60 jours à renouveler.",
+      "category": "Réseaux sociaux",
+      "tags": [
+        "threads",
+        "meta",
+        "publication",
+        "jeton",
+        "60 jours",
+        "carrousel"
+      ],
+      "order": 4,
+      "updated": "2026-11-10",
+      "headings": [
+        {
+          "level": 2,
+          "text": "Obtenir le jeton",
+          "anchor": "obtenir-le-jeton"
+        },
+        {
+          "level": 2,
+          "text": "Champs dans PlanneRs",
+          "anchor": "champs-dans-planners"
+        },
+        {
+          "level": 2,
+          "text": "Documentation officielle",
+          "anchor": "documentation-officielle"
+        }
+      ]
+    },
+    {
+      "path": "reseaux/linkedin.md",
+      "title": "LinkedIn",
+      "description": "Connecter un profil ou une page LinkedIn pour publier texte, images, documents PDF et vidéos, avec un jeton OAuth de 60 jours.",
+      "category": "Réseaux sociaux",
+      "tags": [
+        "linkedin",
+        "page entreprise",
+        "profil",
+        "oauth",
+        "jeton",
+        "60 jours",
+        "urn",
+        "pdf",
+        "carrousel",
+        "community management api"
+      ],
+      "order": 5,
+      "updated": "2026-11-10",
+      "headings": [
+        {
+          "level": 2,
+          "text": "Profil ou page ?",
+          "anchor": "profil-ou-page-"
+        },
+        {
+          "level": 2,
+          "text": "1. Créer l'application",
+          "anchor": "1-créer-lapplication"
+        },
+        {
+          "level": 2,
+          "text": "2. Obtenir le jeton",
+          "anchor": "2-obtenir-le-jeton"
+        },
+        {
+          "level": 2,
+          "text": "3. Trouver l'auteur (URN)",
+          "anchor": "3-trouver-lauteur-urn"
+        },
+        {
+          "level": 2,
+          "text": "Champs dans PlanneRs",
+          "anchor": "champs-dans-planners"
+        },
+        {
+          "level": 2,
+          "text": "Documentation officielle",
+          "anchor": "documentation-officielle"
+        }
+      ]
+    },
+    {
+      "path": "reseaux/x.md",
+      "title": "X (Twitter)",
+      "description": "Connecter un compte X avec les quatre clés OAuth 1.0a pour publier texte, images et vidéo.",
+      "category": "Réseaux sociaux",
+      "tags": [
+        "x",
+        "twitter",
+        "oauth 1.0a",
+        "api key",
+        "access token",
+        "read and write",
+        "tweet",
+        "post"
+      ],
+      "order": 6,
+      "updated": "2026-11-10",
+      "headings": [
+        {
+          "level": 2,
+          "text": "1. Créer l'application",
+          "anchor": "1-créer-lapplication"
+        },
+        {
+          "level": 2,
+          "text": "2. Générer les clés",
+          "anchor": "2-générer-les-clés"
+        },
+        {
+          "level": 2,
+          "text": "Champs dans PlanneRs",
+          "anchor": "champs-dans-planners"
+        },
+        {
+          "level": 2,
+          "text": "Documentation officielle",
+          "anchor": "documentation-officielle"
+        }
+      ]
+    },
+    {
+      "path": "reseaux/bluesky.md",
+      "title": "Bluesky",
+      "description": "Connecter un compte Bluesky avec un mot de passe d'application pour publier texte et images, sans validation d'application.",
+      "category": "Réseaux sociaux",
+      "tags": [
+        "bluesky",
+        "at protocol",
+        "mot de passe d'application",
+        "app password",
+        "publication"
+      ],
+      "order": 7,
+      "updated": "2026-11-10",
+      "headings": [
+        {
+          "level": 2,
+          "text": "Obtenir le mot de passe d'application",
+          "anchor": "obtenir-le-mot-de-passe-dapplication"
+        },
+        {
+          "level": 2,
+          "text": "Champs dans PlanneRs",
+          "anchor": "champs-dans-planners"
+        },
+        {
+          "level": 2,
+          "text": "Documentation officielle",
+          "anchor": "documentation-officielle"
+        }
+      ]
+    },
+    {
+      "path": "reseaux/mastodon.md",
+      "title": "Mastodon",
+      "description": "Connecter un compte Mastodon (ou compatible) avec un jeton d'application pour publier texte, images et vidéos.",
+      "category": "Réseaux sociaux",
+      "tags": [
+        "mastodon",
+        "fediverse",
+        "instance",
+        "jeton",
+        "application",
+        "publication"
+      ],
+      "order": 8,
+      "updated": "2026-11-10",
+      "headings": [
+        {
+          "level": 2,
+          "text": "Obtenir le jeton",
+          "anchor": "obtenir-le-jeton"
+        },
+        {
+          "level": 2,
+          "text": "Champs dans PlanneRs",
+          "anchor": "champs-dans-planners"
+        },
+        {
+          "level": 2,
+          "text": "Documentation officielle",
+          "anchor": "documentation-officielle"
+        }
+      ]
+    },
+    {
+      "path": "reseaux/pinterest.md",
+      "title": "Pinterest",
+      "description": "Connecter un compte Pinterest professionnel avec un jeton d'accès pour publier des épingles image, carrousel ou vidéo sur un tableau.",
+      "category": "Réseaux sociaux",
+      "tags": [
+        "pinterest",
+        "épingle",
+        "pin",
+        "tableau",
+        "board",
+        "api v5"
+      ],
+      "order": 8,
+      "updated": "2026-11-10",
+      "headings": [
+        {
+          "level": 2,
+          "text": "1. Créer l'application",
+          "anchor": "1-créer-lapplication"
+        },
+        {
+          "level": 2,
+          "text": "2. Trouver l'identifiant du tableau",
+          "anchor": "2-trouver-lidentifiant-du-tableau"
+        },
+        {
+          "level": 2,
+          "text": "3. Connecter dans PlanneRs",
+          "anchor": "3-connecter-dans-planners"
+        }
+      ]
+    },
+    {
+      "path": "reseaux/youtube.md",
+      "title": "YouTube (Shorts)",
+      "description": "Connecter une chaîne YouTube avec un client OAuth Google pour publier des Shorts et des vidéos à l'heure prévue.",
+      "category": "Réseaux sociaux",
+      "tags": [
+        "youtube",
+        "shorts",
+        "vidéo",
+        "oauth",
+        "google cloud",
+        "quota"
+      ],
+      "order": 8,
+      "updated": "2026-11-10",
+      "headings": [
+        {
+          "level": 2,
+          "text": "1. Préparer Google Cloud",
+          "anchor": "1-préparer-google-cloud"
+        },
+        {
+          "level": 2,
+          "text": "2. Connecter dans PlanneRs",
+          "anchor": "2-connecter-dans-planners"
+        },
+        {
+          "level": 2,
+          "text": "Bon à savoir",
+          "anchor": "bon-à-savoir"
+        }
+      ]
+    },
+    {
+      "path": "reseaux/a-venir.md",
+      "title": "TikTok et Buffer",
+      "description": "TikTok et Buffer, sans module de publication pour l'instant, à gérer en « publier à la main » avec rappel, et ce que demandera leur future connexion.",
+      "category": "Réseaux sociaux",
+      "tags": [
+        "tiktok",
+        "buffer",
+        "à la main",
+        "rappel",
+        "feuille de route"
+      ],
+      "order": 9,
+      "updated": "2026-11-10",
+      "headings": [
+        {
+          "level": 2,
+          "text": "En attendant : publier à la main",
+          "anchor": "en-attendant--publier-à-la-main"
+        },
+        {
+          "level": 2,
+          "text": "Ce que demandera chaque connexion",
+          "anchor": "ce-que-demandera-chaque-connexion"
+        }
+      ]
+    },
+    {
+      "path": "stockage/README.md",
+      "title": "Stockage : vue d'ensemble",
+      "description": "Différence entre stockage source et hébergement public, ce dont les réseaux ont besoin pour lire un média, et quelle combinaison choisir.",
+      "category": "Stockage",
+      "tags": [
+        "stockage",
+        "médias",
+        "hébergement public",
+        "adresse publique",
+        "google drive",
+        "dropbox",
+        "onedrive",
+        "r2",
+        "github pages",
+        "copie automatique"
+      ],
+      "order": 0,
+      "updated": "2026-11-10",
+      "headings": [
+        {
+          "level": 2,
+          "text": "Pourquoi c'est important",
+          "anchor": "pourquoi-cest-important"
+        },
+        {
+          "level": 2,
+          "text": "Deux familles",
+          "anchor": "deux-familles"
+        },
+        {
+          "level": 2,
+          "text": "Copie automatique",
+          "anchor": "copie-automatique"
+        },
+        {
+          "level": 2,
+          "text": "Que choisir ?",
+          "anchor": "que-choisir-"
+        }
+      ]
+    },
+    {
+      "path": "stockage/google-drive-lecture.md",
+      "title": "Google Drive (lecture)",
+      "description": "Relier un dossier Google Drive en lecture seule avec un compte de service, pour ouvrir le dossier de chaque post et copier les médias avant publication.",
+      "category": "Stockage",
+      "tags": [
+        "google drive",
+        "compte de service",
+        "service account",
+        "clé json",
+        "lecture seule",
+        "google cloud",
+        "dossier racine"
+      ],
+      "order": 1,
+      "updated": "2026-11-10",
+      "headings": [
+        {
+          "level": 2,
+          "text": "Étapes",
+          "anchor": "étapes"
+        },
+        {
+          "level": 2,
+          "text": "Champs dans PlanneRs",
+          "anchor": "champs-dans-planners"
+        },
+        {
+          "level": 2,
+          "text": "Sécurité",
+          "anchor": "sécurité"
+        },
+        {
+          "level": 2,
+          "text": "Bon à savoir",
+          "anchor": "bon-à-savoir"
+        }
+      ]
+    },
+    {
+      "path": "stockage/google-drive-envoi.md",
+      "title": "Google Drive (envoi de fichiers)",
+      "description": "Autoriser PlanneRs à envoyer vidéos, photos et fichiers dans ton Google Drive par OAuth (ID client Application Web, écran de consentement en production).",
+      "category": "Stockage",
+      "tags": [
+        "google drive",
+        "oauth",
+        "écriture",
+        "envoi",
+        "upload",
+        "id client",
+        "écran de consentement",
+        "redirect uri",
+        "refresh token"
+      ],
+      "order": 2,
+      "updated": "2026-11-10",
+      "headings": [
+        {
+          "level": 2,
+          "text": "1. Écran de consentement",
+          "anchor": "1-écran-de-consentement"
+        },
+        {
+          "level": 2,
+          "text": "2. ID client",
+          "anchor": "2-id-client"
+        },
+        {
+          "level": 2,
+          "text": "3. Dans PlanneRs",
+          "anchor": "3-dans-planners"
+        },
+        {
+          "level": 2,
+          "text": "Révoquer",
+          "anchor": "révoquer"
+        }
+      ]
+    },
+    {
+      "path": "stockage/onedrive.md",
+      "title": "OneDrive",
+      "description": "Relier un dossier OneDrive (compte personnel ou Microsoft 365) en lecture seule via une application Microsoft Entra et un jeton de rafraîchissement.",
+      "category": "Stockage",
+      "tags": [
+        "onedrive",
+        "microsoft",
+        "entra",
+        "azure",
+        "graph",
+        "oauth",
+        "refresh token",
+        "files.read",
+        "lecture seule"
+      ],
+      "order": 3,
+      "updated": "2026-11-10",
+      "headings": [
+        {
+          "level": 2,
+          "text": "1. Inscrire une application",
+          "anchor": "1-inscrire-une-application"
+        },
+        {
+          "level": 2,
+          "text": "2. Obtenir le jeton de rafraîchissement",
+          "anchor": "2-obtenir-le-jeton-de-rafraîchissement"
+        },
+        {
+          "level": 2,
+          "text": "Champs dans PlanneRs",
+          "anchor": "champs-dans-planners"
+        },
+        {
+          "level": 2,
+          "text": "Révoquer",
+          "anchor": "révoquer"
+        }
+      ]
+    },
+    {
+      "path": "stockage/dropbox.md",
+      "title": "Dropbox",
+      "description": "Relier un dossier Dropbox en lecture seule avec une application Dropbox (App key, App secret) et un jeton de rafraîchissement hors ligne.",
+      "category": "Stockage",
+      "tags": [
+        "dropbox",
+        "oauth",
+        "app key",
+        "app secret",
+        "refresh token",
+        "offline",
+        "lecture seule"
+      ],
+      "order": 4,
+      "updated": "2026-11-10",
+      "headings": [
+        {
+          "level": 2,
+          "text": "1. Créer l'application",
+          "anchor": "1-créer-lapplication"
+        },
+        {
+          "level": 2,
+          "text": "2. Obtenir le jeton de rafraîchissement",
+          "anchor": "2-obtenir-le-jeton-de-rafraîchissement"
+        },
+        {
+          "level": 2,
+          "text": "Champs dans PlanneRs",
+          "anchor": "champs-dans-planners"
+        },
+        {
+          "level": 2,
+          "text": "Révoquer",
+          "anchor": "révoquer"
+        }
+      ]
+    },
+    {
+      "path": "stockage/webdav.md",
+      "title": "WebDAV (Nextcloud, ownCloud, NAS)",
+      "description": "Relier un dossier WebDAV (Nextcloud, ownCloud, Synology, kDrive…) en lecture avec un mot de passe d'application.",
+      "category": "Stockage",
+      "tags": [
+        "webdav",
+        "nextcloud",
+        "owncloud",
+        "synology",
+        "nas",
+        "kdrive",
+        "mot de passe d'application",
+        "lecture seule"
+      ],
+      "order": 5,
+      "updated": "2026-11-10",
+      "headings": [
+        {
+          "level": 2,
+          "text": "Nextcloud",
+          "anchor": "nextcloud"
+        },
+        {
+          "level": 2,
+          "text": "Autres serveurs",
+          "anchor": "autres-serveurs"
+        },
+        {
+          "level": 2,
+          "text": "Champs dans PlanneRs",
+          "anchor": "champs-dans-planners"
+        }
+      ]
+    },
+    {
+      "path": "stockage/cloudflare-r2.md",
+      "title": "Cloudflare R2 (ou S3)",
+      "description": "Donner une adresse publique aux médias avec un bucket Cloudflare R2 ou tout service compatible S3 (clés d'accès, domaine public).",
+      "category": "Stockage",
+      "tags": [
+        "cloudflare",
+        "r2",
+        "s3",
+        "bucket",
+        "hébergement public",
+        "adresse publique",
+        "access key",
+        "r2.dev",
+        "domaine personnalisé"
+      ],
+      "order": 6,
+      "updated": "2026-11-10",
+      "headings": [
+        {
+          "level": 2,
+          "text": "1. Créer le bucket",
+          "anchor": "1-créer-le-bucket"
+        },
+        {
+          "level": 2,
+          "text": "2. Créer les clés d'accès",
+          "anchor": "2-créer-les-clés-daccès"
+        },
+        {
+          "level": 2,
+          "text": "Champs dans PlanneRs",
+          "anchor": "champs-dans-planners"
+        },
+        {
+          "level": 2,
+          "text": "Autres services S3",
+          "anchor": "autres-services-s3"
+        }
+      ]
+    },
+    {
+      "path": "stockage/github-pages.md",
+      "title": "GitHub Pages",
+      "description": "Héberger gratuitement les médias dans un dépôt GitHub public servi par GitHub Pages, avec un jeton fine-grained limité à ce dépôt.",
+      "category": "Stockage",
+      "tags": [
+        "github",
+        "github pages",
+        "hébergement public",
+        "jeton fine-grained",
+        "contents",
+        "dépôt public",
+        "jsdelivr"
+      ],
+      "order": 7,
+      "updated": "2026-11-10",
+      "headings": [
+        {
+          "level": 2,
+          "text": "1. Créer le dépôt",
+          "anchor": "1-créer-le-dépôt"
+        },
+        {
+          "level": 2,
+          "text": "2. Créer le jeton",
+          "anchor": "2-créer-le-jeton"
+        },
+        {
+          "level": 2,
+          "text": "Champs dans PlanneRs",
+          "anchor": "champs-dans-planners"
+        },
+        {
+          "level": 2,
+          "text": "Bon à savoir",
+          "anchor": "bon-à-savoir"
+        }
+      ]
+    },
+    {
+      "path": "notifications/ntfy.md",
+      "title": "ntfy",
+      "description": "Recevoir les rappels « à poster à la main » et les alertes d'échec en notification push sur ton téléphone avec ntfy, sans compte.",
+      "category": "Notifications",
+      "tags": [
+        "ntfy",
+        "push",
+        "notification",
+        "téléphone",
+        "rappel",
+        "alerte",
+        "échec",
+        "auto-hébergé"
+      ],
+      "order": 1,
+      "updated": "2026-11-10",
+      "headings": [
+        {
+          "level": 2,
+          "text": "Étapes",
+          "anchor": "étapes"
+        },
+        {
+          "level": 2,
+          "text": "Champs dans PlanneRs",
+          "anchor": "champs-dans-planners"
+        }
+      ]
+    },
+    {
+      "path": "notifications/telegram.md",
+      "title": "Telegram",
+      "description": "Recevoir les rappels et alertes de PlanneRs dans Telegram avec ton propre bot (BotFather) et l'identifiant de la discussion.",
+      "category": "Notifications",
+      "tags": [
+        "telegram",
+        "bot",
+        "botfather",
+        "chat id",
+        "notification",
+        "rappel",
+        "alerte"
+      ],
+      "order": 2,
+      "updated": "2026-11-10",
+      "headings": [
+        {
+          "level": 2,
+          "text": "1. Créer le bot",
+          "anchor": "1-créer-le-bot"
+        },
+        {
+          "level": 2,
+          "text": "2. Trouver l'identifiant de la discussion",
+          "anchor": "2-trouver-lidentifiant-de-la-discussion"
+        },
+        {
+          "level": 2,
+          "text": "Champs dans PlanneRs",
+          "anchor": "champs-dans-planners"
+        },
+        {
+          "level": 2,
+          "text": "Révoquer",
+          "anchor": "révoquer"
+        }
+      ]
+    },
+    {
+      "path": "notifications/webhook.md",
+      "title": "Webhook signé",
+      "description": "Envoyer les événements de PlanneRs (rappel, échec, test) en JSON vers ton adresse HTTPS, signés en HMAC SHA-256, pour Slack, Discord, n8n, Make ou ton propre serveur.",
+      "category": "Notifications",
+      "tags": [
+        "webhook",
+        "hmac",
+        "sha-256",
+        "signature",
+        "json",
+        "n8n",
+        "make",
+        "zapier",
+        "discord",
+        "slack",
+        "intégration"
+      ],
+      "order": 3,
+      "updated": "2026-11-10",
+      "headings": [
+        {
+          "level": 2,
+          "text": "Corps envoyé",
+          "anchor": "corps-envoyé"
+        },
+        {
+          "level": 2,
+          "text": "Vérifier la signature",
+          "anchor": "vérifier-la-signature"
+        },
+        {
+          "level": 2,
+          "text": "Champs dans PlanneRs",
+          "anchor": "champs-dans-planners"
+        },
+        {
+          "level": 2,
+          "text": "Exemples de destinations",
+          "anchor": "exemples-de-destinations"
+        }
+      ]
+    },
+    {
+      "path": "reference/depannage.md",
+      "title": "Dépannage",
+      "description": "Messages d'erreur courants (Meta, Instagram, Facebook, Threads, LinkedIn, X, Google Drive, Cloudflare) et quoi faire pour chacun.",
+      "category": "Référence",
+      "tags": [
+        "dépannage",
+        "erreur",
+        "2207052",
+        "2207076",
+        "2207077",
+        "erreur 10",
+        "190",
+        "oauth",
+        "jeton expiré",
+        "invalid scopes",
+        "access",
+        "d1",
+        "robot"
+      ],
+      "order": 1,
+      "updated": "2026-11-10",
+      "headings": [
+        {
+          "level": 2,
+          "text": "Meta (Instagram, Facebook, Threads)",
+          "anchor": "meta-instagram-facebook-threads"
+        },
+        {
+          "level": 2,
+          "text": "Jetons qui expirent",
+          "anchor": "jetons-qui-expirent"
+        },
+        {
+          "level": 2,
+          "text": "X, Bluesky, Mastodon",
+          "anchor": "x-bluesky-mastodon"
+        },
+        {
+          "level": 2,
+          "text": "Application",
+          "anchor": "application"
+        }
+      ]
+    },
+    {
+      "path": "reference/securite.md",
+      "title": "Sécurité",
+      "description": "Comment PlanneRs protège l'accès (Cloudflare Access), chiffre les identifiants (AES-GCM) et limite les droits, plus les liens pour tout révoquer.",
+      "category": "Référence",
+      "tags": [
+        "sécurité",
+        "cloudflare access",
+        "jwt",
+        "chiffrement",
+        "aes-gcm",
+        "encryption_key",
+        "révocation",
+        "secrets",
+        "moindre privilège"
+      ],
+      "order": 2,
+      "updated": "2026-11-10",
+      "headings": [
+        {
+          "level": 2,
+          "text": "Qui peut ouvrir PlanneRs",
+          "anchor": "qui-peut-ouvrir-planners"
+        },
+        {
+          "level": 2,
+          "text": "Identifiants",
+          "anchor": "identifiants"
+        },
+        {
+          "level": 2,
+          "text": "Bonnes pratiques",
+          "anchor": "bonnes-pratiques"
+        },
+        {
+          "level": 2,
+          "text": "Tout révoquer",
+          "anchor": "tout-révoquer"
+        },
+        {
+          "level": 2,
+          "text": "Signaler une faille",
+          "anchor": "signaler-une-faille"
+        }
+      ]
+    },
+    {
+      "path": "reference/glossaire.md",
+      "title": "Glossaire",
+      "description": "Les mots de PlanneRs et des API des réseaux sociaux, expliqués simplement (statuts, relais, créneau, jeton, scope, adresse publique…).",
+      "category": "Référence",
+      "tags": [
+        "glossaire",
+        "vocabulaire",
+        "statut",
+        "relais",
+        "créneau",
+        "jeton",
+        "scope",
+        "oauth",
+        "dry_run",
+        "manqué"
+      ],
+      "order": 3,
+      "updated": "2026-11-10",
+      "headings": [
+        {
+          "level": 2,
+          "text": "Dans PlanneRs",
+          "anchor": "dans-planners"
+        },
+        {
+          "level": 2,
+          "text": "Côté réseaux et API",
+          "anchor": "côté-réseaux-et-api"
+        }
+      ]
+    },
+    {
+      "path": "reference/architecture.md",
+      "title": "Architecture",
+      "description": "Comment PlanneRs est construit (Worker Cloudflare, D1, robot, connecteurs, stockages), le format d'un post et comment écrire un connecteur.",
+      "category": "Référence",
+      "tags": [
+        "architecture",
+        "cloudflare workers",
+        "d1",
+        "cron",
+        "robot",
+        "adaptateur",
+        "connecteur",
+        "contribution",
+        "api",
+        "données"
+      ],
+      "order": 4,
+      "updated": "2026-11-10",
+      "headings": [
+        {
+          "level": 2,
+          "text": "Données",
+          "anchor": "données"
+        },
+        {
+          "level": 2,
+          "text": "Écrire un connecteur",
+          "anchor": "écrire-un-connecteur"
+        },
+        {
+          "level": 2,
+          "text": "Mode démo",
+          "anchor": "mode-démo"
+        },
+        {
+          "level": 2,
+          "text": "Écrire la documentation",
+          "anchor": "écrire-la-documentation"
+        }
+      ]
+    },
+    {
+      "path": "reference/assistants-ia.md",
+      "title": "Assistants IA (MCP)",
+      "description": "Brancher Claude, Codex ou ChatGPT sur PlanneRs avec le serveur MCP intégré (/mcp), protégé par Cloudflare Access.",
+      "category": "Référence",
+      "tags": [
+        "mcp",
+        "ia",
+        "claude",
+        "codex",
+        "chatgpt",
+        "assistant",
+        "oauth",
+        "cloudflare access",
+        "jeton de service",
+        "réécrire",
+        "légende par réseau",
+        "anthropic"
+      ],
+      "order": 5,
+      "updated": "2026-11-10",
+      "headings": [
+        {
+          "level": 2,
+          "text": "1. Autoriser la connexion (une fois)",
+          "anchor": "1-autoriser-la-connexion-une-fois"
+        },
+        {
+          "level": 2,
+          "text": "2. Ajouter le connecteur",
+          "anchor": "2-ajouter-le-connecteur"
+        },
+        {
+          "level": 3,
+          "text": "Claude (ordinateur, web, téléphone)",
+          "anchor": "claude-ordinateur-web-téléphone"
+        },
+        {
+          "level": 3,
+          "text": "Codex (OpenAI)",
+          "anchor": "codex-openai"
+        },
+        {
+          "level": 3,
+          "text": "ChatGPT",
+          "anchor": "chatgpt"
+        },
+        {
+          "level": 2,
+          "text": "Sans OAuth : un jeton de service",
+          "anchor": "sans-oauth--un-jeton-de-service"
+        },
+        {
+          "level": 2,
+          "text": "Automatiser : l'assistant prépare, tu contrôles",
+          "anchor": "automatiser--lassistant-prépare-tu-contrôles"
+        },
+        {
+          "level": 2,
+          "text": "Réécrire une légende pour chaque réseau",
+          "anchor": "réécrire-une-légende-pour-chaque-réseau"
+        },
+        {
+          "level": 2,
+          "text": "Détails techniques",
+          "anchor": "détails-techniques"
+        }
+      ]
+    }
+  ]
+}

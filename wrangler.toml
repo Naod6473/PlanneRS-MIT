@@ -1,0 +1,33 @@
+# PlanneRs : configuration Cloudflare Workers.
+# Étapes complètes : docs/demarrage/installation.md
+name = "planners"
+main = "worker/src/index.js"
+compatibility_date = "2025-09-01"
+
+# Ton propre domaine (facultatif, voir docs/demarrage/installation.md#utiliser-ton-propre-domaine) :
+# routes = [{ pattern = "planners.exemple.fr", custom_domain = true }]
+# workers_dev = false
+
+[assets]
+directory = "./web"
+binding = "ASSETS"
+run_worker_first = ["/api/*", "/mcp", "/v/*", "/cal/*"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "planners"
+database_id = "" # identifiant de ta base D1 (voir docs/demarrage/installation.md)
+migrations_dir = "migrations"
+
+[triggers]
+crons = ["*/5 * * * *"]
+
+[vars]
+# Tant que DRY_RUN vaut "true", le robot simule les envois sans rien publier.
+DRY_RUN = "true"
+GRAPH_VERSION = "v21.0"
+# Cloudflare Access : domaine de l'équipe (ex. mon-equipe.cloudflareaccess.com) et « Application Audience (AUD) Tag ».
+ACCESS_TEAM_DOMAIN = ""
+ACCESS_AUD = ""
+# Adresse publique de base des médias (facultatif), ex. https://medias.exemple.fr
+MEDIA_BASE_URL = ""

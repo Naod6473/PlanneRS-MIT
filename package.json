@@ -1,0 +1,26 @@
+{
+  "name": "planners",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Planifier, valider et suivre ses publications sur les réseaux sociaux. Auto-hébergé sur Cloudflare.",
+  "license": "MIT",
+  "scripts": {
+    "dev": "wrangler dev",
+    "demo": "node scripts/serve-demo.mjs",
+    "test": "node --test test/*.test.mjs",
+    "docs:index": "node scripts/docs-index.mjs",
+    "build:demo": "node scripts/build-demo.mjs",
+    "db:init": "wrangler d1 migrations apply planners --remote",
+    "deploy": "wrangler d1 migrations apply DB --remote && wrangler deploy",
+    "test:e2e": "node --test test/e2e/*.e2e.mjs"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.8.0"
+  }
+}
