@@ -162,6 +162,7 @@
       d.title = $("#cp-title").value.trim() || A.guessTitle(drafts[""]) || (orig && !autoTitle ? orig.title : "Nouveau post");
       d.format = $("#cp-format").value; d.manual = $("#cp-manual").checked;
       { const sv = $("#cp-series").value.trim(); if (sv) d.series = sv; else delete d.series; }
+      if (d.networks.length && !C.autoNets(Object.assign({}, d, { manual: false }), S.state.settings).length) d.manual = true; // tous les réseaux sont « à la main »
       const fc = $("#cp-fc").value.trim(); if (fc) d.firstComment = fc; else delete d.firstComment;
       const alt = $("#cp-alt").value.trim(); if (alt) d.alt = alt; else delete d.alt;
     }

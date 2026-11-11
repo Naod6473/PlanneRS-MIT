@@ -1094,3 +1094,8 @@ table.list tr.sel td{background:var(--rev-bg)}
 .fres{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0 0 12px}
 .fres .chip{gap:6px;max-width:100%}
 .fres .chip .brand{width:14px;height:14px}
+/* Poster à la main : un onglet par réseau */
+.m-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
+.m-tabs .chip{padding:0 12px 0 6px}
+.m-tabs .chip[aria-selected="true"]{border-color:var(--main);box-shadow:0 0 0 1px var(--main) inset}
+.m-tabs .chip svg.i{width:14px;height:14px;color:var(--pub)}

@@ -54,6 +54,18 @@ Ce qui demande ton attention, du plus urgent au moins urgent :
   - « Tout valider » les valide d'un coup après une confirmation qui les liste. Les posts qui ont un problème bloquant (média manquant, trop de hashtags…) sont laissés de côté. « Annuler » dans le message qui suit retire la validation.
 - **Posts à la main du jour**, **contenus d'actualité qui vont se périmer** (date limite dans moins de 3 jours).
 
+## Poster à la main
+
+Pour les réseaux sans connexion automatique ou à l'API payante, coche-les dans Réglages › Règles et contrôles › **À poster à la main**. À l'heure prévue, tu reçois un rappel, et le post apparaît dans « À faire ». **Poster** ouvre la fiche :
+
+- un onglet par réseau à poster, avec une coche quand c'est fait ;
+- **Enregistrer le média**, puis **Copier le texte** (la version propre à ce réseau, s'il y en a une) ;
+- **Ouvrir X avec le texte** : pour X, LinkedIn, Threads et Bluesky, le réseau s'ouvre avec le texte déjà écrit, il reste à ajouter le média. Pour TikTok, YouTube, Instagram et Facebook, aucun réseau ne permet de pré-remplir le texte depuis un lien : le bouton copie le texte et ouvre la page d'envoi ;
+- sur téléphone, **Poster en un geste** copie le texte et envoie la vidéo directement dans l'app choisie (TikTok, YouTube, X…) par le menu Partager ;
+- **C'est posté** note le réseau comme fait et passe au suivant.
+
+Sur ordinateur, aucun réseau ne permet de joindre la vidéo automatiquement par un lien : glisse-la dans la fenêtre du réseau.
+
 ## Raccourcis
 
 | Raccourci | Effet |

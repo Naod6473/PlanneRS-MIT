@@ -76,7 +76,8 @@
     const missed = all.filter((p) => C.missed(p, now) && !p.ignored).sort((a, b) => C.at(b).localeCompare(C.at(a)));
     const review = all.filter((p) => C.displayStatus(p, now) === "review" && p.date && p.date >= t && p.date <= C.addDays(t, 14))
       .sort((a, b) => C.at(a).localeCompare(C.at(b)));
-    const manual = all.filter((p) => p.date === t && C.displayStatus(p, now) === "manual");
+    const manual = all.filter((p) => p.date === t && (C.displayStatus(p, now) === "manual" ||
+      (!p.manual && ["scheduled", "published"].includes(p.status) && C.pendingManual(p, S.state.settings).length && C.at(p) <= C.nowStamp(new Date(Date.now() + 36e5)))));
     const expiring = all.filter((p) => !p.date && p.expires && p.expires <= C.addDays(t, 3));
     return { failed, late, missed, review, manual, expiring, count: failed.length + late.length + (missed.length ? 1 : 0) + (review.length ? 1 : 0) + manual.length + expiring.length };
   };
@@ -115,8 +116,9 @@
         (A.canValidate() ? '<div class="acts"><button class="btn primary big" data-review>Relire et valider</button>' + (td.review.length > 1 ? '<button class="btn" data-valall>Tout valider</button>' : "") + '<button class="btn quiet" data-share-review>' + icon("send") + "Lien client</button></div>" : '<div class="acts"><a class="btn" href="#list/review">Voir la liste</a><button class="btn quiet" data-share-review>' + icon("send") + "Lien client</button></div>") + "</div>";
     }
     td.manual.forEach((p) => {
-      todo += '<div class="tcard"><div class="head">' + brands(p.networks) + '<span class="st st-manual">' + icon("hand") + "À poster · " + p.time + "</span></div>" +
-        "<h3>" + esc(p.title) + '</h3><div class="acts"><button class="btn primary" data-manual="' + p.id + '">Poster</button><button class="btn" data-open="' + p.id + '">Détails</button></div></div>';
+      const pm = C.pendingManual(p, S.state.settings);
+      todo += '<div class="tcard"><div class="head">' + brands(pm.length ? pm : p.networks) + '<span class="st st-manual">' + icon("hand") + "À poster · " + p.time + "</span></div>" +
+        "<h3>" + esc(p.title) + '</h3><div class="acts"><button class="btn primary" data-manual="' + p.id + '" data-onet="' + esc(pm[0] || "") + '">Poster</button><button class="btn" data-open="' + p.id + '">Détails</button></div></div>';
     });
     td.expiring.forEach((p) => {
       todo += '<div class="tcard warn"><div class="head">' + brands(p.networks) + '<span class="st st-ready">' + icon("clock") + "Se périme le " + esc(C.shortDay(p.expires)) + "</span></div>" +
@@ -876,6 +878,7 @@
       const r = settings().rules || {};
       return '<section class="panel"><h2>Règles d\'envoi</h2><p>Elles s\'appliquent à tous les posts de cet espace.</p><div class="form">' +
         '<label class="toggle"><input type="checkbox" data-rule="robotEnabled"' + (r.robotEnabled !== false ? " checked" : "") + "> Robot de publication en marche (décoche si un autre outil publie encore à sa place)</label>" +
+        '<div><p style="margin:0 0 6px"><b>À poster à la main</b> : les réseaux sans connexion automatique (ou à l\'API payante). Le robot ne les envoie jamais ; à l\'heure prévue, tu reçois un rappel et la fiche « Poster à la main » prépare le texte (déjà écrit pour X, LinkedIn, Threads et Bluesky).</p><div class="filters">' + netChecks('data-rule-mnet=""', r.manualNets || []) + "</div></div>" +
         (r.robotEnabled === false ? '<div><p class="muted" style="margin:0 0 6px">Robot à l\'arrêt : envoyer quand même automatiquement vers ces réseaux (les autres restent à l\'outil qui publie à sa place).</p><div class="filters">' + netChecks('data-rule-net=""', r.robotNets || []) + "</div></div>" : "") +
         '<label class="toggle"><input type="checkbox" data-rule="requireValidation"' + (r.requireValidation !== false ? " checked" : "") + "> Ne rien envoyer sans légende validée</label>" +
         '<label class="toggle"><input type="checkbox" data-rule="confirmMoves"' + (r.confirmMoves !== false ? " checked" : "") + "> Demander une confirmation avant de déplacer un contenu (calendrier et Contenus)</label>" +

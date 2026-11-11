@@ -171,3 +171,36 @@ test("robot à l'arrêt : réseau coché en échec, un nouvel essai puis signal�
   await runRobot(deps);
   assert.equal(notes.filter((n) => n.event === "failed").length, 1);
 });
+
+test("réseaux « à la main » : jamais envoyés par le robot, rappel à l'heure, le reste part", async () => {
+  const p = post({ networks: ["x", "instagram"] });
+  let xCalls = 0;
+  const { deps, notes } = setup([p], { instagram: ok, x: { publish: async () => { xCalls++; return { status: "ok" }; } } });
+  deps.settings.rules.manualNets = ["x"];
+  await runRobot(deps);
+  assert.equal(xCalls, 0);
+  assert.equal(p.status, "published");
+  assert.equal(p.results.instagram.status, "ok");
+  assert.equal(p.results.x, undefined);
+  assert.ok(notes.some((n) => n.event === "manual" && /X|x/.test(n.title)));
+  const again = notes.length; await runRobot(deps); assert.equal(notes.length, again); // un seul rappel
+});
+
+test("tous les réseaux « à la main » : traité comme un post à la main", async () => {
+  const p = post({ networks: ["x", "tiktok"] });
+  const { deps, notes } = setup([p], { x: ok, tiktok: ok });
+  deps.settings.rules.manualNets = ["x", "tiktok"];
+  await runRobot(deps);
+  assert.equal(p.status, "scheduled");
+  assert.equal(p.results, undefined);
+  assert.equal(notes[0].event, "manual");
+});
+
+test("robot à l'arrêt : rappel des réseaux à la main même si le post a été publié ailleurs", async () => {
+  const p = post({ networks: ["instagram", "x"], status: "published" });
+  const { deps, notes } = setup([p], { instagram: ok, x: ok });
+  deps.settings.rules.robotEnabled = false; deps.settings.rules.manualNets = ["x"];
+  await runRobot(deps);
+  assert.equal(notes.length, 1);
+  assert.equal(p.results, undefined);
+});

@@ -168,6 +168,23 @@
     return best;
   }
 
+  // ---- Réseaux postés à la main (Réglages › Règles : « À poster à la main », ou post entier « à la main »)
+  function manualNets(p, settings) {
+    const nets = p.networks || [], mn = ((settings || {}).rules || {}).manualNets || [];
+    return p.manual ? nets.slice() : nets.filter((n) => mn.includes(n));
+  }
+  function autoNets(p, settings) { const m = manualNets(p, settings); return (p.networks || []).filter((n) => !m.includes(n)); }
+  function pendingManual(p, settings) { const r = p.results || {}; return manualNets(p, settings).filter((n) => !(r[n] && r[n].status === "ok")); }
+  // Lien qui ouvre le réseau avec le texte déjà écrit, quand le réseau le permet (sinon null : texte à coller).
+  const PREFILL = {
+    x: (t) => "https://x.com/intent/post?text=" + encodeURIComponent(t),
+    linkedin: (t) => "https://www.linkedin.com/feed/?shareActive=true&text=" + encodeURIComponent(t),
+    threads: (t) => "https://www.threads.net/intent/post?text=" + encodeURIComponent(t),
+    bluesky: (t) => "https://bsky.app/intent/compose?text=" + encodeURIComponent(t),
+    mastodon: null,
+  };
+  function prefillUrl(net, text) { const f = PREFILL[net]; return f && text ? f(String(text).slice(0, 3000)) : null; }
+
   // ---- Recherche, séries, CSV (fonctions pures, testées)
   const fold = (x) => String(x == null ? "" : x).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
   // Série d'un post : le champ « series », sinon le début du titre avant « · ép. N » (ex. « L'IA, de zéro à pro · ép. 2/7 : … »).
@@ -210,6 +227,6 @@
   function nowStamp(d) { d = d || new Date(); return ymd(d) + "T" + pad(d.getHours()) + ":" + pad(d.getMinutes()); }
 
   const api = { STATUS, FORMATS, STAGES, pad, ymd, parseYmd, addDays, mondayOf, toMin, at, longDate, shortDay, MONTHS, DAYS, setLang,
-    displayStatus, missed, willSend, hashtags, checks, mediaChecks, slotOf, nowStamp, fold, seriesOf, matchQuery, parseCsv, toCsv, capFor, TEXT_MAX, utm, textOut };
+    displayStatus, missed, willSend, hashtags, checks, mediaChecks, slotOf, nowStamp, fold, seriesOf, matchQuery, parseCsv, toCsv, manualNets, autoNets, pendingManual, prefillUrl, capFor, TEXT_MAX, utm, textOut };
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.Core = api;
 })(typeof self !== "undefined" ? self : this);

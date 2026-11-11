@@ -15,7 +15,7 @@
     if (f) f.focus();
   }
 
-  const APP_URL = { instagram: "https://www.instagram.com/", facebook: "https://www.facebook.com/", linkedin: "https://www.linkedin.com/feed/", x: "https://x.com/compose/post", threads: "https://www.threads.net/", tiktok: "https://www.tiktok.com/upload", bluesky: "https://bsky.app/", youtube: "https://studio.youtube.com/" };
+  const APP_URL = { instagram: "https://www.instagram.com/", facebook: "https://www.facebook.com/", linkedin: "https://www.linkedin.com/feed/", x: "https://x.com/compose/post", threads: "https://www.threads.net/", tiktok: "https://www.tiktok.com/upload", bluesky: "https://bsky.app/", youtube: "https://www.youtube.com/upload" };
 
   // ------------------------------------------------------------ Google Drive (si connecté)
   const relPath = (f) => !!f && !/^https?:\/\//.test(f);
@@ -148,6 +148,8 @@
     else if (st === "scheduled") foot = '<button class="btn" data-act="showmove">Changer la date</button><button class="btn" data-act="unvalidate">Retirer la validation</button>' + (A.stageOf && A.stageOf(p) === "scheduled" ? '<button class="btn" data-unlock="' + esc(p.id) + '">' + icon("unlock") + "Débloquer</button>" : "");
     else if (st === "ready" || st === "draft") foot = '<button class="btn primary" data-act="showmove">Programmer</button>' + (st === "draft" ? '<button class="btn" data-act="toready">Marquer prêt</button>' : "");
     else if (done) foot = (p.url ? '<a class="btn primary" href="' + safeUrl(p.url) + '" target="_blank" rel="noopener">' + icon("open") + "Voir le post</a>" : "") + (p.parent ? "" : '<button class="btn' + (p.url ? "" : " primary") + '" data-act="recycle">' + icon("undo") + "Republier</button>");
+    { const pmn = p.manual || p.parent ? [] : C.pendingManual(p, S.state.settings);
+      if (pmn.length && p.date && ["scheduled", "published", "failed"].includes(p.status)) foot = '<button class="btn" data-manual="' + esc(p.id) + '" data-onet="' + pmn[0] + '">' + icon("hand") + "À la main : " + esc(pmn.map((n) => (window.BRANDS[n] ? window.BRANDS[n].title : n)).join(", ")) + "</button>" + foot; }
     if (!done) foot += '<button class="btn" data-act="compose">' + icon("pen") + "Modifier</button>";
     foot += '<span style="flex:1"></span><details class="moremenu"><summary class="btn quiet" aria-label="Plus d\'actions">' + icon("more") + '<span class="lbl2">Plus</span></summary><div class="mm-list" role="menu">' +
       '<button class="btn quiet" role="menuitem" data-act="dup">' + icon("dup") + "Dupliquer</button>" +
@@ -300,7 +302,7 @@
         p.format = L.querySelector("#ed-format").value;
         const nets = [...L.querySelectorAll("[data-ed-net]")].filter((x) => x.checked).map((x) => x.dataset.edNet);
         if (!nets.length) { U.toast("Choisis au moins un réseau"); return; }
-        p.networks = nets; p.manual = L.querySelector("#ed-manual").checked;
+        p.networks = nets; p.manual = L.querySelector("#ed-manual").checked; if (nets.length && !C.autoNets(Object.assign({}, p, { manual: false }), S.state.settings).length) p.manual = true;
         const fc = L.querySelector("#ed-fc"); if (fc) { if (fc.value.trim()) p.firstComment = fc.value.trim(); else delete p.firstComment; }
         const alt = L.querySelector("#ed-alt"); if (alt) { if (alt.value.trim()) p.alt = alt.value.trim(); else delete p.alt; }
         await S.savePosts([p]); U.toast("Enregistré"); A.render(); A.openPost(p.id, { saved: true }); return;
@@ -547,7 +549,14 @@
   // ------------------------------------------------------------ Poster à la main
   A.openManual = function (id, onlyNet) {
     const p = S.post(id); if (!p) return;
-    const net = onlyNet || (p.status === "failed" || p.needsAttention ? A.failedNet(p) : p.networks[0]);
+    const set = S.state.settings, pend = C.pendingManual(p, set);
+    const net = onlyNet || (p.status === "failed" || p.needsAttention ? A.failedNet(p) : pend[0] || p.networks[0]);
+    // Un onglet par réseau à poster à la main (fait : coche).
+    const tabNets = [...new Set(C.manualNets(p, set).concat([net]))].filter((n) => p.networks.includes(n));
+    const isDone = (n) => !!(p.results && p.results[n] && p.results[n].status === "ok");
+    const mtabs = tabNets.length > 1 ? '<div class="m-tabs" role="tablist" aria-label="Réseau">' + tabNets.map((n) => '<button role="tab" class="chip" data-mnet="' + n + '" aria-selected="' + (n === net) + '"' + (n === net ? ' aria-pressed="true"' : "") + ">" + brand(n) + esc(window.BRANDS[n] ? window.BRANDS[n].title : n) + (isDone(n) ? icon("check") : "") + "</button>").join("") + "</div>" : "";
+    const txtOut = p.format === "story" ? "" : C.textOut(p, net, set);
+    const pre = p.format === "story" ? null : C.prefillUrl(net, txtOut);
     const appName = window.BRANDS[net] ? window.BRANDS[net].title : net;
     const m = (p.media || [])[0];
     const guideM = (p.media || []).find((x) => x.role === "guide" && x.url);
@@ -555,13 +564,14 @@
     const step = (n, title, body, doneFlag) => '<div class="step' + (doneFlag ? " done" : "") + '" data-step="' + n + '"><span class="n">' + (doneFlag ? icon("check") : ++k) + "</span><div><h4>" + title + "</h4>" + body + "</div></div>";
     const has2 = p.format === "story" ? !!p.note : !!C.capFor(p, net).trim();
     openLayer('<div class="sh-top">' + brands(p.networks, "lg") + '<span class="muted" style="font-size:13px">' + esc(C.FORMATS[p.format]) + " · " + (p.date ? esc(C.shortDay(p.date)) + " " + p.time : "") + ' · à la main</span><span style="flex:1"></span><button class="iconbtn" data-close aria-label="Fermer">' + icon("x") + "</button></div>" +
-      '<div class="sh-body"><h2>' + esc(p.title) + '</h2>' +
+      '<div class="sh-body"><h2>' + esc(p.title) + '</h2>' + mtabs +
       '<div class="onego" id="m-onego" hidden><button class="btn primary big" data-onego>' + icon("send") + "Poster en un geste</button><p class=\"muted\">" + (p.format === "story" ? (p.note ? "Copie la consigne et ouvre" : "Ouvre") : C.capFor(p, net).trim() ? "Copie le texte et ouvre" : "Ouvre") + " le menu Partager avec le fichier : choisis " + esc(appName) + ".</p></div>" +
       '<div class="steps">' +
       step(1, "Enregistrer le média", "<p>" + (m ? esc(m.name) : "Aucun fichier rattaché.") + "</p>" + (m && /^https?:/.test(m.url || "") ? '<a class="btn big" id="m-dl" href="' + safeUrl(m.url) + '" download data-mstep="1">' + icon("download") + "Enregistrer</a>" : (m && relPath(p.folder) && driveOn() ? '<a class="btn big" id="m-dl" href="#" data-mstep="1">' + icon("download") + "Recherche du fichier…</a>" : (p.folder && !relPath(p.folder) ? '<a class="btn big" href="' + safeUrl(p.folder) + '" target="_blank" rel="noopener" data-mstep="1">' + icon("open") + "Ouvrir le dossier</a>" : '<button class="btn big" data-mstep="1">C\'est fait</button>'))) + (guideM ? '<p><a href="' + safeUrl(guideM.url) + '" target="_blank" rel="noopener">Voir les repères (où placer les autocollants)</a></p>' : "") + '<p id="m-folder">' + (p.folder && !relPath(p.folder) && m && m.url ? '<a href="' + safeUrl(p.folder) + '" target="_blank" rel="noopener">Ouvrir le dossier</a>' : "") + "</p>") +
       (!has2 ? "" : p.format === "story" ? step(2, "Préparer la story", (p.note ? '<div class="quote">' + esc(p.note) + "</div>" : "<p>Aucune consigne.</p>") + "<p class=\"muted\">Pas de légende sur une story.</p>" + (p.note ? '<button class="btn big" data-mstep="2" data-copy>' + icon("copy") + "Copier la consigne</button>" : '<button class="btn big" data-mstep="2">C\'est fait</button>'))
         : step(2, "Copier le texte", (C.capFor(p, net) ? '<div class="quote">' + esc(C.textOut(p, net, S.state.settings)) + "</div>" : "<p>Pas de texte pour ce post.</p>") + '<button class="btn big" data-mstep="2" data-copy>' + icon("copy") + "Copier</button>")) +
-      step(3, "Ouvrir " + esc(appName), (p.format === "story" ? "<p>Publie l'image en story, puis ajoute l'autocollant de la consigne.</p>" : "<p>Publie le média avec le texte copié.</p>") + '<a class="btn big" href="' + safeUrl(APP_URL[net] || "#") + '" target="_blank" rel="noopener" data-mstep="3">' + icon("open") + "Ouvrir " + esc(appName) + "</a>") +
+      step(3, "Ouvrir " + esc(appName), (p.format === "story" ? "<p>Publie l'image en story, puis ajoute l'autocollant de la consigne.</p>" : pre ? "<p>Le texte est déjà écrit : ajoute le média, puis publie.</p>" : "<p>Publie le média avec le texte copié.</p>") +
+        (pre ? '<a class="btn big primary" href="' + safeUrl(pre) + '" target="_blank" rel="noopener" data-mstep="3">' + icon("open") + "Ouvrir " + esc(appName) + " avec le texte</a>" : '<a class="btn big" href="' + safeUrl(APP_URL[net] || "#") + '" target="_blank" rel="noopener" data-mstep="3"' + (txtOut ? " data-copy" : "") + ">" + icon("open") + (txtOut ? "Copier le texte et ouvrir " : "Ouvrir ") + esc(appName) + "</a>")) +
       step(4, "Revenir ici", '<p>Confirme quand c\'est en ligne. Le lien est facultatif.</p><label class="form"><input id="m-url" type="url" placeholder="Lien du post (facultatif)"></label>') +
       '</div></div><div class="sh-foot"><button class="btn primary big" data-posted>' + icon("check") + "C'est posté</button>" +
       '<button class="btn quiet" data-later style="width:100%">Reporter à demain</button></div>', "Poster à la main");
@@ -586,6 +596,7 @@
       prepShare(A.driveFileUrl(f));
     }).catch(() => { const b = L.querySelector("#m-dl"); if (b) { b.textContent = "Stockage inaccessible"; } });
     const doneStep = (n) => { const s = L.querySelector('[data-step="' + n + '"]'); if (s) { s.classList.add("done"); s.querySelector(".n").innerHTML = icon("check"); } };
+    L.querySelectorAll("[data-mnet]").forEach((b) => b.addEventListener("click", () => { A.closeLayer(); A.openManual(p.id, b.dataset.mnet); }));
     const og = L.querySelector("[data-onego]");
     if (og) og.addEventListener("click", () => {
       if (!shareFile) return;
@@ -600,11 +611,18 @@
       const s = L.querySelector('[data-step="' + b.dataset.mstep + '"]'); s.classList.add("done"); s.querySelector(".n").innerHTML = icon("check");
     }));
     L.querySelector("[data-posted]").addEventListener("click", async () => {
-      p.status = "published"; p.stage = "published"; const u = L.querySelector("#m-url").value.trim(); if (u && !p.url) p.url = u;
+      const u = L.querySelector("#m-url").value.trim();
       p.results = Object.assign({}, p.results || {}, { [net]: { status: "ok", url: u || undefined, manual: true } });
+      const rest = C.pendingManual(p, set).filter((n) => n !== net);
+      const autoLeft = !p.manual && C.autoNets(p, set).some((n) => !(p.results[n] && p.results[n].status === "ok"));
+      // Le post passe « publié » quand plus rien n'attend (les réseaux automatiques gardent leur propre suivi).
+      if (!rest.length && !(autoLeft && p.status === "scheduled")) { p.status = "published"; p.stage = "published"; }
+      if (u && !p.url && (p.status === "published" || net === p.networks[0])) p.url = u;
       if (Object.values(p.results).every((r) => r.status === "ok")) { p.needsAttention = false; delete p.failure; }
-      await S.savePosts([p]); await S.log({ level: "ok", text: "Posté à la main : " + p.title, postId: p.id });
-      A.closeLayer(); U.toast("Noté comme publié"); A.render();
+      await S.savePosts([p]); await S.log({ level: "ok", text: "Posté à la main sur " + appName + " : " + p.title, postId: p.id });
+      A.closeLayer(); A.render();
+      if (rest.length) { U.toast("Noté pour " + appName + ". Reste : " + rest.map((n) => (window.BRANDS[n] ? window.BRANDS[n].title : n)).join(", ")); A.openManual(p.id, rest[0]); }
+      else U.toast("Noté comme publié");
     });
     L.querySelector("[data-later]").addEventListener("click", async () => {
       p.date = C.addDays(C.ymd(new Date()), 1); p.ignored = false;
