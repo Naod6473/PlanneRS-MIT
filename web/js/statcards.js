@@ -53,20 +53,52 @@
   };
 
   // Courbe en aire, une seule échelle, info-bulle par jour.
+  // Courbe lissée sans dépasser les valeurs (spline monotone) : pas de creux ou de bosse inventés entre deux jours.
+  function smooth(P) {
+    const n = P.length; if (n < 3) return P.map((p, k) => (k ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" ");
+    const dx = [], m = [], t = [];
+    for (let k = 0; k < n - 1; k++) { dx[k] = P[k + 1][0] - P[k][0]; m[k] = (P[k + 1][1] - P[k][1]) / (dx[k] || 1); }
+    t[0] = m[0]; t[n - 1] = m[n - 2];
+    for (let k = 1; k < n - 1; k++) t[k] = m[k - 1] * m[k] <= 0 ? 0 : (3 * (dx[k - 1] + dx[k])) / ((2 * dx[k] + dx[k - 1]) / m[k - 1] + (dx[k] + 2 * dx[k - 1]) / m[k]);
+    let d = "M" + P[0][0].toFixed(1) + " " + P[0][1].toFixed(1);
+    for (let k = 0; k < n - 1; k++) {
+      const h = dx[k] / 3;
+      d += " C" + (P[k][0] + h).toFixed(1) + " " + (P[k][1] + h * t[k]).toFixed(1) + " " + (P[k + 1][0] - h).toFixed(1) + " " + (P[k + 1][1] - h * t[k + 1]).toFixed(1) + " " + P[k + 1][0].toFixed(1) + " " + P[k + 1][1].toFixed(1);
+    }
+    return d;
+  }
+  // Courbe en aire, une seule échelle. Au survol (ou au doigt) : un point et une bulle « jour : valeur ».
   function area(pts, color, label, rel) {
     const ok = pts.map((p, i) => [i, p]).filter(([, p]) => p.v != null);
     if (ok.length < 2) return '<div class="sc-none">' + (ok.length ? "La courbe se dessine au fil des relevés quotidiens." : "Pas encore de relevé jour par jour.") + "</div>";
     const W = 300, H = 90, n = pts.length - 1 || 1;
     const vs = ok.map(([, p]) => p.v), hi = Math.max(...vs, 1), lo = rel ? Math.min(...vs) - (Math.max(...vs) - Math.min(...vs) || 1) : Math.min(0, ...vs);
     const X = (i) => (i * W) / n, Y = (v) => H - 4 - ((v - lo) / (hi - lo || 1)) * (H - 10);
-    const line = ok.map(([i, p], k) => (k ? "L" : "M") + X(i).toFixed(1) + " " + Y(p.v).toFixed(1)).join(" ");
-    const fill = line + " L" + X(ok[ok.length - 1][0]).toFixed(1) + " " + H + " L" + X(ok[0][0]).toFixed(1) + " " + H + " Z";
+    const P = ok.map(([i, p]) => [X(i), Y(p.v)]);
+    const line = smooth(P);
+    const fill = line + " L" + P[P.length - 1][0].toFixed(1) + " " + H + " L" + P[0][0].toFixed(1) + " " + H + " Z";
     const id = "g" + Math.random().toString(36).slice(2, 8);
-    return '<svg class="sc-chart" viewBox="0 0 ' + W + " " + H + '" preserveAspectRatio="none" role="img" aria-label="' + esc(label + " jour par jour, de " + fmt(Math.min(...vs)) + " à " + fmt(hi)) + '">' +
+    const data = ok.map(([, p], k) => [+(P[k][0] / W).toFixed(4), +(P[k][1] / H).toFixed(4), C.shortDay(p.d), fmt(p.v)]);
+    return '<div class="sc-wrap" data-sc="' + esc(JSON.stringify(data)) + '" style="--c:' + color + '"><svg class="sc-chart" viewBox="0 0 ' + W + " " + H + '" preserveAspectRatio="none" role="img" aria-label="' + esc(label + " jour par jour, de " + fmt(Math.min(...vs)) + " à " + fmt(hi)) + '">' +
       '<defs><linearGradient id="' + id + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + color + '" stop-opacity=".55"/><stop offset="1" stop-color="' + color + '" stop-opacity=".04"/></linearGradient></defs>' +
-      '<path d="' + fill + '" fill="url(#' + id + ')"/><path d="' + line + '" fill="none" stroke="' + color + '" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>' +
-      ok.map(([i, p]) => '<rect x="' + (X(i) - W / n / 2).toFixed(1) + '" y="0" width="' + (W / n).toFixed(1) + '" height="' + H + '" fill="transparent"><title>' + esc(C.shortDay(p.d) + " : " + fmt(p.v)) + "</title></rect>").join("") + "</svg>";
+      '<path d="' + fill + '" fill="url(#' + id + ')"/><path d="' + line + '" fill="none" stroke="' + color + '" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg>' +
+      '<i class="sc-dot" hidden></i><span class="sc-tip" role="status" hidden></span></div>';
   }
+  function hover(e) {
+    const w = e.target.closest && e.target.closest(".sc-wrap");
+    document.querySelectorAll(".sc-wrap.on").forEach((x) => { if (x !== w) { x.classList.remove("on"); x.querySelector(".sc-dot").hidden = true; x.querySelector(".sc-tip").hidden = true; } });
+    if (!w) return;
+    const data = JSON.parse(w.dataset.sc), r = w.getBoundingClientRect(), fx = (e.clientX - r.left) / r.width;
+    let best = data[0]; for (const d of data) if (Math.abs(d[0] - fx) < Math.abs(best[0] - fx)) best = d;
+    const dot = w.querySelector(".sc-dot"), tip = w.querySelector(".sc-tip");
+    w.classList.add("on"); dot.hidden = false; tip.hidden = false;
+    dot.style.left = best[0] * 100 + "%"; dot.style.top = best[1] * 100 + "%";
+    tip.innerHTML = "<b>" + esc(best[2]) + "</b><span>" + esc(best[3]) + "</span>";
+    tip.style.left = best[0] * 100 + "%"; tip.style.top = best[1] * 100 + "%";
+    tip.classList.toggle("right", best[0] > 0.6);
+  }
+  document.addEventListener("pointermove", hover);
+  document.addEventListener("pointerdown", hover);
 
   A.statCardsHtml = function (st, today) {
     const nets = ["instagram", "facebook"].filter((n) => st[n] && (st[n].account || (st[n].media || []).length));
