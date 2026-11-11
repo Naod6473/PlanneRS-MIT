@@ -64,6 +64,16 @@ export async function rewrite(client, post, net, settings) {
   return { text, over: !!(max && [...text].length > max), model: res.model || MODEL };
 }
 
+// Une vidéo, tous les réseaux : une proposition par réseau, en parallèle. Un réseau en échec n'empêche pas les autres.
+export async function adaptAll(client, post, nets, settings) {
+  if (!(post.caption || "").trim()) throw new Error("Écris d'abord le texte commun : il sert de base.");
+  const res = await Promise.allSettled(nets.map((n) => rewrite(client, post, n, settings)));
+  const captions = {}, over = [], failed = {};
+  res.forEach((r, i) => { const n = nets[i]; if (r.status === "fulfilled") { captions[n] = r.value.text; if (r.value.over) over.push(n); } else failed[n] = (r.reason && r.reason.message) || "échec"; });
+  if (!Object.keys(captions).length) { const e = res[0].reason || new Error("Claude n'a rien proposé."); throw e; }
+  return { captions, over, failed };
+}
+
 // Réponse proposée à un commentaire. Jamais envoyée toute seule : elle arrive dans la zone de réponse.
 export const REPLY_SYSTEM = "Tu proposes des réponses aux commentaires reçus sur les réseaux sociaux d'un compte. Réponse courte (une à trois phrases), chaleureuse, dans la langue du commentaire, au ton du compte, tutoiement si le compte tutoie. Tu réponds à la question posée sans rien inventer ; si tu ne sais pas, tu remercies et tu proposes d'en reparler. Pas de hashtag. Tu réponds uniquement avec le texte de la réponse.";
 

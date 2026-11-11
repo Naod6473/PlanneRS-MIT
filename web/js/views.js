@@ -384,11 +384,28 @@
   function profileGrid() {
     const list = top().filter((p) => p.networks.includes("instagram") && ["reel", "carousel", "image"].includes(p.format) && (p.date || p.status === "published"))
       .sort((a, b) => (C.at(b) || "").localeCompare(C.at(a) || "")).slice(0, 30);
-    return '<div class="profile"><p class="muted" style="margin:0 0 10px;font-size:13px">Aperçu de la grille Instagram : les cases en pointillés ne sont pas encore publiées.</p><div class="pgrid">' +
-      list.map((p) => '<button data-open="' + p.id + '" class="' + (p.status === "published" ? "" : "future") + '" aria-label="' + esc(p.title) + '">' +
-        (coverOf(p) ? '<img src="' + esc(coverOf(p)) + '" alt="" draggable="false">' : '<span class="ph">' + esc(p.title) + "</span>") +
-        '<span class="lab">' + esc(C.shortDay(p.date)) + "</span></button>").join("") + "</div></div>";
+    const st = S.state.stats || (S.mode === "demo" ? (A._demoSt = A._demoSt || A.demoStats()) : null) || {};
+    const ig = (st.instagram || {}).account || {};
+    const acc = (S.state.accounts || {}).instagram || {};
+    const name = ig.username || (String(acc.account || "").match(/«\s*([^»]+?)\s*»/) || [])[1] || (S.state.settings.name || "Mon compte");
+    const fmt = (n) => (n == null ? "–" : n >= 10000 ? (n / 1000).toFixed(1).replace(".", ",") + " k" : String(n));
+    const pub = list.filter((p) => p.status === "published").length, fut = list.length - pub;
+    const badge = (p) => p.format === "reel" ? '<span class="pbadge" title="Reel">' + icon("film") + "</span>" : p.format === "carousel" ? '<span class="pbadge" title="Carrousel">' + icon("copy") + "</span>" : "";
+    return '<div class="profile"><div class="phead"><span class="pav">' + esc([...name][0].toUpperCase()) + '</span><div class="pnums"><b>' + esc(name) + "</b><div>" +
+      "<span><b>" + fmt(ig.media_count != null ? ig.media_count : pub) + "</b> publications</span><span><b>" + fmt(ig.followers) + "</b> abonnés</span><span><b>" + fut + "</b> à venir</span></div></div></div>" +
+      '<p class="muted" style="margin:0 0 10px;font-size:13px">Les cases en pointillés ne sont pas encore publiées. Glisse une case à venir sur une autre pour échanger leurs dates.</p><div class="pgrid">' +
+      list.map((p) => '<button data-open="' + p.id + '"' + (p.status === "published" ? "" : ' class="future" draggable="true" data-pswap="' + p.id + '"') + ' aria-label="' + esc(p.title) + '">' +
+        (coverOf(p) ? '<img src="' + esc(coverOf(p)) + '" alt="" draggable="false">' : '<span class="ph">' + esc(p.title) + "</span>") + badge(p) +
+        '<span class="lab">' + esc(C.shortDay(p.date)) + (p.status === "published" ? "" : " · " + esc(p.time || "")) + "</span></button>").join("") + "</div></div>";
   }
+  // Échange les dates de deux posts à venir (glisser une case de la grille sur une autre).
+  A.swapDates = async function (a, b) {
+    const pa = S.state.posts.find((p) => p.id === a), pb = S.state.posts.find((p) => p.id === b);
+    if (!pa || !pb || a === b || pa.status === "published" || pb.status === "published") return;
+    const d = [pa.date, pa.time]; pa.date = pb.date; pa.time = pb.time; pb.date = d[0]; pb.time = d[1];
+    await S.savePosts([pa, pb]);
+    U.toast("Dates échangées : " + pa.title + " ↔ " + pb.title); A.render();
+  };
 
   function agenda() {
     const t = today();
@@ -653,7 +670,7 @@
     return {
       title: "Stats", tools,
       html: (warn.length ? '<div class="banner warn">' + warn.map(esc).join("<br>") + "</div>" : "") +
-        A.statCardsHtml(st, t) + best +
+        A.statCardsHtml(st, t) + best + A.bestTimesHtml() +
         '<div class="statgrid"><section class="panel"><div class="sec-row"><h2 class="sec-h"><span>Publications</span><span>' + rows.length + "</span></h2>" + sortSeg + "</div>" + (top ? top + '<p class="muted small" style="margin:10px 0 0">Un post a bien marché ? Ouvre-le et choisis « Reprendre plus tard » pour le reprogrammer dans quelques semaines.</p>' : '<div class="empty">Aucune publication reliée pour l\'instant.</div>') + "</section>" + tagBox + "</div>" + note,
     };
   };
@@ -736,22 +753,46 @@
       '<section class="panel"><h2>Ajouter</h2><p>Chaque service a sa fiche : ce qu\'il permet, ce qu\'il demande, et le lien vers sa documentation officielle.</p><div class="addlist">' +
       off.map((c) => '<button data-conn="' + c.id + '">' + brand(c.logo === undefined ? c.id : c.logo || c.id, "lg") + esc(c.name) + "</button>").join("") + "</div></section>";
   }
-  // Meilleurs horaires d'après les stats : moyenne des vues (ou de la portée) par heure de publication.
-  A.bestHours = function () {
-    const st = S.state.stats || (S.mode === "demo" ? A.demoStats() : null); if (!st) return null;
-    const media = [].concat((st.instagram || {}).media || [], (st.facebook || {}).media || []).filter((m) => m.at && (m.views != null || m.reach != null));
+  // Meilleurs horaires d'après les stats : score moyen par heure et par jour de publication.
+  // Score d'un post = vues (ou portée), sinon interactions (likes + 3 × commentaires), comparé à la moyenne de son réseau.
+  A.bestTimes = function () {
+    const st = S.state.stats || (S.mode === "demo" ? (A._demoSt = A._demoSt || A.demoStats()) : null); if (!st) return null;
+    const media = [];
+    ["instagram", "facebook", "youtube"].forEach((n) => {
+      const ms = ((st[n] || {}).media || []).filter((m) => m.at).map((m) => ({ at: m.at, v: m.views != null ? +m.views : m.reach != null ? +m.reach : (+m.likes || 0) + 3 * (+m.comments || 0) }));
+      const avg = ms.reduce((a, m) => a + m.v, 0) / (ms.length || 1);
+      if (avg > 0) ms.forEach((m) => media.push({ at: m.at, r: m.v / avg }));
+    });
     if (media.length < 8) return null;
-    const by = {};
-    media.forEach((m) => { const h = new Date(m.at).getHours(); (by[h] = by[h] || []).push(m.views != null ? m.views : m.reach); });
-    const all = media.reduce((a, m) => a + (m.views != null ? m.views : m.reach), 0) / media.length;
-    return Object.entries(by).filter(([, v]) => v.length >= 2).map(([h, v]) => ({ h: +h, n: v.length, avg: v.reduce((a, b) => a + b, 0) / v.length }))
-      .map((x) => Object.assign(x, { gain: Math.round((x.avg / all - 1) * 100) })).sort((a, b) => b.avg - a.avg).slice(0, 3);
+    const hours = {}, days = {}, grid = {};
+    media.forEach((m) => { const d = new Date(m.at), h = d.getHours(), w = (d.getDay() + 6) % 7;
+      (hours[h] = hours[h] || []).push(m.r); (days[w] = days[w] || []).push(m.r); (grid[w + "-" + h] = grid[w + "-" + h] || []).push(m.r); });
+    const mean = (v) => v.reduce((a, b) => a + b, 0) / v.length;
+    const rank = (o, min) => Object.entries(o).filter(([, v]) => v.length >= min).map(([k, v]) => ({ k: +k, n: v.length, gain: Math.round((mean(v) - 1) * 100) })).sort((a, b) => b.gain - a.gain);
+    return { n: media.length, hours: rank(hours, 2), days: rank(days, 2), grid: Object.fromEntries(Object.entries(grid).map(([k, v]) => [k, { n: v.length, r: mean(v) }])) };
+  };
+  A.bestHours = function () { const b = A.bestTimes(); return b ? b.hours.slice(0, 3).map((x) => ({ h: x.k, n: x.n, gain: x.gain })) : null; };
+  // Carte « Quand publier » de la page Stats : jours × heures, plus la case est foncée, mieux tes posts ont marché.
+  A.bestTimesHtml = function () {
+    const b = A.bestTimes(); if (!b) return "";
+    const hs = [...new Set(Object.keys(b.grid).map((k) => +k.split("-")[1]))].sort((x, y) => x - y);
+    if (!hs.length) return "";
+    const D = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+    const max = Math.max(...Object.values(b.grid).map((c) => c.r));
+    const cell = (w, h) => { const c = b.grid[w + "-" + h]; if (!c) return "<td></td>"; const g = Math.round((c.r - 1) * 100);
+      return '<td style="--a:' + (0.12 + 0.88 * (c.r / max)).toFixed(2) + '" title="' + D[w] + " " + h + " h : " + (g >= 0 ? "+" : "") + g + " % · " + c.n + " post" + (c.n > 1 ? "s" : "") + '"><span>' + (g >= 0 ? "+" : "") + g + "</span></td>"; };
+    const top = b.hours[0], day = b.days[0];
+    return '<section class="panel"><h2 class="sec-h"><span>Quand publier</span><span class="muted" style="font-weight:400;font-size:13px">' + b.n + " posts analysés</span></h2>" +
+      "<p>" + (top ? "Meilleure heure : <b>" + top.k + " h</b> (" + (top.gain >= 0 ? "+" : "") + top.gain + " % par rapport à ta moyenne)" : "") + (day ? ". Meilleur jour : <b>" + C.DAYS[(day.k + 1) % 7] + "</b> (" + (day.gain >= 0 ? "+" : "") + day.gain + " %)" : "") + ".</p>" +
+      '<div class="heat-wrap"><table class="heat"><thead><tr><th></th>' + hs.map((h) => "<th>" + h + " h</th>").join("") + "</tr></thead><tbody>" +
+      D.map((d, w) => "<tr><th>" + d + "</th>" + hs.map((h) => cell(w, h)).join("") + "</tr>").join("") + "</tbody></table></div>" +
+      '<p class="muted" style="font-size:12px;margin:8px 0 0">Écart par rapport à ta moyenne (vues, sinon portée ou interactions). Une case vide : pas encore de post à ce moment-là.</p></section>';
   };
   function bestSlots() {
     const best = A.bestHours(); if (!best || !best.length) return "";
     const have = new Set(slots().map((s) => s.time.slice(0, 2)));
-    return '<section class="panel"><h2>Meilleurs horaires</h2><p>D\'après tes posts récents : les heures où ils font le plus de vues.</p><div class="besth">' +
-      best.map((b) => { const hh = String(b.h).padStart(2, "0"); return '<div><b class="mono">' + hh + ':00</b><span class="muted">' + (b.gain > 0 ? "+" + b.gain + " % de vues" : "dans la moyenne") + " · " + b.n + " posts</span>" +
+    return '<section class="panel"><h2>Meilleurs horaires</h2><p>D\'après tes posts récents : les heures où ils marchent le mieux.</p><div class="besth">' +
+      best.map((b) => { const hh = String(b.h).padStart(2, "0"); return '<div><b class="mono">' + hh + ':00</b><span class="muted">' + (b.gain > 0 ? "+" + b.gain + " % par rapport à ta moyenne" : "dans la moyenne") + " · " + b.n + " posts</span>" +
         (have.has(hh) ? '<span class="st st-published">' + icon("check") + "Déjà un créneau</span>" : '<button class="btn sm" data-slot-suggest="' + hh + ':00">' + icon("plus") + "Ajouter</button>") + "</div>"; }).join("") + "</div></section>";
   }
   // Cases à cocher des réseaux de l'espace (ensembles, flux).

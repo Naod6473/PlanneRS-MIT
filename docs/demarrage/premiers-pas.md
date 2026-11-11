@@ -4,7 +4,7 @@ description: Configurer son espace après l'installation, connecter un premier c
 category: Démarrage
 tags: [démarrage, espace, créneaux, premier post, validation, simulation]
 order: 2
-updated: 2026-11-10
+updated: 2026-11-11
 ---
 
 # Premiers pas
@@ -39,7 +39,7 @@ Les **contrôles personnalisés** affichent un rappel si une légende ne contien
 
 ## 4. Connecter un premier compte
 
-**Réglages › Comptes** : chaque réseau a sa fiche, avec ce qu'il demande, les droits nécessaires et le lien vers sa documentation. Commence par le réseau principal, puis son relais :
+**Réglages › Comptes** : chaque réseau a sa fiche, avec ce qu'il demande, les droits nécessaires et le lien vers sa documentation. Pour Instagram, YouTube, TikTok et Google Drive, **Me guider pas à pas** ouvre un assistant : une étape à la fois, le lien direct, les valeurs à copier en un clic, puis la vérification ; en cas d'échec, il te renvoie à l'étape à revoir. Commence par le réseau principal, puis son relais :
 
 - Instagram et Facebook : [Application Meta et jetons](../reseaux/meta.md), puis [Instagram](../reseaux/instagram.md) et [Page Facebook](../reseaux/facebook.md).
 - Les autres réseaux : voir le [sommaire](../README.md#réseaux-sociaux).

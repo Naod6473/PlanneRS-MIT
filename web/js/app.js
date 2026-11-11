@@ -533,3 +533,12 @@
     setInterval(() => { if (!document.getElementById("layer").innerHTML && !A.pending.length && !(document.getElementById("tour") || {}).innerHTML) A.render(); }, 60000);
   })();
 })();
+
+// Grille du profil : glisser une case à venir sur une autre échange leurs dates (ordinateur).
+(function () {
+  let from = null;
+  document.addEventListener("dragstart", (e) => { const b = e.target.closest && e.target.closest("[data-pswap]"); if (!b) return; from = b.dataset.pswap; e.dataTransfer.effectAllowed = "move"; try { e.dataTransfer.setData("text/plain", from); } catch (x) { /* rien */ } });
+  document.addEventListener("dragover", (e) => { const b = from && e.target.closest && e.target.closest("[data-pswap]"); if (!b) return; e.preventDefault(); document.querySelectorAll(".pgrid .over").forEach((x) => x !== b && x.classList.remove("over")); b.classList.add("over"); });
+  document.addEventListener("drop", (e) => { const b = from && e.target.closest && e.target.closest("[data-pswap]"); if (!b) return; e.preventDefault(); const a = from; from = null; if (a !== b.dataset.pswap) window.App.swapDates(a, b.dataset.pswap); });
+  document.addEventListener("dragend", () => { from = null; document.querySelectorAll(".pgrid .over").forEach((x) => x.classList.remove("over")); });
+})();

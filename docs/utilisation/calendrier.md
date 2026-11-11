@@ -4,7 +4,7 @@ description: Voir et déplacer ses publications en vue Semaine par créneaux, Mo
 category: Utilisation
 tags: [calendrier, semaine, mois, grille du profil, glisser-déposer, déplacer, créneaux, confirmation, téléphone]
 order: 2
-updated: 2026-11-10
+updated: 2026-11-11
 ---
 
 # Calendrier
@@ -15,7 +15,7 @@ updated: 2026-11-10
 |---|---|
 | **Semaine** | Une grille : tes [créneaux](activite-et-reglages.md#créneaux) en lignes, les jours en colonnes. Une ligne « Autres » regroupe les posts à une heure hors créneau. À droite, le bac **Prêts à programmer** (posts prêts sans date). |
 | **Mois** | Les posts de chaque jour du mois, cinq au plus par case (« + n autres » ouvre la semaine). |
-| **Grille du profil** | L'aperçu de la grille Instagram : publiés en plein, à venir en pointillés. |
+| **Grille du profil** | L'aperçu du profil Instagram : en-tête (publications, abonnés, posts à venir), publiés en plein, à venir en pointillés, icône Reel ou carrousel. Sur ordinateur, glisse une case à venir sur une autre pour **échanger leurs dates**. |
 | Téléphone | La vue Semaine devient une liste par jour, avec une barre des 7 jours en haut. |
 
 Le menu des réseaux (en haut à droite) affiche ou masque chaque réseau.

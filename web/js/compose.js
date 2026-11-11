@@ -77,6 +77,7 @@
             (tpl.signature ? '<button type="button" class="btn sm quiet" data-cptpl="sig" title="Ajouter la signature">' + icon("pen") + "Signature</button>" : "") +
             tags.map((t, i) => '<button type="button" class="btn sm quiet" data-cptpl="' + i + '">#&nbsp;' + esc(t.name) + "</button>").join("") +
             '<button type="button" class="btn sm quiet" data-cp="rewrite" id="cp-rw" hidden>' + icon("spark") + "Réécrire avec Claude</button>" +
+            '<button type="button" class="btn sm quiet" data-cp="adapt" id="cp-ad" hidden>' + icon("spark") + "Adapter pour chaque réseau</button>" +
             '<span class="grow"></span><span class="cp-count" id="cp-count"></span></div>' +
           '<div class="cp-add" id="cp-add" hidden><label class="btn sm">' + icon("download") + 'Depuis l\'appareil<input type="file" id="cp-file" accept="image/*,video/*" multiple hidden></label>' +
             '<input type="url" id="cp-url" placeholder="ou colle le lien d\'une image ou d\'une vidéo (https://…)"><button type="button" class="btn sm" data-cp="addurl">Ajouter</button></div>' +
@@ -91,7 +92,7 @@
         '<section class="cp-pv"><h3>Aperçu</h3><div class="seg cp-pvnets" role="group" aria-label="Aperçu sur"></div><div class="cp-pvbox" id="cp-pv"></div></section></div>' +
       '<div class="cp-foot"><div class="cp-when"><label><span class="sr">Jour</span><input type="date" id="cp-date"></label>' +
         '<label><span class="sr">Heure</span><select id="cp-slot"><option value="">Heure…</option>' + slots.map((s) => '<option value="' + s.time + '">' + s.time + " · " + esc(s.label) + "</option>").join("") + '<option value="other">Autre heure…</option></select></label>' +
-        '<label id="cp-otherl" hidden><span class="sr">Heure précise</span><input type="time" id="cp-time"></label></div>' +
+        '<label id="cp-otherl" hidden><span class="sr">Heure précise</span><input type="time" id="cp-time"></label>' + bestChip() + "</div>" +
         (A.canValidate() ? '<label class="toggle cp-val"><input type="checkbox" id="cp-val"> Texte validé</label>' : "") +
         '<span class="grow"></span>' +
         (!orig || orig.status === "draft" ? '<button class="btn" data-cp="draft">Enregistrer en brouillon</button>' : "") +
@@ -117,6 +118,7 @@
     const goLabel = () => { const w = when(); $("#cp-go").innerHTML = icon(w.date ? "calendar" : "check") + (orig && orig.date && w.date ? "Enregistrer" : w.date ? "Programmer" : orig ? "Enregistrer" : "Ajouter à « Prêts à programmer »"); };
 
     function tabs() {
+      const ad = $("#cp-ad"); if (ad) ad.hidden = !!cur || d.networks.length < 2 || story() || !(S.state.rewrite || S.mode !== "api");
       const box = $(".cp-capt");
       if (story() || d.networks.length < 2) { box.innerHTML = ""; if (cur) setTab(""); return; }
       const own = (n) => !!(drafts[n] && drafts[n].trim());
@@ -174,6 +176,11 @@
     text.addEventListener("input", () => { touch(); count(); draw(); tabs(); text.focus(); const v = $("#cp-val"); if (v && v.checked) { v.checked = false; U.toast("Texte modifié : coche « Texte validé » à nouveau quand il est bon"); } });
     L.querySelectorAll("#cp-title,#cp-fc,#cp-alt").forEach((x) => x.addEventListener("input", () => { touch(); draw(); }));
     L.querySelectorAll("#cp-format,#cp-manual").forEach((x) => x.addEventListener("change", () => { touch(); if (story()) setTab(""); tabs(); draw(); }));
+    const bc = $("#cp-best"); if (bc) bc.addEventListener("click", () => {
+      const hh = String(bc.dataset.h).padStart(2, "0"), sl = slots.find((x) => x.time.slice(0, 2) === hh);
+      if (sl) { $("#cp-slot").value = sl.time; $("#cp-otherl").hidden = true; } else { $("#cp-slot").value = "other"; $("#cp-time").value = hh + ":00"; $("#cp-otherl").hidden = false; }
+      touch(); goLabel();
+    });
     $("#cp-slot").addEventListener("change", () => { $("#cp-otherl").hidden = $("#cp-slot").value !== "other"; touch(); goLabel(); });
     $("#cp-date").addEventListener("change", () => { if ($("#cp-date").value && !$("#cp-slot").value && slots[0]) $("#cp-slot").value = slots[0].time; touch(); goLabel(); });
     $("#cp-time").addEventListener("change", touch);
@@ -217,6 +224,7 @@
         $("#cp-url").value = ""; touch(); media(); return;
       }
       if (act === "rewrite") return rewrite(b);
+      if (act === "adapt") return adapt(b);
       if (act === "draft" || act === "go") return save(act);
     });
 
@@ -261,6 +269,35 @@
         U.toast(r.over ? "Proposition un peu trop longue : raccourcis-la" : "Proposition de Claude : relis-la avant d'enregistrer");
       } catch (x) { U.toast("Réécriture impossible : " + x.message); }
       finally { btn.disabled = false; }
+    }
+
+    // Un texte par réseau à partir du texte commun ; chaque proposition est à relire (la case « Texte validé » se décoche).
+    async function adapt(btn) {
+      drafts[cur] = text.value;
+      const base = (drafts[""] || "").trim();
+      if (!base) { U.toast("Écris d'abord le texte commun"); return; }
+      const nets = d.networks.slice();
+      let r;
+      btn.disabled = true; U.toast("Claude adapte le texte pour " + nets.map(T).join(", ") + "…");
+      try {
+        if (S.mode !== "api") {
+          const cut = (n, m) => { const t = [...base]; return t.length > m ? t.slice(0, m - 1).join("") + "…" : base; };
+          r = { captions: Object.fromEntries(nets.map((n) => [n, n === "x" ? cut(base, 280) : n === "youtube" ? base.split("\n")[0] + "\n\n" + (base.match(/#[\p{L}\p{N}_]+/gu) || []).slice(0, 3).join(" ") : base])), over: [], failed: {} };
+        } else r = await S.call("POST", "adapt", { title: $("#cp-title") ? $("#cp-title").value : d.title, format: d.format, caption: base, networks: nets });
+        Object.entries(r.captions).forEach(([n, t]) => { drafts[n] = t; });
+        touch(); const v = $("#cp-val"); if (v) v.checked = false;
+        tabs(); count(); draw();
+        const miss = Object.keys(r.failed || {});
+        U.toast((S.mode !== "api" ? "Démo : " : "") + "Un texte par réseau (onglets) : relis chacun avant de valider" + (r.over && r.over.length ? ". Trop long : " + r.over.map(T).join(", ") : "") + (miss.length ? ". Pas fait : " + miss.map(T).join(", ") : ""));
+      } catch (x) { U.toast("Adaptation impossible : " + x.message); }
+      finally { btn.disabled = false; }
+    }
+
+    // Heure conseillée d'après les stats (si assez de posts publiés).
+    function bestChip() {
+      const b = A.bestTimes && A.bestTimes(); const h = b && b.hours[0];
+      if (!h || h.gain <= 0) return "";
+      return '<button type="button" class="cp-best" id="cp-best" data-h="' + h.k + '" title="D\'après tes stats : ' + h.n + ' posts publiés vers ' + h.k + ' h">Conseillé : <b>' + h.k + " h</b> (+" + h.gain + " %)</button>";
     }
 
     async function save(act) {

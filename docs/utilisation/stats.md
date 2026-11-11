@@ -28,6 +28,10 @@ Sous les cartes : le **Reel le plus vu**, la liste **Publications** (triée par 
 
 Un post a bien marché ? Ouvre-le depuis la liste et choisis **Reprendre plus tard** pour le reprogrammer dans quelques semaines ([Contenus](contenus.md#reprendre-un-post-qui-a-bien-marché)).
 
+## Quand publier
+
+Une carte jours × heures compare chaque moment de publication à ta moyenne (vues, sinon portée ou interactions, réseau par réseau). Il faut au moins 8 posts publiés avec des chiffres. La meilleure heure sert aussi de suggestion **Conseillé** dans la fenêtre de création et dans **Réglages › Créneaux**.
+
 ## Bilan du mois
 
 Le bouton **Bilan du mois** (en haut de Stats) résume un mois : nombre de publications et jours couverts, abonnés gagnés sur Instagram et Facebook, vues, likes et commentaires, répartition par réseau et par format, et les 5 meilleurs posts. Les flèches changent de mois. **Copier le résumé** donne un texte à coller dans un message ; **Imprimer ou PDF** ouvre l'impression du navigateur (choisis « Enregistrer en PDF ») pour l'envoyer à un client.

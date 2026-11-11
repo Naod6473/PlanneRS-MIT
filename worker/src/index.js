@@ -175,6 +175,18 @@ async function api(request, env, path, url, auth) {
     try { return json(await rewriter.rewrite(aiClient(env), draft, net, st)); }
     catch (e) { return err(e.status === 401 ? "Clé ANTHROPIC_API_KEY refusée : vérifie-la dans les secrets du Worker." : e.status === 429 ? "Trop de demandes à Claude : réessaie dans une minute." : e.status === 529 || e.status >= 500 ? "Claude est surchargé ou indisponible : réessaie dans un instant." : e.message, 502); }
   }
+  // Une vidéo, tous les réseaux : un texte adapté par réseau à partir du texte commun (jamais validé tout seul).
+  if (path === "adapt" && m === "POST") {
+    if (!env.ANTHROPIC_API_KEY) return err("Pour adapter avec Claude, ajoute le secret ANTHROPIC_API_KEY au Worker (voir la documentation « Assistants IA »).", 409);
+    const nets = [...new Set(((body && body.networks) || []).map(String))].filter((n) => ADAPTERS[n]).slice(0, 8);
+    if (!nets.length) return err("Choisis au moins un réseau.");
+    const st = (await db.getKV(env, "settings")) || {};
+    const draft = { title: String((body && body.title) || ""), format: String((body && body.format) || ""), caption: String((body && body.caption) || "") };
+    try {
+      const out = await rewriter.adaptAll(aiClient(env), draft, nets, st);
+      return json(out);
+    } catch (e) { return err(e.status === 401 ? "Clé ANTHROPIC_API_KEY refusée : vérifie-la dans les secrets du Worker." : e.status === 429 ? "Trop de demandes à Claude : réessaie dans une minute." : e.status >= 500 ? "Claude est surchargé ou indisponible : réessaie dans un instant." : e.message, 502); }
+  }
   if ((r0 = path.match(/^posts\/([^/]+)\/links$/)) && m === "POST") {
     const p = await db.getPost(env, decodeURIComponent(r0[1]));
     if (!p) return err("Post introuvable", 404);

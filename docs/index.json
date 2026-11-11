@@ -169,7 +169,7 @@
         "simulation"
       ],
       "order": 2,
-      "updated": "2026-11-10",
+      "updated": "2026-11-11",
       "headings": [
         {
           "level": 2,
@@ -315,7 +315,7 @@
         "téléphone"
       ],
       "order": 2,
-      "updated": "2026-11-10",
+      "updated": "2026-11-11",
       "headings": [
         {
           "level": 2,
@@ -473,6 +473,11 @@
           "level": 2,
           "text": "Ce qui est affiché",
           "anchor": "ce-qui-est-affiché"
+        },
+        {
+          "level": 2,
+          "text": "Quand publier",
+          "anchor": "quand-publier"
         },
         {
           "level": 2,

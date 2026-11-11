@@ -29,3 +29,16 @@ test("texte trop long signalé, refus et légende vide expliqués", async () => 
   assert.throws(() => textOf({ stop_reason: "refusal", content: [] }), /refusé/);
   await assert.rejects(rewrite(fake({}), { title: "x", caption: " " }, "x", {}), /légende commune/);
 });
+
+test("adaptAll : une proposition par réseau, un échec n'empêche pas les autres", async () => {
+  const { adaptAll } = await import("../worker/src/rewrite.js");
+  const client = { beta: { messages: { create: async (req) => {
+    if (/pour X\./.test(req.messages[0].content)) throw new Error("panne");
+    return { content: [{ type: "text", text: "Texte " + (req.messages[0].content.match(/pour (\w+)/) || [])[1] }] };
+  } } } };
+  const r = await adaptAll(client, { title: "T", caption: "Base #a" }, ["instagram", "x", "tiktok"], {});
+  assert.equal(r.captions.instagram, "Texte Instagram");
+  assert.equal(r.captions.tiktok, "Texte TikTok");
+  assert.ok(r.failed.x);
+  await assert.rejects(() => adaptAll(client, { caption: "" }, ["instagram"], {}));
+});

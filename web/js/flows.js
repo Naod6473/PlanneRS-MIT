@@ -6,6 +6,7 @@
 
   const layer = () => document.getElementById("layer");
   A.closeLayer = function () { if (A.beforeClose && A.beforeClose() === false) return; A.beforeClose = null; layer().innerHTML = ""; document.body.style.overflow = ""; if (A.lastFocus) { try { A.lastFocus.focus(); } catch (e) { /* rien */ } } };
+  A.openLayer = (h, l) => openLayer(h, l);
   function openLayer(html, label) {
     A.lastFocus = document.activeElement;
     layer().innerHTML = '<div class="scrim" data-close></div><div class="sheet" role="dialog" aria-modal="true" aria-label="' + esc(label) + '">' + html + "</div>";
@@ -903,7 +904,7 @@
       ((id === "gdrivewrite" || id === "youtube") && S.mode === "api" ? '<div class="box"><h4>URI de redirection à déclarer dans Google Cloud</h4><p class="mono" style="word-break:break-all">' + esc(location.origin + "/api/oauth/google/callback") + "</p></div>" : "") +
       (id === "tiktok" && S.mode === "api" ? '<div class="box"><h4>URI de redirection à déclarer dans l\'app TikTok</h4><p class="mono" style="word-break:break-all">' + esc(location.origin + "/api/oauth/tiktok/callback") + "</p></div>" : "") +
       form + '</div><div class="sh-foot">' + (pending ? id === "tiktok" ? '<a class="btn primary big" href="api/oauth/tiktok/start">' + icon("open") + 'Autoriser avec TikTok</a><button class="btn danger" data-cact="off">Recommencer</button>' : '<a class="btn primary big" href="api/oauth/google/start' + (id === "youtube" ? "?for=youtube" : "") + '">' + icon("open") + 'Autoriser avec Google</a><button class="btn danger" data-cact="off">Recommencer</button>' : a && a.status !== "error" ? '<button class="btn" data-cact="test">Tester la connexion</button><button class="btn danger" data-cact="off">Déconnecter</button>' :
-        (S.mode === "api" && !fields ? '<p class="muted" style="margin:0">Ce connecteur n\'est pas encore disponible dans cette version.</p>' : '<button class="btn primary big" data-cact="on">Se connecter à ' + esc(c.name) + "</button>")) + "</div>", c.name);
+        (S.mode === "api" && !fields ? '<p class="muted" style="margin:0">Ce connecteur n\'est pas encore disponible dans cette version.</p>' : (A.hasWizard && A.hasWizard(id) && !(a && a.status === "ok") ? '<button class="btn primary big" data-cact="wizard">' + icon("spark") + "Me guider pas à pas</button>" : "") + '<button class="btn' + (A.hasWizard && A.hasWizard(id) ? "" : " primary big") + '" data-cact="on">Se connecter à ' + esc(c.name) + "</button>")) + "</div>", c.name);
     layer().querySelectorAll("input[data-fill]").forEach((inp) => inp.addEventListener("change", async () => {
       const file = inp.files && inp.files[0]; if (!file) return;
       const ta = layer().querySelector('[name="' + inp.dataset.fill + '"]'); ta.value = (await file.text()).trim();
@@ -911,6 +912,7 @@
     }));
     layer().querySelector(".sh-foot").addEventListener("click", async (e) => {
       const b = e.target.closest("[data-cact]"); if (!b) return;
+      if (b.dataset.cact === "wizard") { A.wizard(id); return; }
       if (S.mode === "api" && b.dataset.cact === "on") {
         const f = layer().querySelector("#cf"); if (!f || !f.reportValidity()) return;
         const body = Object.fromEntries(new FormData(f).entries());
