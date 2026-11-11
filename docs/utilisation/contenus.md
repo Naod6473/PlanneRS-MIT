@@ -9,6 +9,8 @@ updated: 2026-11-11
 
 # Contenus
 
+La case de recherche et la liste des séries, en haut du tableau et de la liste, filtrent les posts affichés ([Chercher et filtrer](calendrier.md#chercher-et-filtrer)). Ctrl K (ou ⌘ K) cherche aussi dans le texte des posts.
+
 ## Le tableau
 
 Sept colonnes suivent un contenu de l'idée à la publication :
@@ -42,7 +44,7 @@ Le « + » en haut de chaque colonne crée une carte directement à cette étape
 
 ## La liste
 
-Une ligne par sujet, une colonne par réseau. La recherche filtre par titre ou légende.
+Une ligne par sujet, une colonne par réseau. La recherche filtre par titre, texte, numéro ou hashtag.
 
 ### Modifier plusieurs posts d'un coup
 

@@ -125,6 +125,7 @@
     const fresh = p.status === "draft" && !p.date && !(p.caption || "").trim();
     const info = done ? "" : '<details class="box" id="ed"' + (fresh || opts.edit ? " open" : "") + '><summary style="cursor:pointer;font-weight:600">' + icon("pen") + ' Titre, format, réseaux et options</summary><div class="form" style="margin-top:10px">' +
       '<label>Titre<input id="ed-title" value="' + esc(p.title) + '"></label>' +
+      A.seriesField("ed-series", p) +
       '<label>Format<select id="ed-format">' + Object.entries(C.FORMATS).map(([k, l]) => '<option value="' + k + '"' + (p.format === k ? " selected" : "") + ">" + l + "</option>").join("") + "</select></label>" +
       '<fieldset style="border:0;padding:0;margin:0"><legend style="font-weight:600;font-size:13px;margin-bottom:4px">Réseaux</legend><div class="filters">' +
       A.nets().map((n) => '<label class="chip"><input type="checkbox" data-ed-net="' + n + '"' + (p.networks.includes(n) ? " checked" : "") + ">" + brand(n) + esc(window.BRANDS[n].title) + "</label>").join("") + "</div>" +
@@ -295,6 +296,7 @@
       case "toready": p.status = "ready"; p.stage = "ready"; await S.savePosts([p]); break;
       case "saveinfo": {
         p.title = L.querySelector("#ed-title").value.trim() || p.title;
+        { const sv = L.querySelector("#ed-series").value.trim(); if (sv) p.series = sv; else delete p.series; }
         p.format = L.querySelector("#ed-format").value;
         const nets = [...L.querySelectorAll("[data-ed-net]")].filter((x) => x.checked).map((x) => x.dataset.edNet);
         if (!nets.length) { U.toast("Choisis au moins un réseau"); return; }
@@ -728,6 +730,11 @@
   };
 
   // Reprendre un post publié qui a bien marché : une copie à une date future, légende à relire.
+  A.seriesList = function () { return [...new Set(S.state.posts.filter((q) => !q.parent).map(C.seriesOf).filter(Boolean))].sort((a, b) => a.localeCompare(b, "fr")); };
+  A.seriesField = function (id, p) {
+    return '<label>Série (facultatif)<input id="' + id + '" list="' + id + '-l" value="' + esc(p.series || "") + '" placeholder="' + esc(C.seriesOf(Object.assign({}, p, { series: "" })) || "Ex. : L\'IA, de zéro à pro") + '"><datalist id="' + id + '-l">' + A.seriesList().map((x) => '<option value="' + esc(x) + '">').join("") + "</datalist></label>";
+  };
+
   A.openRecycle = function (id) {
     const p = S.post(id); if (!p) return;
     const t = C.ymd(new Date());
@@ -764,27 +771,15 @@
 
   // ------------------------------------------------------------ Import d'un planning CSV
   // Colonnes reconnues (en-tête, séparateur « ; » ou « , ») : date, heure, titre, format, réseaux, légende.
-  function parseCsv(txt) {
-    txt = txt.replace(/^﻿/, "");
-    const first = txt.split(/\r?\n/)[0] || "", sep = (first.match(/;/g) || []).length >= (first.match(/,/g) || []).length ? ";" : ",";
-    const rows = []; let row = [], cell = "", q = false;
-    for (let i = 0; i < txt.length; i++) {
-      const ch = txt[i];
-      if (q) { if (ch === '"') { if (txt[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += ch; }
-      else if (ch === '"') q = true;
-      else if (ch === sep) { row.push(cell); cell = ""; }
-      else if (ch === "\n" || ch === "\r") { if (ch === "\r" && txt[i + 1] === "\n") i++; row.push(cell); rows.push(row); row = []; cell = ""; }
-      else cell += ch;
-    }
-    if (cell || row.length) { row.push(cell); rows.push(row); }
-    return rows.filter((r) => r.some((c) => c.trim()));
-  }
+  const parseCsv = C.parseCsv;
   const norm = (x) => String(x || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
   A.csvToPosts = function (txt) {
     const rows = parseCsv(txt); if (rows.length < 2) return { posts: [], errors: ["Le fichier est vide ou n'a pas d'en-tête."] };
     const head = rows[0].map(norm);
     const col = (...names) => head.findIndex((h) => names.includes(h));
-    const ci = { date: col("date", "jour"), time: col("heure", "time", "horaire"), title: col("titre", "title", "sujet"), format: col("format", "type"), nets: col("reseaux", "reseau", "networks", "network"), cap: col("legende", "caption", "texte", "text") };
+    const ci = { date: col("date"), time: col("heure", "time", "horaire"), title: col("titre", "title", "sujet"), format: col("format", "type"), nets: col("reseaux", "reseau", "networks", "network"), cap: col("legende", "caption", "texte", "text"),
+      ref: col("n°", "no", "numero", "num", "ref", "reference"), status: col("statut", "status", "etat"), url: col("lien", "url", "link"), series: col("serie", "series") };
+    if (ci.date < 0) ci.date = col("jour");
     if (ci.title < 0) return { posts: [], errors: ["Colonne « titre » introuvable."] };
     const fmts = Object.entries(C.FORMATS), brandsAll = Object.entries(window.BRANDS || {});
     const posts = [], errors = [], base = Date.now().toString(36);
@@ -794,21 +789,35 @@
       let date = get(ci.date) || null;
       if (date) { const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(date); if (m) date = m[3] + "-" + m[2].padStart(2, "0") + "-" + m[1].padStart(2, "0"); }
       if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) { errors.push("Ligne " + line + " : date illisible (« " + date + " »)."); return; }
-      let time = get(ci.time).replace(/h$/i, ":00").replace("h", ":") || null;
+      let time = get(ci.time).replace(/^[—–-]+$/, "").replace(/h$/i, ":00").replace("h", ":") || null;
       if (time && /^\d{1,2}:\d{2}$/.test(time)) time = time.padStart(5, "0"); else if (time) { errors.push("Ligne " + line + " : heure illisible (« " + time + " »)."); return; }
       const fv = norm(get(ci.format)); const fm = fmts.find(([key, l]) => norm(key) === fv || norm(l) === fv);
       const nets = get(ci.nets).split(/[+|,/ ]+/).map(norm).filter(Boolean).map((n) => (brandsAll.find(([id, b]) => norm(id) === n || norm(b.title) === n) || [])[0]).filter(Boolean);
-      posts.push({ id: "i" + base + k, ref: "", title, format: fm ? fm[0] : "image", networks: nets.length ? [...new Set(nets)] : [A.nets()[0]],
-        date, time: date ? time || ((S.state.settings.slots || [])[0] || {}).time || "12:00" : null, caption: get(ci.cap), captionValidated: false, manual: false, media: [],
-        stage: date ? "scheduled" : "ready", status: date ? "scheduled" : "ready" });
+      const sv = norm(get(ci.status)), url = /^https?:\/\//i.test(get(ci.url)) ? get(ci.url) : "";
+      const published = /^publi/.test(sv) || (!!url && !sv);
+      const st = published ? "published" : /^brouillon|^draft|^idee/.test(sv) ? "draft" : date ? "scheduled" : "ready";
+      const networks = nets.length ? [...new Set(nets)] : [A.nets()[0]];
+      const p = { id: "i" + base + k, ref: get(ci.ref), title, format: fm ? fm[0] : "image", networks,
+        date, time: date ? time || ((S.state.settings.slots || [])[0] || {}).time || "12:00" : null, caption: get(ci.cap), captionValidated: published, manual: false, media: [],
+        stage: published ? "published" : st === "draft" ? "idea" : date ? "scheduled" : "ready", status: st };
+      if (get(ci.series)) p.series = get(ci.series);
+      if (url) { p.url = url; p.results = { [networks[0]]: { ok: true, url } }; }
+      posts.push(p);
     });
-    return { posts, errors };
+    // Déjà dans l'app : même lien, même n° et même format, ou même jour, même heure et même titre.
+    const have = S.state.posts.filter((q) => !q.parent), dup = [];
+    const same = (p) => have.find((q) => (p.url && (q.url === p.url || Object.values(q.results || {}).some((r) => r && r.url === p.url))) ||
+      (p.ref && q.ref && norm(q.ref).replace(/^0+/, "") === norm(p.ref).replace(/^0+/, "") && q.format === p.format) ||
+      (p.date && q.date === p.date && (q.time || "").slice(0, 5) === p.time && norm(q.title) === norm(p.title)));
+    const fresh = posts.filter((p) => (same(p) ? (dup.push(p), false) : true));
+    return { posts: fresh, errors, dup };
   };
   A.openCsvImport = function (txt) {
-    const { posts, errors } = A.csvToPosts(txt);
+    const { posts, errors, dup = [] } = A.csvToPosts(txt);
     const n = posts.length;
     openLayer('<div class="sh-top"><b>Importer un planning</b><span style="flex:1"></span><button class="iconbtn" data-close aria-label="Fermer">' + icon("x") + "</button></div>" +
-      '<div class="sh-body"><p style="margin:0">' + (n ? n + " post" + (n > 1 ? "s" : "") + " trouvé" + (n > 1 ? "s" : "") + ". Les légendes seront à valider." : "Aucun post à importer.") + "</p>" +
+      '<div class="sh-body"><p style="margin:0">' + (n ? n + " post" + (n > 1 ? "s" : "") + " à ajouter." + (posts.some((p) => p.status !== "published") ? " Les légendes des posts à venir seront à valider." : "") : "Aucun nouveau post à importer.") + "</p>" +
+      (dup.length ? '<p class="muted" style="margin:0">' + dup.length + " ligne" + (dup.length > 1 ? "s" : "") + " déjà dans l'app (même lien, même n° ou même date et titre) : ignorée" + (dup.length > 1 ? "s" : "") + ".</p>" : "") +
       (n ? '<ul class="vall">' + posts.slice(0, 50).map((p) => "<li><b>" + esc(p.title) + '</b><span class="muted">' + (p.date ? esc(C.shortDay(p.date)) + " " + p.time : "sans date") + " · " + esc(C.FORMATS[p.format]) + " · " + p.networks.map((x) => esc(window.BRANDS[x] ? window.BRANDS[x].title : x)).join(", ") + "</span></li>").join("") + "</ul>" : "") +
       (errors.length ? '<p class="muted" style="margin:0">' + errors.length + " ligne" + (errors.length > 1 ? "s" : "") + ' ignorée' + (errors.length > 1 ? "s" : "") + " :</p><ul class=\"vall ko\">" + errors.slice(0, 20).map((e) => "<li>" + esc(e) + "</li>").join("") + "</ul>" : "") + "</div>" +
       '<div class="sh-foot">' + (n ? '<button class="btn primary" id="csv-ok">Importer ' + n + " post" + (n > 1 ? "s" : "") + "</button>" : "") + '<button class="btn" data-close>Annuler</button></div>', "Importer un planning");
@@ -820,6 +829,24 @@
       U.toast(n + " posts importés", { label: "Annuler", fn: async () => { for (const p of posts) await S.deletePost(p.id); A.render(); U.toast("Import annulé"); } });
     });
   };
+  // Export CSV : le planning entier, avec les chiffres relevés ; réimportable (mêmes colonnes que l'import).
+  A.exportCsv = function () {
+    const nm = (n) => (window.BRANDS[n] ? window.BRANDS[n].title : n);
+    const now = C.nowStamp();
+    const list = S.state.posts.filter((p) => !p.parent).sort((a, b) => ((a.date || "9999") + (a.time || "")).localeCompare((b.date || "9999") + (b.time || "")));
+    const rows = [["date", "heure", "titre", "format", "reseaux", "legende", "statut", "serie", "n°", "lien", "vues", "likes", "commentaires"]];
+    list.forEach((p) => {
+      const st = (A.postStats && A.postStats(p)) || {}, sum = (k) => { const v = Object.values(st).reduce((n, m) => n + (m[k] || 0), 0); return Object.keys(st).length ? v : ""; };
+      const url = p.url || (Object.values(p.results || {}).find((r) => r && r.url) || {}).url || "";
+      rows.push([p.date || "", p.date ? (p.time || "").slice(0, 5) : "", p.title, C.FORMATS[p.format] || p.format, (p.networks || []).map(nm).join("+"), p.caption || "",
+        (C.STATUS[C.displayStatus(p, now)] || {}).label || p.status, C.seriesOf(p), p.ref || "", url, sum("views"), sum("likes"), sum("comments")]);
+    });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob(["\uFEFF" + C.toCsv(rows)], { type: "text/csv;charset=utf-8" }));
+    a.download = "planning-" + C.ymd(new Date()) + ".csv"; document.body.appendChild(a); a.click(); a.remove();
+    U.toast(list.length + " posts exportés en CSV");
+  };
+
   A.csvTemplate = "date;heure;titre;format;reseaux;legende\n2026-12-01;12:30;Mon premier post;reel;instagram+facebook;\"Une légende, avec des #hashtags\"\n;;Une idée sans date;carrousel;instagram;\n";
 
   // ------------------------------------------------------------ Tout valider
@@ -869,7 +896,7 @@
       const v = q.value.trim().toLowerCase();
       const vs = acts.filter(([, l]) => !v || l.toLowerCase().includes(v)).map(([k, l, ic]) => '<button data-sact="' + k + '">' + icon(ic) + l + "</button>")
         .concat(views.filter(([, l]) => !v || l.toLowerCase().includes(v)).map(([h, l]) => '<button data-go="' + h + '">' + icon("right") + "Aller à " + l + "</button>"));
-      const ps = S.state.posts.filter((p) => v && (p.title.toLowerCase().includes(v) || (p.ref || "").includes(v))).slice(0, 20)
+      const ps = S.state.posts.filter((p) => v && !p.parent && C.matchQuery(p, v)).slice(0, 20)
         .map((p) => '<button data-open="' + p.id + '">' + brands(p.networks) + '<span class="mono muted">' + esc(p.ref || "") + "</span> " + esc(p.title) + '<span class="muted" style="margin-left:auto;font-size:12px">' + (p.date ? esc(C.shortDay(p.date)) + " " + p.time : "sans date") + "</span></button>");
       r.innerHTML = vs.concat(ps).join("") || '<p class="muted" style="padding:10px 14px">Aucun résultat.</p>';
       sel = 0; mark();

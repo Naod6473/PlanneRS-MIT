@@ -38,7 +38,22 @@
   };
   const visible = (p) => (p.networks || []).some((n) => !A.netOff[n]);
   // Calendrier : filtre facultatif par statut (légende cliquable).
-  const calVis = (p) => visible(p) && (!A.calSt || C.displayStatus(p, C.nowStamp()) === A.calSt);
+  // Recherche (titre, texte, n°…) et série : appliquées au calendrier et aux contenus.
+  const shown = (p) => visible(p) && (!A.q || C.matchQuery(p, A.q)) && (!A.serie || C.seriesOf(p) === A.serie);
+  const calVis = (p) => shown(p) && (!A.calSt || C.displayStatus(p, C.nowStamp()) === A.calSt);
+  function fbar(opts) {
+    const series = [...new Set(top().map(C.seriesOf).filter(Boolean))].sort((a, b) => a.localeCompare(b, "fr"));
+    if (A.serie && !series.includes(A.serie)) A.serie = "";
+    let h = '<div class="fbar"><label class="lsearch">' + icon("search") + '<input type="search" data-fq placeholder="Chercher : titre, texte, n°, hashtag…" value="' + esc(A.q || "") + '" aria-label="Chercher dans les posts"></label>' +
+      (series.length ? '<label class="fserie"><span class="sr">Série</span><select data-fserie aria-label="Série"><option value="">Toutes les séries</option>' + series.map((x) => '<option value="' + esc(x) + '"' + (A.serie === x ? " selected" : "") + ' data-noi18n>' + esc(x) + "</option>").join("") + "</select></label>" : "") +
+      (A.q || A.serie ? '<button class="btn quiet sm" data-fclear>' + icon("x") + "Effacer</button>" : "") + "</div>";
+    if ((A.q || A.serie) && opts && opts.results) {
+      const hits = top().filter(shown).sort((a, b) => (C.at(a) || "9999").localeCompare(C.at(b) || "9999"));
+      h += '<div class="fres"><span class="muted">' + hits.length + " résultat" + (hits.length > 1 ? "s" : "") + (hits.length > 8 ? " (les 8 premiers)" : "") + "</span>" +
+        hits.slice(0, 8).map((p) => '<button class="chip sm" data-open="' + esc(p.id) + '">' + brands(p.networks) + '<span class="mono muted">' + (p.date ? esc(C.shortDay(p.date)) : "sans date") + '</span><span data-noi18n>' + esc(p.title.length > 40 ? p.title.slice(0, 39) + "…" : p.title) + "</span></button>").join("") + "</div>";
+    }
+    return h;
+  }
   // Couverture d'un post : miniature enregistrée, sinon le média « cover », sinon la première image.
   const driveTh = (u) => { const id = (/drive\.google\.com\/.*(?:id=|\/d\/)([\w-]{20,})/.exec(u || "") || [])[1]; return id ? "https://drive.google.com/thumbnail?id=" + id + "&sz=w400" : u; };
   const coverOf = (p) => {
@@ -313,7 +328,7 @@
     else html = weekGrid();
     if (mode !== "grid") {
       const sts = ["scheduled", "review", "manual", "late", "failed", "published"];
-      html = '<div class="callegend" role="group" aria-label="Statuts (cliquer pour filtrer)">' + sts.map((k) => '<button class="lg c-' + k + '" data-calst="' + k + '" aria-pressed="' + (A.calSt === k) + '">' + icon(C.STATUS[k].icon) + "<span>" + C.STATUS[k].label + "</span></button>").join("") +
+      html = fbar({ results: true }) + '<div class="callegend" role="group" aria-label="Statuts (cliquer pour filtrer)">' + sts.map((k) => '<button class="lg c-' + k + '" data-calst="' + k + '" aria-pressed="' + (A.calSt === k) + '">' + icon(C.STATUS[k].icon) + "<span>" + C.STATUS[k].label + "</span></button>").join("") +
         (A.calSt ? '<button class="lg clear" data-calst="">' + icon("x") + "<span>Tout afficher</span></button>" : "") + "</div>" + html;
     }
     return { title: "Calendrier", tools, html };
@@ -353,7 +368,7 @@
       });
     }
     h += "</div>";
-    const ready = top().filter((p) => !p.date && p.status === "ready" && visible(p));
+    const ready = top().filter((p) => !p.date && p.status === "ready" && shown(p));
     const tray = A.trayClosed
       ? '<aside class="tray closed" data-tray aria-label="Prêts à programmer"><button class="traytg" data-tray-toggle aria-expanded="false" title="Afficher les posts prêts à programmer">' + icon("left") + '<span>Prêts à programmer · ' + ready.length + "</span></button></aside>"
       : '<aside class="tray" data-tray aria-label="Prêts à programmer"><h2 class="sec-h"><span>Prêts à programmer</span><span>' + ready.length +
@@ -439,7 +454,7 @@
   A.views.contents = function () {
     const tools = '<div class="seg" role="group" aria-label="Affichage">' + [["board", "Tableau"], ["list", "Liste"], ["media", "Médias"]].map(([k, l]) =>
       '<button data-cmode="' + k + '" aria-pressed="' + (A.contentsMode === k) + '">' + l + "</button>").join("") + '</div><span class="grow"></span><button class="btn primary" data-new aria-label="Nouveau post">' + icon("plus") + '<span class="lbl">Nouveau post</span></button>';
-    const all = top().filter(visible);
+    const all = top().filter(shown);
     let html;
     if (!A.contentsMode) A.contentsMode = A.isMobile() ? "list" : "board";
     if (A.contentsMode === "media") html = mediaLib();
@@ -471,10 +486,8 @@
       let rows = Object.values(byRef).map((ps) => { ps.sort((a, b) => (C.at(a) || "z").localeCompare(C.at(b) || "z")); return { ps, at: C.at(ps[0]) || "", d: ps[0].date }; });
       rows = rows.filter((r) => per === "all" || (per === "next" ? !r.d || r.d >= t : r.d && r.d < t));
       rows.sort((a, b) => (asc ? 1 : -1) * ((a.at || "9999").localeCompare(b.at || "9999")));
-      const q = (A.listQ || "").toLowerCase();
-      if (q) rows = rows.filter((r) => r.ps.some((p) => (p.title + " " + (p.ref || "") + " " + (p.category || "")).toLowerCase().includes(q)));
       const segP = '<div class="seg small-seg" role="group" aria-label="Période">' + [["next", "À venir"], ["past", "Passés"], ["all", "Tout"]].map(([k, l]) => '<button data-listper="' + k + '" aria-pressed="' + (per === k) + '">' + l + "</button>").join("") + "</div>";
-      html = '<div class="listbar">' + segP + '<label class="lsearch">' + icon("search") + '<input type="search" data-listq placeholder="Filtrer par titre, numéro…" value="' + esc(A.listQ || "") + '" aria-label="Filtrer la liste"></label><span class="muted">' + rows.length + " sujet" + (rows.length > 1 ? "s" : "") + " · tri " + (asc ? "du plus proche" : "du plus récent") + "</span></div>" +
+      html = '<div class="listbar">' + segP + '<span class="muted">' + rows.length + " sujet" + (rows.length > 1 ? "s" : "") + " · tri " + (asc ? "du plus proche" : "du plus récent") + "</span></div>" +
         (A.sel && A.sel.size ? bulkBar() : "") +
         (rows.length ? '<div class="tablewrap"><table class="list"><thead><tr><th class="lsel"><input type="checkbox" data-selall aria-label="Tout sélectionner"' + (rows.length && rows.every((r) => r.ps.every((p) => A.sel && A.sel.has(p.id))) ? " checked" : "") + "></th><th>Date</th><th>Sujet</th><th>Publications</th></tr></thead><tbody>" +
         rows.map((r) => { const p0 = r.ps[0];
@@ -484,6 +497,7 @@
             '<td><div class="lpubs">' + r.ps.map((p) => '<span class="lpub" data-open="' + p.id + '">' + brands(p.networks) + '<span class="lfmt">' + esc(C.FORMATS[p.format] || "") + (p.date && p.date !== p0.date ? " · " + esc(C.shortDay(p.date)) : "") + (p.time && p !== p0 ? " " + p.time : "") + "</span>" + status(C.displayStatus(p, now)) + "</span>").join("") + "</div></td></tr>";
         }).join("") + "</tbody></table></div>" : '<div class="empty">Rien ici.</div>');
     }
+    if (A.contentsMode !== "media") html = fbar() + html;
     return { title: "Contenus", tools, html };
   };
 
@@ -631,7 +645,7 @@
     const st = S.state.stats || (S.mode === "demo" ? A.demoStats() : {}) || {};
     const ig = st.instagram || {}, fb = st.facebook || {};
     const t = today();
-    const tools = '<span class="muted">Relevé ' + esc(agoText(st.updated)) + '</span><a class="btn" href="#report">' + icon("chart") + '<span class="lbl">Bilan du mois</span></a><button class="btn" data-stats-refresh title="Actualiser" aria-label="Actualiser les statistiques">' + icon("undo") + '<span class="lbl">Actualiser</span></button>';
+    const tools = '<span class="muted">Relevé ' + esc(agoText(st.updated)) + '</span><a class="btn" href="#report">' + icon("chart") + '<span class="lbl">Bilan du mois</span></a><button class="btn" data-export-csv title="Exporter les publications et leurs chiffres (CSV)">' + icon("download") + '<span class="lbl">CSV</span></button><button class="btn" data-stats-refresh title="Actualiser" aria-label="Actualiser les statistiques">' + icon("undo") + '<span class="lbl">Actualiser</span></button>';
     if (!st.updated) return { title: "Stats", tools, html: '<div class="empty">Pas encore de statistiques. Elles sont relevées chaque matin à partir de 7 h pour Instagram et Facebook (comptes connectés dans Réglages › Comptes). Tu peux aussi cliquer sur « Actualiser ».</div>' };
 
     // Publications de l'app avec leurs chiffres, triées au choix.
@@ -901,8 +915,8 @@
       '<label class="toggle"><input type="checkbox" data-ai-validate' + ((settings().ai || {}).validate ? " checked" : "") + (A.canValidate() ? "" : " disabled") + "> L'assistant peut aussi valider les légendes</label>" +
       '<p class="muted" style="margin:0;font-size:12px">' + ((settings().ai || {}).validate ? "Attention : un post validé par l'assistant part tout seul à l'heure prévue, sans relecture humaine." : "Conseillé : l'assistant prépare, et c'est toi qui valides dans « À valider ». Rien ne part sans ton accord.") + ' <a class="lk" href="' + docsBase() + 'reference/assistants-ia.md" target="_blank" rel="noopener">Comment le connecter</a></p>' +
       '<p class="muted" style="margin:0;font-size:12px">' + (S.state.rewrite ? "Réécriture des légendes par réseau avec Claude : active." : "Réécriture des légendes par réseau avec Claude : ajoute le secret ANTHROPIC_API_KEY au Worker pour l'activer.") + "</p></div></section>" +
-      '<section class="panel"><h2>Importer un planning</h2><p>Un fichier CSV (Excel, Google Sheets…) avec les colonnes date, heure, titre, format, reseaux, legende. Seul le titre est obligatoire.</p><div style="display:flex;gap:8px;flex-wrap:wrap">' +
-      '<label class="btn" style="cursor:pointer">' + icon("plus") + 'Importer un CSV<input type="file" accept=".csv,text/csv" data-import-csv hidden></label><button class="btn quiet" data-csv-model>' + icon("download") + "Modèle CSV</button></div>" +
+      '<section class="panel"><h2>Importer ou exporter un planning</h2><p>Un fichier CSV (Excel, Google Sheets…) avec les colonnes date, heure, titre, format, reseaux, legende. Seul le titre est obligatoire. Reconnues aussi : statut (« Publié » : le post arrive comme publié), lien, n°, serie. Les lignes déjà dans l\'app sont ignorées. L\'export contient tout le planning avec les vues, likes et commentaires relevés, et se réimporte tel quel.</p><div style="display:flex;gap:8px;flex-wrap:wrap">' +
+      '<label class="btn" style="cursor:pointer">' + icon("plus") + 'Importer un CSV<input type="file" accept=".csv,text/csv" data-import-csv hidden></label><button class="btn quiet" data-csv-model>' + icon("download") + "Modèle CSV</button><button class=\"btn\" data-export-csv>" + icon("download") + "Exporter le planning (CSV)</button></div>" +
       '<p style="margin:14px 0 8px">Tes publications Instagram faites avant PlanneRs (jusqu\'à 500) : elles arrivent comme « publiées », avec leur légende et leur lien, pour les retrouver dans le calendrier et les Stats et pouvoir les reprendre. Rien n\'est publié, rien n\'est recréé en double.</p>' +
       '<button class="btn" data-ig-history>' + brand("instagram") + "Récupérer l'historique Instagram</button></section>" +
       '<section class="panel"><h2>Aide</h2><p>La visite guidée présente chaque menu en une minute.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-tour>' + icon("today") + "Revoir la visite guidée</button>" +

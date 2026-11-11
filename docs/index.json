@@ -324,6 +324,11 @@
         },
         {
           "level": 2,
+          "text": "Chercher et filtrer",
+          "anchor": "chercher-et-filtrer"
+        },
+        {
+          "level": 2,
           "text": "Déplacer un post",
           "anchor": "déplacer-un-post"
         },

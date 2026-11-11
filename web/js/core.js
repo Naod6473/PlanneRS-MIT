@@ -168,9 +168,48 @@
     return best;
   }
 
+  // ---- Recherche, séries, CSV (fonctions pures, testées)
+  const fold = (x) => String(x == null ? "" : x).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+  // Série d'un post : le champ « series », sinon le début du titre avant « · ép. N » (ex. « L'IA, de zéro à pro · ép. 2/7 : … »).
+  function seriesOf(p) {
+    if (p.series) return String(p.series).trim();
+    const m = /^(.{3,80}?)\s*[·:|-]\s*(?:ép\.?|épisode|ep\.?|episode|partie)\s*\d/i.exec(p.title || "");
+    return m ? m[1].trim() : "";
+  }
+  // Tous les mots de la recherche doivent se trouver dans le titre, le texte, le n°, la série, le premier commentaire ou la note.
+  function matchQuery(p, q) {
+    const words = fold(q).split(/\s+/).filter(Boolean);
+    if (!words.length) return true;
+    const hay = fold([p.title, p.caption, p.ref, seriesOf(p), p.firstComment, p.note, Object.values(p.captions || {}).join(" ")].join(" "));
+    return words.every((w) => hay.includes(w));
+  }
+  function parseCsv(txt) {
+    txt = String(txt || "").replace(/^\uFEFF/, "");
+    const first = txt.split(/\r?\n/)[0] || "", sep = (first.match(/;/g) || []).length >= (first.match(/,/g) || []).length ? ";" : ",";
+    const rows = []; let row = [], cell = "", q = false;
+    for (let i = 0; i < txt.length; i++) {
+      const ch = txt[i];
+      if (q) { if (ch === '"') { if (txt[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += ch; }
+      else if (ch === '"') q = true;
+      else if (ch === sep) { row.push(cell); cell = ""; }
+      else if (ch === "\n" || ch === "\r") { if (ch === "\r" && txt[i + 1] === "\n") i++; row.push(cell); rows.push(row); row = []; cell = ""; }
+      else cell += ch;
+    }
+    if (cell || row.length) { row.push(cell); rows.push(row); }
+    return rows.filter((r) => r.some((c) => c.trim()));
+  }
+  // CSV au point-virgule (Excel en français), une formule n'est jamais exécutée (=, +, -, @ en tête sont protégés).
+  function toCsv(rows) {
+    return rows.map((r) => r.map((v) => {
+      let x = v == null ? "" : String(v);
+      if (/^[=+\-@]/.test(x) && !/^-?\d+([.,]\d+)?$/.test(x)) x = "'" + x;
+      return /[;"\n\r]/.test(x) ? '"' + x.replace(/"/g, '""') + '"' : x;
+    }).join(";")).join("\r\n") + "\r\n";
+  }
+
   function nowStamp(d) { d = d || new Date(); return ymd(d) + "T" + pad(d.getHours()) + ":" + pad(d.getMinutes()); }
 
   const api = { STATUS, FORMATS, STAGES, pad, ymd, parseYmd, addDays, mondayOf, toMin, at, longDate, shortDay, MONTHS, DAYS, setLang,
-    displayStatus, missed, willSend, hashtags, checks, mediaChecks, slotOf, nowStamp, capFor, TEXT_MAX, utm, textOut };
+    displayStatus, missed, willSend, hashtags, checks, mediaChecks, slotOf, nowStamp, fold, seriesOf, matchQuery, parseCsv, toCsv, capFor, TEXT_MAX, utm, textOut };
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.Core = api;
 })(typeof self !== "undefined" ? self : this);

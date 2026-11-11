@@ -97,6 +97,7 @@
           '<div class="bar" id="cp-bar" hidden><i></i></div></div>' +
         '<details class="cp-set" id="cp-set"><summary>' + icon("settings") + "Paramètres</summary><div class=\"form\">" +
           '<label>Titre (pour toi, dans le calendrier)<input id="cp-title" placeholder="Pris dans la première ligne si tu le laisses vide"></label>' +
+          A.seriesField("cp-series", d) +
           '<label>Format<select id="cp-format">' + Object.entries(C.FORMATS).map(([k, l]) => '<option value="' + k + '">' + l + "</option>").join("") + "</select></label>" +
           '<label class="toggle"><input type="checkbox" id="cp-manual"> Publier à la main (rappel au lieu d\'un envoi automatique)</label>' +
           '<label id="cp-fcl">Premier commentaire (Instagram, Facebook)<textarea id="cp-fc" rows="2" placeholder="Hashtags, lien… posté juste après la publication"></textarea></label>' +
@@ -160,6 +161,7 @@
       if (Object.keys(own).length) d.captions = own; else delete d.captions;
       d.title = $("#cp-title").value.trim() || A.guessTitle(drafts[""]) || (orig && !autoTitle ? orig.title : "Nouveau post");
       d.format = $("#cp-format").value; d.manual = $("#cp-manual").checked;
+      { const sv = $("#cp-series").value.trim(); if (sv) d.series = sv; else delete d.series; }
       const fc = $("#cp-fc").value.trim(); if (fc) d.firstComment = fc; else delete d.firstComment;
       const alt = $("#cp-alt").value.trim(); if (alt) d.alt = alt; else delete d.alt;
     }

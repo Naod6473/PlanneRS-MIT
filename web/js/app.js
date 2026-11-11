@@ -265,6 +265,8 @@
     if ((b = g("[data-slot-del]"))) { S.state.settings.slots.splice(+b.dataset.slotDel, 1); await saveSet(); return; }
     if ((b = g("[data-chk-add]"))) { (S.state.settings.customChecks = S.state.settings.customChecks || []).push({ label: "Mention du crédit absente", contains: "Crédit" }); await saveSet(); return; }
     if ((b = g("[data-chk-del]"))) { S.state.settings.customChecks.splice(+b.dataset.chkDel, 1); await saveSet(); return; }
+    if ((b = g("[data-fclear]"))) { A.q = ""; A.serie = ""; A.render(); return; }
+    if ((b = g("[data-export-csv]"))) { A.exportCsv(); return; }
     if ((b = g("[data-export]"))) {
       const blob = new Blob([JSON.stringify(S.state, null, 2)], { type: "application/json" });
       const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "planners-" + C.ymd(new Date()) + ".json"; a.click(); return;
@@ -278,6 +280,7 @@
   }
   document.addEventListener("change", async (e) => {
     if (e.target.matches && e.target.matches("[data-stat-days]")) { A.statDays = +e.target.value; A.render(); return; }
+    if (e.target.matches && e.target.matches("[data-fserie]")) { A.serie = e.target.value; A.render(); return; }
     const t = e.target, d = t.dataset, st = S.state.settings;
     if (t.matches("[data-lang]")) { I18N.set(t.value); return; }
     if (t.matches("[data-utm-domains]")) { const d = t.value.split(/[\s,;]+/).map((x) => x.trim().replace(/^https?:\/\//, "").replace(/\/.*$/, "").toLowerCase()).filter((x) => x.includes(".")); st.utm = Object.assign({ medium: "social" }, st.utm, { domains: d }); await S.saveSettings(st); U.toast(d.length ? "Liens suivis activés" : "Liens suivis désactivés"); return; }
@@ -318,9 +321,9 @@
   });
   // Liste : filtre par texte, sans perdre la saisie.
   document.addEventListener("input", (e) => {
-    const sel = e.target.matches("[data-listq]") ? "[data-listq]" : e.target.matches("[data-mq]") ? "[data-mq]" : null;
+    const sel = e.target.matches("[data-fq]") ? "[data-fq]" : e.target.matches("[data-mq]") ? "[data-mq]" : null;
     if (!sel) return;
-    if (sel === "[data-mq]") A.mQ = e.target.value; else A.listQ = e.target.value;
+    if (sel === "[data-mq]") A.mQ = e.target.value; else A.q = e.target.value;
     const pos = e.target.selectionStart;
     A.render();
     const i = document.querySelector(sel); if (i) { i.focus(); try { i.setSelectionRange(pos, pos); } catch (x) { /* rien */ } }
