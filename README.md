@@ -5,6 +5,10 @@ Auto-hébergé sur Cloudflare (gratuit pour un usage personnel), sans abonnement
 
 *Plan, approve and track your social media posts from one screen. Self-hosted on Cloudflare. The interface is available in French and English (Settings › Workspace › Language); the documentation is in French for now.*
 
+[![Vidéo de présentation de PlanneRs : tous tes réseaux, un seul écran](docs/img/video-presentation.jpg)](https://youtu.be/mzCHU1rWABg)
+
+▶ [Voir la vidéo de présentation sur YouTube](https://youtu.be/mzCHU1rWABg) *(watch the intro video)*
+
 ## Ce que ça fait
 
 - **Aujourd'hui** : ce qui t'attend d'abord (échecs, posts manqués, posts à faire à la main, légendes à valider), puis le programme du jour.
