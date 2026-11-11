@@ -170,3 +170,19 @@ test("fenêtre de création : écrire, choisir les réseaux, voir l'aperçu, pro
     await page.close();
   }
 });
+
+test("stats : cartes par compte et par période", { skip }, async () => {
+  for (const mobile of [false, true]) {
+    const { page, errors } = await open({ mobile });
+    await go(page, "#stats");
+    assert.ok(await page.locator(".sc-card").count() >= 6);
+    await page.selectOption("[data-stat-days]", "30");
+    assert.equal(await page.inputValue("[data-stat-days]"), "30");
+    await page.click('[data-stat-chan="facebook"]');
+    assert.ok(await page.locator(".sc-card").count() >= 2);
+    const w = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+    assert.ok(w <= 0, "pas de débordement horizontal");
+    assert.deepEqual(errors, []);
+    await page.close();
+  }
+});

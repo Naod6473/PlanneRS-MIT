@@ -45,3 +45,21 @@ test("Stats : sans droit insights, on garde abonnés et likes", async () => {
   assert.equal(s.instagram.media[0].likes, 2);
   assert.equal(s.facebook, undefined);
 });
+
+test("Stats : périodes 7/30 jours, période précédente, portée jour par jour", async () => {
+  const seen = [];
+  route([
+    [/17841\/insights/, (u) => {
+      const q = new URL(u).searchParams; seen.push(q.get("metric"));
+      if (q.get("metric") === "reach" && !q.get("metric_type")) return J({ data: [{ name: "reach", values: [{ value: 40, end_time: "2026-11-08T08:00:00+0000" }, { value: 55, end_time: "2026-11-09T08:00:00+0000" }] }] });
+      if (/likes/.test(q.get("metric"))) return J({ error: { message: "metric not supported" } }, 400);
+      return J({ data: [{ name: "reach", total_value: { value: 300 } }, { name: "views", total_value: { value: 500 } }] });
+    }],
+    [/17841\/media/, () => J({ data: [] })],
+    [/17841\?/, () => J({ username: "moncompte", followers_count: 9 })],
+  ]);
+  const s = await collect({}, async (n) => (n === "instagram" ? { token: "t", accountId: "17841" } : null), { history: [{ d: "2026-11-08", ig: 8 }] }, "2026-11-10");
+  assert.equal(s.instagram.week.views, 500); assert.equal(s.instagram.month.reach, 300); assert.equal(s.instagram.prevWeek.reach, 300);
+  assert.ok(seen.filter((m) => /likes/.test(m)).length === 1, "la liste complète n'est tentée qu'une fois");
+  assert.deepEqual(s.history.map((h) => [h.d, h.ig, h.igReach]), [["2026-11-07", undefined, 40], ["2026-11-08", 8, 55], ["2026-11-10", 9, 300]]);
+});

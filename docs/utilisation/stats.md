@@ -2,29 +2,27 @@
 title: Stats
 description: Les statistiques Instagram et Facebook dans PlanneRs, avec les chiffres affichés, leur fréquence de mise à jour et les autorisations nécessaires.
 category: Utilisation
-tags: [stats, statistiques, insights, abonnés, vues, portée, likes, commentaires, meilleur reel]
+tags: [stats, période, 7 jours, 30 jours, 90 jours, cartes, partages, enregistrements, statistiques, insights, abonnés, vues, portée, likes, commentaires, meilleur reel]
 order: 4
-updated: 2026-11-10
+updated: 2026-11-11
 ---
 
 # Stats
 
 ## Ce qui est affiché
 
-**Instagram**
+À gauche, les **comptes** (Instagram, Page Facebook) : clique sur l'un d'eux. En haut, la **période** : 7, 30 ou 90 jours. Chaque carte donne le total de la période, l'écart avec la période d'avant (▲ en vert, ▼ en rouge, survole pour voir l'ancien chiffre) et la courbe jour par jour.
 
-| Chiffre | Période |
-|---|---|
-| Abonnés, avec l'écart sur 7 jours | Aujourd'hui |
-| Vues | Dernières 24 h et 7 jours |
-| Comptes touchés (portée) | 7 jours |
-| Visites du profil | 7 jours |
-| Likes et commentaires | 30 jours |
-| Reel le plus vu | Toutes les publications relevées |
+| Carte | Instagram | Facebook |
+|---|---|---|
+| Abonnés (écart = gagnés sur la période) | Oui | Oui |
+| Comptes touchés, vues | Oui | |
+| Likes (réactions sur Facebook), commentaires, partages | Oui | Oui, d'après les posts de la période |
+| Enregistrements, réponses aux stories, visites du profil | Oui | |
 
-Les petites courbes montrent l'évolution jour par jour. La liste **Publications** se trie par vues, likes, commentaires, portée ou date. Les vignettes de l'accueil et du calendrier affichent aussi les vues et les likes des posts publiés.
+D'où viennent les chiffres : pour 7 et 30 jours, les totaux du compte renvoyés par Instagram ; pour 90 jours et pour les courbes, les relevés quotidiens. La portée est reprise jour par jour sur les 30 derniers jours dès le premier relevé ; les autres courbes se remplissent au fil des jours. Une carte sans aucune donnée n'est pas affichée.
 
-**Facebook** : abonnés de la Page.
+Sous les cartes : le **Reel le plus vu**, la liste **Publications** (triée par vues, likes, commentaires, portée ou date) et les **hashtags qui marchent**.
 
 Un post a bien marché ? Ouvre-le depuis la liste et choisis **Reprendre plus tard** pour le reprogrammer dans quelques semaines ([Contenus](contenus.md#reprendre-un-post-qui-a-bien-marché)).
 

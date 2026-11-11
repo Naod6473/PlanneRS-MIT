@@ -450,6 +450,13 @@
       "category": "Utilisation",
       "tags": [
         "stats",
+        "période",
+        "7 jours",
+        "30 jours",
+        "90 jours",
+        "cartes",
+        "partages",
+        "enregistrements",
         "statistiques",
         "insights",
         "abonnés",
@@ -460,7 +467,7 @@
         "meilleur reel"
       ],
       "order": 4,
-      "updated": "2026-11-10",
+      "updated": "2026-11-11",
       "headings": [
         {
           "level": 2,

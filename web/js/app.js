@@ -206,6 +206,7 @@
     if ((b = g("[data-tour]"))) { e.preventDefault(); A.tour(); return; }
     if ((b = g("[data-stats-refresh]"))) { b.disabled = true; b.textContent = "Relevé en cours…"; try { if (S.mode === "api") S.state.stats = await S.call("POST", "stats/refresh"); else { S.state.stats = A.demoStats(); U.toast("Mode démo : chiffres d'exemple"); } } catch (err) { U.toast("Relevé impossible : " + err.message); } A.render(); return; }
     if ((b = g("[data-quick]"))) { A.quick(b.dataset.quick); return; }
+    if ((b = g("[data-stat-chan]"))) { A.statChan = b.dataset.statChan; A.render(); return; }
     if ((b = g("[data-stat-sort]"))) { A.statSort = b.dataset.statSort; A.render(); return; }
     if ((b = g("[data-dash]"))) { A.dashRange = b.dataset.dash; try { localStorage.setItem("planners-dash", A.dashRange); } catch (x) { /* rien */ } A.render(); return; }
     if ((b = g("[data-calst]"))) { A.calSt = b.dataset.calst && A.calSt !== b.dataset.calst ? b.dataset.calst : ""; A.render(); return; }
@@ -268,6 +269,7 @@
     await S.saveSettings(S.state.settings); A.render();
   }
   document.addEventListener("change", async (e) => {
+    if (e.target.matches && e.target.matches("[data-stat-days]")) { A.statDays = +e.target.value; A.render(); return; }
     const t = e.target, d = t.dataset, st = S.state.settings;
     if (t.matches("[data-lang]")) { I18N.set(t.value); return; }
     if (t.matches("[data-utm-domains]")) { const d = t.value.split(/[\s,;]+/).map((x) => x.trim().replace(/^https?:\/\//, "").replace(/\/.*$/, "").toLowerCase()).filter((x) => x.includes(".")); st.utm = Object.assign({ medium: "social" }, st.utm, { domains: d }); await S.saveSettings(st); U.toast(d.length ? "Liens suivis activés" : "Liens suivis désactivés"); return; }
@@ -511,10 +513,10 @@
       return { key: n + ":demo" + i, at: at(p), kind: reel ? "reel" : p.format, views, likes: Math.round(views * rnd(3, 9) / 100), comments: rnd(0, 14), reach: Math.round(views * 0.7), url: n === "instagram" ? "https://www.instagram.com/" : "https://www.facebook.com/" };
     });
     const t = C.ymd(new Date()); let ig = 410, fb = 120; const history = [];
-    for (let i = 20; i >= 0; i--) { ig += rnd(0, 9); fb += rnd(0, 3); history.push({ d: C.addDays(t, -i), ig, fb, igViews: rnd(400, 2600), igReach: rnd(250, 1500) }); }
+    for (let i = 95; i >= 0; i--) { ig += rnd(0, 9); fb += rnd(0, 3); const v = rnd(400, 2600); history.push({ d: C.addDays(t, -i), ig, fb, igViews: v, igReach: Math.round(v * rnd(55, 80) / 100), igLikes: Math.round(v * rnd(2, 6) / 100), igComments: rnd(0, 9), igShares: rnd(0, 12), igSaves: rnd(0, 15), igProfile: rnd(3, 40) }); }
     return { updated: new Date().toISOString(), history,
-      instagram: { account: { followers: ig }, media: media("instagram"), day: { views: history[history.length - 1].igViews }, week: { views: rnd(6000, 14000), reach: rnd(3000, 8000), profile_views: rnd(90, 400) } },
-      facebook: { account: { followers: fb }, media: media("facebook") } };
+      instagram: { media: media("instagram"), day: { views: history[history.length - 1].igViews }, account: { followers: ig, username: "boulangerie.demo" } },
+      facebook: { account: { followers: fb, name: "Boulangerie (démo)" }, media: media("facebook") } };
   };
 
   (async function boot() {

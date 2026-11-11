@@ -598,16 +598,9 @@
   };
 
   A.views.stats = function () {
-    const st = S.state.stats || {};
+    const st = S.state.stats || (S.mode === "demo" ? A.demoStats() : {}) || {};
     const ig = st.instagram || {}, fb = st.facebook || {};
-    const hist = st.history || [];
     const t = today();
-    const back = (n, field) => { const old = hist.filter((h) => h.d <= C.addDays(t, -7) && h[field] != null).pop() || hist.find((h) => h[field] != null); return old && n != null ? n - old[field] : null; };
-    const delta = (v) => (v == null ? "" : '<em class="' + (v > 0 ? "up" : v < 0 ? "down" : "") + '">' + (v > 0 ? "+" : "") + v + " en 7 j</em>");
-    const tileS = (val, lbl, extra) => '<div class="kpi stat"><b>' + val + "</b><span>" + lbl + "</span>" + (extra || "") + "</div>";
-    const since30 = Date.now() - 30 * 864e5;
-    const recent = [].concat(ig.media || [], fb.media || []).filter((m) => m.at && new Date(m.at).getTime() > since30);
-    const likes30 = recent.reduce((a, m) => a + (m.likes || 0), 0), com30 = recent.reduce((a, m) => a + (m.comments || 0), 0);
     const tools = '<span class="muted">Relevé ' + esc(agoText(st.updated)) + '</span><a class="btn" href="#report">' + icon("chart") + '<span class="lbl">Bilan du mois</span></a><button class="btn" data-stats-refresh title="Actualiser" aria-label="Actualiser les statistiques">' + icon("undo") + '<span class="lbl">Actualiser</span></button>';
     if (!st.updated) return { title: "Stats", tools, html: '<div class="empty">Pas encore de statistiques. Elles sont relevées chaque matin à partir de 7 h pour Instagram et Facebook (comptes connectés dans Réglages › Comptes). Tu peux aussi cliquer sur « Actualiser ».</div>' };
 
@@ -646,23 +639,11 @@
     const warn = [ig.error && "Instagram : " + ig.error, ig.insightsError && "Instagram : la portée n'est pas disponible avec ce jeton (droit « instagram_manage_insights » à ajouter). " + ig.insightsError,
       fb.error && "Facebook : " + fb.error].filter(Boolean);
     const note = fb.mediaError ? '<p class="muted small" style="margin-top:12px">Facebook : seuls les abonnés de la Page sont relevés. Les réactions et commentaires des posts demandent le droit Meta « pages_read_user_content ».</p>' : "";
-    const day = ig.day || {}, week = ig.week || {};
     return {
       title: "Stats", tools,
       html: (warn.length ? '<div class="banner warn">' + warn.map(esc).join("<br>") + "</div>" : "") +
-        '<div class="kpis">' +
-        (ig.account ? tileS(fmtN(ig.account.followers), brand("instagram") + " abonnés Instagram", delta(back(ig.account.followers, "ig"))) : "") +
-        (fb.account ? tileS(fmtN(fb.account.followers), brand("facebook") + " abonnés Facebook", delta(back(fb.account.followers, "fb"))) : "") +
-        (day.views != null ? tileS(fmtN(day.views), "vues aujourd'hui (24 h)") : "") +
-        (week.views != null ? tileS(fmtN(week.views), "vues sur 7 jours") : "") +
-        (week.reach != null ? tileS(fmtN(week.reach), "comptes touchés (7 j)") : "") +
-        (week.profile_views != null ? tileS(fmtN(week.profile_views), "visites du profil (7 j)") : "") +
-        tileS(likes30, "likes et réactions (30 j)") + tileS(com30, "commentaires (30 j)") + "</div>" + best +
-        '<div class="statgrid"><section class="panel"><h2 class="sec-h"><span>Abonnés Instagram</span><span>' + fmtN(ig.account && ig.account.followers) + "</span></h2>" + spark(hist.map((h) => ({ d: h.d, v: h.ig })), "Abonnés Instagram") +
-        (hist.filter((h) => h.fb != null).length > 1 ? '<h2 class="sec-h" style="margin-top:14px"><span>Abonnés Facebook</span><span>' + fmtN(fb.account && fb.account.followers) + "</span></h2>" + spark(hist.map((h) => ({ d: h.d, v: h.fb })), "Abonnés Facebook") : "") +
-        (hist.filter((h) => h.igViews != null).length > 1 ? '<h2 class="sec-h" style="margin-top:14px"><span>Vues par jour</span><span>Instagram</span></h2>' + spark(hist.map((h) => ({ d: h.d, v: h.igViews })), "Vues par jour") : "") +
-        (hist.filter((h) => h.igReach != null).length > 1 ? '<h2 class="sec-h" style="margin-top:14px"><span>Comptes touchés par jour</span><span>Instagram</span></h2>' + spark(hist.map((h) => ({ d: h.d, v: h.igReach })), "Comptes touchés par jour") : "") +
-        '</section><section class="panel"><div class="sec-row"><h2 class="sec-h"><span>Publications</span><span>' + rows.length + "</span></h2>" + sortSeg + "</div>" + (top ? top + '<p class="muted small" style="margin:10px 0 0">Un post a bien marché ? Ouvre-le et choisis « Reprendre plus tard » pour le reprogrammer dans quelques semaines.</p>' : '<div class="empty">Aucune publication reliée pour l\'instant.</div>') + "</section>" + tagBox + "</div>" + note,
+        A.statCardsHtml(st, t) + best +
+        '<div class="statgrid"><section class="panel"><div class="sec-row"><h2 class="sec-h"><span>Publications</span><span>' + rows.length + "</span></h2>" + sortSeg + "</div>" + (top ? top + '<p class="muted small" style="margin:10px 0 0">Un post a bien marché ? Ouvre-le et choisis « Reprendre plus tard » pour le reprogrammer dans quelques semaines.</p>' : '<div class="empty">Aucune publication reliée pour l\'instant.</div>') + "</section>" + tagBox + "</div>" + note,
     };
   };
 

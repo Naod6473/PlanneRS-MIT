@@ -10,6 +10,8 @@ import { pageToken } from "./adapters/facebook.js";
 const HISTORY_DAYS = 120;
 const MEDIA_INSIGHTS = 20; // nombre de publications récentes dont on lit la portée (limite d'appels par exécution)
 
+// Une valeur « end_time » de l'API couvre la journée qui se termine à cette heure : on la range au jour d'avant.
+export const dayBefore = (iso) => new Date(new Date(iso).getTime() - 12 * 3600e3).toISOString().slice(0, 10);
 const why = (e) => (e && (e.why || e.message)) || "Erreur inconnue";
 const sum = (v) => (v && v.total_value ? v.total_value.value : Array.isArray(v && v.values) ? v.values.reduce((a, x) => a + (+x.value || 0), 0) : 0);
 
@@ -29,12 +31,31 @@ export async function instagram(env, cred, prev) {
   const tok = cred.token, id = cred.accountId;
   const a = await graph(env, "GET", id, { fields: "username,followers_count,follows_count,media_count" }, tok);
   out.account = { username: a.username, followers: a.followers_count, follows: a.follows_count, media: a.media_count };
-  const range = async (days) => {
-    const until = Math.floor(Date.now() / 1000), since = until - days * 86400;
-    const r = await graph(env, "GET", id + "/insights", { metric: "reach,profile_views,accounts_engaged,total_interactions,views", period: "day", metric_type: "total_value", since, until }, tok);
+  // Totaux du compte sur une fenêtre [aujourd'hui - from ; aujourd'hui - to] (30 jours au plus par appel).
+  // Liste complète d'abord ; si l'API la refuse (version ou droits), la liste d'origine.
+  const FULL = "reach,views,likes,comments,shares,saves,replies,total_interactions,profile_views,accounts_engaged";
+  const BASIC = "reach,profile_views,accounts_engaged,total_interactions,views";
+  let metrics = FULL;
+  const range = async (from, to = 0) => {
+    const now = Math.floor(Date.now() / 1000), until = now - to * 86400, since = now - from * 86400;
+    let r;
+    try { r = await graph(env, "GET", id + "/insights", { metric: metrics, period: "day", metric_type: "total_value", since, until }, tok); }
+    catch (e) { if (metrics === BASIC) throw e; metrics = BASIC; r = await graph(env, "GET", id + "/insights", { metric: metrics, period: "day", metric_type: "total_value", since, until }, tok); }
     return Object.fromEntries((r.data || []).map((x) => [x.name, sum(x)]));
   };
-  try { out.day = await range(1); out.week = await range(7); } catch (e) { out.insightsError = why(e); }
+  try {
+    out.day = await range(1); out.week = await range(7); out.month = await range(30);
+    try { out.prevWeek = await range(14, 7); out.prevMonth = await range(60, 30); } catch (e) { /* comparaison indisponible */ }
+  } catch (e) { out.insightsError = why(e); }
+  // Portée jour par jour sur 30 jours (seule mesure du compte disponible en série) : remplit la courbe dès le premier relevé.
+  if (!out.insightsError) {
+    try {
+      const until = Math.floor(Date.now() / 1000), since = until - 30 * 86400;
+      const r = await graph(env, "GET", id + "/insights", { metric: "reach", period: "day", since, until }, tok);
+      const v = ((r.data || [])[0] || {}).values || [];
+      out.reachDaily = v.filter((x) => x.end_time).map((x) => ({ d: dayBefore(x.end_time), v: +x.value || 0 }));
+    } catch (e) { /* facultatif */ }
+  }
   const list = await graph(env, "GET", id + "/media", { fields: "id,permalink,timestamp,media_product_type,media_type,like_count,comments_count", limit: 100 }, tok);
   out.media = (list.data || []).map((x) => ({ net: "instagram", id: x.id, key: mediaKey(x.permalink), url: x.permalink, at: x.timestamp, kind: x.media_product_type === "REELS" ? "reel" : x.media_type === "CAROUSEL_ALBUM" ? "carousel" : "image", likes: x.like_count || 0, comments: x.comments_count || 0 }));
   const old = Object.fromEntries(((prev && prev.media) || []).map((m) => [m.id, m]));
@@ -86,8 +107,16 @@ export async function collect(env, getCred, prev, today) {
   const fb = await getCred("facebook");
   if (fb && fb.token && fb.pageId) { try { s.facebook = await facebook(env, fb); } catch (e) { s.facebook = { error: why(e) }; } }
   const point = { d: today };
-  if (s.instagram && s.instagram.account) { point.ig = s.instagram.account.followers; if (s.instagram.day) { point.igReach = s.instagram.day.reach; point.igEng = s.instagram.day.accounts_engaged; point.igViews = s.instagram.day.views; point.igProfile = s.instagram.day.profile_views; } }
+  if (s.instagram && s.instagram.account) { point.ig = s.instagram.account.followers; if (s.instagram.day) { const d = s.instagram.day; point.igReach = d.reach; point.igEng = d.accounts_engaged; point.igViews = d.views; point.igProfile = d.profile_views;
+    for (const [k, f] of [["likes", "igLikes"], ["comments", "igComments"], ["shares", "igShares"], ["saves", "igSaves"], ["replies", "igReplies"]]) if (d[k] != null) point[f] = d[k]; } }
   if (s.facebook && s.facebook.account) point.fb = s.facebook.account.followers;
   if (point.ig != null || point.fb != null) s.history = s.history.filter((h) => h.d !== today).concat(point).slice(-HISTORY_DAYS);
+  // Portée des 30 derniers jours : complète les jours sans relevé (le relevé du jour garde la priorité).
+  const rd = (s.instagram && s.instagram.reachDaily) || [];
+  if (rd.length) {
+    const byDay = new Map(s.history.map((h) => [h.d, h]));
+    for (const x of rd) { if (x.d >= today) continue; const h = byDay.get(x.d); if (h) { if (h.igReach == null) h.igReach = x.v; } else byDay.set(x.d, { d: x.d, igReach: x.v }); }
+    s.history = [...byDay.values()].sort((a, b) => a.d.localeCompare(b.d)).slice(-HISTORY_DAYS);
+  }
   return s;
 }
