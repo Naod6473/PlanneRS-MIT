@@ -292,6 +292,11 @@
           "anchor": "à-faire"
         },
         {
+          "level": 3,
+          "text": "Sur téléphone",
+          "anchor": "sur-téléphone"
+        },
+        {
           "level": 2,
           "text": "Poster à la main",
           "anchor": "poster-à-la-main"
@@ -300,6 +305,11 @@
           "level": 2,
           "text": "Raccourcis",
           "anchor": "raccourcis"
+        },
+        {
+          "level": 2,
+          "text": "Raccourcis clavier",
+          "anchor": "raccourcis-clavier"
         }
       ]
     },
@@ -326,6 +336,11 @@
           "level": 2,
           "text": "Les vues",
           "anchor": "les-vues"
+        },
+        {
+          "level": 3,
+          "text": "Compact ou Détaillé",
+          "anchor": "compact-ou-détaillé"
         },
         {
           "level": 2,

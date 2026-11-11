@@ -55,6 +55,15 @@ Ce qui demande ton attention, du plus urgent au moins urgent :
   - « Tout valider » les valide d'un coup après une confirmation qui les liste. Les posts qui ont un problème bloquant (média manquant, trop de hashtags…) sont laissés de côté. « Annuler » dans le message qui suit retire la validation.
 - **Posts à la main du jour**, **contenus d'actualité qui vont se périmer** (date limite dans moins de 3 jours).
 
+### Sur téléphone
+
+L'écran s'appelle **À faire maintenant** : une carte par post à valider ou à poster à la main.
+
+- **Glisse à droite** pour valider le texte (ou ouvrir l'aide « Poster à la main » pour un post à la main).
+- **Glisse à gauche** pour le reporter au lendemain, même heure.
+
+« Annuler », dans le message du bas, défait le geste. Les boutons de la carte restent là pour ceux qui préfèrent toucher.
+
 ## Poster à la main
 
 Pour les réseaux sans connexion automatique ou à l'API payante, coche-les dans Réglages › Règles et contrôles › **À poster à la main**. À l'heure prévue, tu reçois un rappel, et le post apparaît dans « À faire ». **Poster** ouvre la fiche :
@@ -80,3 +89,22 @@ Sur ordinateur, aucun réseau ne permet de joindre la vidéo automatiquement par
 | Remplir un jour vide | Propose de programmer un post prêt sur le prochain jour sans rien. |
 
 Sur ordinateur, tu peux aussi **déposer un fichier n'importe où sur la page** : il est envoyé dans le Drive comme avec « Ajouter une vidéo ».
+
+## Raccourcis clavier
+
+Sur ordinateur, la touche **?** affiche la liste :
+
+| Touche | Effet |
+|---|---|
+| N | Nouveau post |
+| / | Chercher |
+| ← → | Période précédente / suivante (calendrier) |
+| T | Revenir à aujourd'hui |
+| V | Valider le post ouvert |
+| E | Modifier le post ouvert |
+| D | Changer la date du post ouvert |
+| M | Poster à la main |
+| G puis A, C, O, S, Y ou R | Aller à Aujourd'hui, Calendrier, Contenus, Stats, Activité ou Réglages |
+| Échap | Fermer |
+
+Les raccourcis ne réagissent pas pendant que tu écris dans un champ.

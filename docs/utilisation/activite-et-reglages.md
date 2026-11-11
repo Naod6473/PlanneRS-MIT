@@ -23,6 +23,8 @@ Il faut l'autorisation Meta `instagram_manage_comments` sur le jeton Instagram (
 
 ## Réglages
 
+Les réglages sont rangés en deux groupes : **Essentiel** (Comptes, Créneaux, Règles et contrôles, Notifications) et **Avancé** (Stockage et médias, Modèles, Automatisations, Espace). La case **Chercher un réglage**, en haut de la liste, trouve n'importe quel réglage par un mot (« rappel », « hashtag »…) et affiche les blocs qui le contiennent, avec l'onglet d'où ils viennent.
+
 ### Comptes
 
 Un réseau par fiche : ce qu'il demande, ce qu'il permet, les droits, les limites et les liens de documentation. Voir [Réseaux sociaux](../README.md#réseaux-sociaux). Les identifiants sont chiffrés et ne sont jamais renvoyés au navigateur ([Sécurité](../reference/securite.md)).

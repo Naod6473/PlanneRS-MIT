@@ -20,6 +20,17 @@ updated: 2026-11-11
 
 Le menu des réseaux (en haut à droite) affiche ou masque chaque réseau.
 
+### Compact ou Détaillé
+
+En Semaine et en Mois, la bascule **Compact / Détaillé** change la taille des cartes (le choix est retenu) :
+
+- **Détaillé** : miniature du média en haut de la carte, titre sur deux lignes, pastille d'étape. Le calendrier se lit sans ouvrir les posts.
+- **Compact** : une ligne par post, toute la semaine tient à l'écran.
+
+Sur ordinateur, laisser la souris une demi-seconde sur une carte affiche un **aperçu** : miniature, début du texte, réseaux, date et série.
+
+Les pastilles au-dessus du calendrier filtrent par étape (En préparation, À valider, Programmé, Publié), par réseau « à la main », ou par alerte (En retard, Échec).
+
 ## Chercher et filtrer
 
 Au-dessus du calendrier, la case **Chercher** filtre les posts sur leur titre, leur texte, leur numéro, leurs hashtags ou leur note : tous les mots doivent y être, sans tenir compte des accents ni des majuscules. Les résultats de toutes les dates s'affichent en dessous (les 8 premiers) : clique sur l'un d'eux pour l'ouvrir. La liste **Séries** ne garde qu'une série. **Effacer** remet tout. Les mêmes filtres s'appliquent dans Contenus.
