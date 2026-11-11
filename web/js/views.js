@@ -513,7 +513,7 @@
   };
   // Chiffres d'une publication, par réseau : par l'adresse, sinon par l'heure (la plus proche, à 1 h près).
   A.postStats = function (p) {
-    const st = S.state.stats;
+    const st = S.state.stats || (S.mode === "demo" ? (A._demoSt = A._demoSt || A.demoStats()) : null);
     if (!st || p.status !== "published") return null;
     const out = {};
     for (const n of ["instagram", "facebook"]) {
