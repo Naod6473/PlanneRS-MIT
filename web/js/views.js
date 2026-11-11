@@ -784,7 +784,10 @@
         '<label class="toggle"><input type="checkbox" data-notify="onFailure"' + (n.onFailure ? " checked" : "") + "> Prévenir tout de suite en cas d'échec</label>" +
         '<label class="toggle"><input type="checkbox" data-notify="digest"' + (n.digest !== false ? " checked" : "") + "> Résumé du matin : légendes à valider, posts à la main, échecs, jetons qui expirent</label>" +
         '<label>Heure du résumé<input type="time" value="' + esc(n.digestTime || "08:00") + '" data-notify-time="digestTime"></label>' +
-        '<p class="muted" style="margin:0;font-size:12px">Rien à signaler, pas de message. Chaque matin, PlanneRs vérifie aussi que tes comptes sont toujours connectés.</p></div></section>' +
+        '<p class="muted" style="margin:0;font-size:12px">Rien à signaler, pas de message. Chaque matin, PlanneRs vérifie aussi que tes comptes sont toujours connectés.</p>' +
+        '<label class="toggle"><input type="checkbox" data-notify="weekly"' + (n.weekly !== false ? " checked" : "") + "> Bilan du dimanche soir : ce qui a marché, ce qui est prévu, les jours vides</label>" +
+        '<label>Heure du bilan (le dimanche)<input type="time" value="' + esc(n.weeklyTime || "19:00") + '" data-notify-time="weeklyTime"></label>' +
+        '<div><button class="btn quiet" data-weekly-preview>' + icon("eye") + 'Voir le bilan de cette semaine</button></div><pre class="wkprev" id="wk-prev" hidden></pre></div></section>' +
         '<section class="panel"><h2>Dans ton agenda</h2><p>Un lien à ajouter dans Google Agenda, Outlook ou Apple Calendrier : tes posts prévus s\'affichent à côté de tes rendez-vous, avec un rappel 15 minutes avant ceux à poster à la main.</p>' +
         (S.mode === "demo" ? '<p class="muted" style="margin:0">Disponible une fois PlanneRs installé sur ton serveur.</p>' : '<div id="ical-box"><p class="muted" style="margin:0">Chargement…</p></div>') + "</section>" +
         connGroup("notify", "Canaux de notification", "Où recevoir les rappels et les alertes.");

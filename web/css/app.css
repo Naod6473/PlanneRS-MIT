@@ -895,3 +895,4 @@ table.list tr.sel td{background:var(--rev-bg)}
 .rwbtn[disabled]{opacity:.5;cursor:progress}
 .onego{display:grid;gap:6px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--panel2)}
 .onego p{margin:0;font-size:13px}
+.wkprev{white-space:pre-wrap;font:inherit;font-size:13px;margin:8px 0 0;padding:12px;border-radius:10px;background:var(--panel2)}

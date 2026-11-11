@@ -129,6 +129,12 @@
       await S.savePosts([p]); await S.log({ level: "change", text: "Nouveau post à partir d'un média de « " + src.title + " »", postId: p.id });
       A.render(); A.openPost(p.id); return U.toast("Nouveau post créé avec ce média");
     }
+    if ((b = g("[data-weekly-preview]"))) {
+      if (S.mode !== "api") { U.toast("Mode démo : le bilan est calculé sur ton serveur"); return; }
+      const box = document.getElementById("wk-prev");
+      try { const r = await S.call("POST", "weekly/run", {}); box.textContent = r.title + "\n\n" + r.text; box.hidden = false; } catch (x) { U.toast("Bilan impossible : " + x.message); }
+      return;
+    }
     if ((b = g("[data-copyval]"))) { try { await navigator.clipboard.writeText(b.dataset.copyval); U.toast("Lien copié"); } catch (x) { const i = b.parentElement.querySelector("input"); if (i) { i.select(); U.toast("Copie le lien sélectionné"); } } return; }
     if ((b = g("[data-ig-history]"))) {
       if (S.mode !== "api") { U.toast("Mode démo : rien à récupérer"); return; }

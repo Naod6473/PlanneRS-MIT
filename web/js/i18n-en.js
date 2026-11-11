@@ -833,5 +833,9 @@ window.I18N_EN = {
 "Texte copié : colle-le dans YouTube": "Text copied: paste it into YouTube",
 "Fichier envoyé à YouTube": "File sent to YouTube",
 "Poster en un geste": "Post in one tap",
-"Ce post n'existe plus": "This post no longer exists"
+"Ce post n'existe plus": "This post no longer exists",
+"Bilan du dimanche soir : ce qui a marché, ce qui est prévu, les jours vides": "Sunday evening review: what worked, what's planned, empty days",
+"Heure du bilan (le dimanche)": "Review time (Sunday)",
+"Voir le bilan de cette semaine": "See this week's review",
+"Mode démo : le bilan est calculé sur ton serveur": "Demo mode: the review is computed on your server"
 };

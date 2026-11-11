@@ -85,3 +85,38 @@ export async function refreshThreads(token, fetchFn) {
   if (!r.ok || !d.access_token) throw new Error((d.error && d.error.message) || "Renouvellement refusé (" + r.status + ")");
   return { token: d.access_token, expires: new Date(Date.now() + (d.expires_in || 5184000) * 1000).toISOString().slice(0, 10) };
 }
+
+// Bilan du dimanche soir : la semaine écoulée, et ce qui attend la semaine prochaine.
+export function weeklyDue(now, settings, lastDay) {
+  const n = (settings && settings.notify) || {};
+  if (n.weekly === false) return false;
+  const t = /^\d{2}:\d{2}$/.test(n.weeklyTime || "") ? n.weeklyTime : "19:00";
+  const today = now.slice(0, 10);
+  return Core.parseYmd(today).getDay() === 0 && today !== lastDay && now.slice(11, 16) >= t;
+}
+
+const plural = (n, one, many) => n + " " + (n > 1 ? many : one);
+const dayName = (d) => ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"][Core.parseYmd(d).getDay()];
+
+export function weekly(posts, stats, settings, now, mediaKeyFn) {
+  const today = now.slice(0, 10), from = Core.addDays(today, -6), next1 = Core.addDays(today, 1), next7 = Core.addDays(today, 7);
+  const top = (posts || []).filter((p) => !p.parent);
+  const past = top.filter((p) => p.date && p.date >= from && p.date <= today);
+  const done = past.filter((p) => p.status === "published");
+  const missed = past.filter((p) => p.status !== "published" && p.status !== "draft" && !p.ignored && ["failed", "late"].includes(Core.displayStatus(p, now)));
+  const lines = ["Cette semaine : " + plural(done.length, "publication", "publications") + (missed.length ? ", " + plural(missed.length, "post manqué ou en échec", "posts manqués ou en échec") : "") + "."];
+  const ig = stats && stats.instagram, hist = (stats && stats.history) || [];
+  const first = hist.find((h) => h.d >= from && h.ig != null), last = hist.slice().reverse().find((h) => h.ig != null);
+  if (first && last && last.d > first.d) { const g = last.ig - first.ig; lines.push("Abonnés Instagram : " + last.ig + " (" + (g >= 0 ? "+" : "") + g + " en 7 jours)."); }
+  const reach = hist.filter((h) => h.d >= from && h.igReach != null).reduce((a, h) => a + h.igReach, 0);
+  if (reach) lines.push("Comptes touchés : " + reach + ".");
+  const byKey = {}; top.forEach((p) => { const k = mediaKeyFn && mediaKeyFn(p.url); if (k) byKey[k] = p; });
+  const best = ((ig && ig.media) || []).filter((m) => m.at && m.at.slice(0, 10) >= from && (m.views || m.reach)).sort((a, b) => (b.views || b.reach || 0) - (a.views || a.reach || 0)).slice(0, 3);
+  if (best.length) lines.push("Le top : " + best.map((m) => { const p = byKey[m.key]; return (p ? p.title : (Core.FORMATS[m.kind] || "Post") + " du " + m.at.slice(8, 10) + "/" + m.at.slice(5, 7)) + " (" + (m.views ? m.views + " vues" : m.reach + " comptes") + ")"; }).join(", ") + ".");
+  const coming = top.filter((p) => p.date && p.date >= next1 && p.date <= next7 && p.status !== "draft");
+  const review = coming.filter((p) => Core.displayStatus(p, now) === "review"), manual = coming.filter((p) => p.manual && p.status !== "published");
+  lines.push("Semaine prochaine : " + plural(coming.length, "post prévu", "posts prévus") + (review.length ? ", dont " + plural(review.length, "légende à valider", "légendes à valider") : "") + (manual.length ? ", " + plural(manual.length, "post à faire à la main", "posts à faire à la main") : "") + ".");
+  const empty = []; for (let d = next1; d <= next7; d = Core.addDays(d, 1)) if (!coming.some((p) => p.date === d)) empty.push(dayName(d));
+  if (empty.length) lines.push("Rien de prévu " + (empty.length > 1 ? "les jours suivants : " : "") + empty.join(", ") + ".");
+  return { title: "PlanneRs · ta semaine", text: lines.join("\n") };
+}

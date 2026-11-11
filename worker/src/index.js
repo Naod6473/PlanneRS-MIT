@@ -19,7 +19,7 @@ import * as ghpages from "./storage/ghpages.js";
 import * as s3 from "./storage/s3.js";
 import { joinPath } from "./storage/common.js";
 import { PublishError } from "./adapters/meta.js";
-import { collect as collectStats } from "./stats.js";
+import { collect as collectStats, mediaKey } from "./stats.js";
 import * as threads from "./adapters/threads.js";
 import * as bluesky from "./adapters/bluesky.js";
 import * as mastodon from "./adapters/mastodon.js";
@@ -197,6 +197,7 @@ async function api(request, env, path, url, auth) {
   if (path === "ical" && m === "POST") { const token = share.newToken(); await db.putKV(env, "ical", { token, by: me }); return json({ url: url.origin + "/cal/" + token + ".ics" }); }
   if (path === "ical" && m === "DELETE") { await db.putKV(env, "ical", {}); return json({ ok: true }); }
   if (path === "daily/run" && m === "POST") return json((await runDaily(env, true)) || {});
+  if (path === "weekly/run" && m === "POST") return json((await runWeekly(env, body && body.send ? "send" : "preview")) || {});
   if (path === "share" && m === "POST") {
     if (!body || !Array.isArray(body.ids) || !body.ids.length) return err("ids manquant");
     const set = (await db.getKV(env, "settings")) || {};
@@ -454,6 +455,18 @@ async function syncInstagram(env, force) {
   return { changed: changed.length };
 }
 
+// Bilan du dimanche soir (Réglages › Notifications), envoyé une fois par semaine.
+async function runWeekly(env, force) {
+  const settings = Object.assign({}, DEFAULT_SETTINGS, (await db.getKV(env, "settings")) || {});
+  const now = localNow(settings.timezone), mark = (await db.getKV(env, "weekly")) || {};
+  if (!force && !daily.weeklyDue(now, settings, mark.day)) return null;
+  if (!force) await db.putKV(env, "weekly", { day: now.slice(0, 10) });
+  const s = await db.loadState(env);
+  const w = daily.weekly(s.posts, await db.getKV(env, "stats"), settings, now, mediaKey);
+  if (!force || force === "send") await (await notifier(env, settings))({ event: "weekly", title: w.title, text: w.text });
+  return w;
+}
+
 // Relevé des statistiques : une fois par jour à partir de 7 h (heure de l'espace), ou à la demande.
 async function stats(env, onlyIfDue) {
   const settings = Object.assign({}, DEFAULT_SETTINGS, (await db.getKV(env, "settings")) || {});
@@ -502,6 +515,6 @@ export default {
     catch (e) { return err("Erreur du serveur : " + e.message, 500); }
   },
   async scheduled(event, env, ctx) {
-    ctx.waitUntil(robot(env).finally(() => syncInstagram(env).catch(() => null)).finally(() => stats(env, true).catch(() => null)).finally(() => runDaily(env).catch(() => null)));
+    ctx.waitUntil(robot(env).finally(() => syncInstagram(env).catch(() => null)).finally(() => stats(env, true).catch(() => null)).finally(() => runDaily(env).catch(() => null)).finally(() => runWeekly(env).catch(() => null)));
   },
 };
