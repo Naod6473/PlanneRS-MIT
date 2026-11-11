@@ -6,7 +6,7 @@
 // chiffrement, puis t'aide à protéger l'accès. Relancer la commande est sans danger : elle reprend là où elle en est.
 // Options : --dir <dossier> (défaut : planners), --dry-run (affiche les commandes sans rien lancer).
 import { spawnSync } from "node:child_process";
-import { cpSync, existsSync, readFileSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { randomBytes } from "node:crypto";
 import { dirname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -39,7 +39,9 @@ export const newKey = () => randomBytes(32).toString("base64");
 
 // ---------------------------------------------------------------- déroulé
 
-const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+// Lancé directement (et non importé par les tests) ? Via npx, le chemin reçu est un lien : on compare les vrais chemins.
+const real = (p) => { try { return realpathSync(p); } catch (e) { return resolve(p); } };
+const isMain = !!process.argv[1] && real(process.argv[1]) === real(fileURLToPath(import.meta.url));
 if (isMain) main().catch((e) => { console.error("\n✗ " + e.message + "\n  Corrige, puis relance la même commande : elle reprend où elle en est."); process.exit(1); });
 
 async function main() {
