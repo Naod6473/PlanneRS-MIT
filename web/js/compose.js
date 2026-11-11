@@ -12,6 +12,17 @@
   const driveThumb = (u) => { const id = (/drive\.google\.com\/.*(?:id=|\/d\/)([\w-]{20,})/.exec(u || "") || [])[1]; return id ? "https://drive.google.com/thumbnail?id=" + id + "&sz=w800" : u; };
 
   // Format déduit des médias tant que la personne ne l'a pas choisi.
+  A.mediaLibrary = function () {
+    const seen = new Set(), out = [];
+    S.state.posts.slice().sort((a, b) => ((b.date || "") + (b.time || "")).localeCompare((a.date || "") + (a.time || "")))
+      .forEach((p) => (p.media || []).forEach((m) => {
+        const k = m.drive || m.url;
+        if (!k || m.local || /^blob:/.test(m.url || "") || m.role === "guide" || seen.has(k)) return;
+        seen.add(k); out.push({ m, p });
+      }));
+    return out;
+  };
+
   A.guessFormat = function (media) {
     const ms = (media || []).filter((m) => m.role !== "guide" && m.role !== "cover");
     if (ms.some(isVid)) return "reel";
@@ -72,7 +83,7 @@
         '<div class="cp-box"><div class="cp-capt" role="tablist" aria-label="Texte par réseau"></div>' +
           '<textarea id="cp-text" class="cp-text" placeholder="Écris ton texte ici…" aria-label="Texte du post"></textarea>' +
           '<p class="muted cp-hint" id="cp-hint" hidden></p>' +
-          '<div class="cp-media" id="cp-media"></div>' +
+          '<div class="cp-media" id="cp-media"></div><ul class="cp-warn" id="cp-warn" hidden></ul>' +
           '<div class="cp-tools"><button type="button" class="btn sm" data-cp="media">' + icon("image") + "Insérer un média</button>" +
             (tpl.signature ? '<button type="button" class="btn sm quiet" data-cptpl="sig" title="Ajouter la signature">' + icon("pen") + "Signature</button>" : "") +
             tags.map((t, i) => '<button type="button" class="btn sm quiet" data-cptpl="' + i + '">#&nbsp;' + esc(t.name) + "</button>").join("") +
@@ -80,7 +91,9 @@
             '<button type="button" class="btn sm quiet" data-cp="adapt" id="cp-ad" hidden>' + icon("spark") + "Adapter pour chaque réseau</button>" +
             '<span class="grow"></span><span class="cp-count" id="cp-count"></span></div>' +
           '<div class="cp-add" id="cp-add" hidden><label class="btn sm">' + icon("download") + 'Depuis l\'appareil<input type="file" id="cp-file" accept="image/*,video/*" multiple hidden></label>' +
+            '<button type="button" class="btn sm" data-cp="lib">' + icon("contents") + "Bibliothèque</button>" +
             '<input type="url" id="cp-url" placeholder="ou colle le lien d\'une image ou d\'une vidéo (https://…)"><button type="button" class="btn sm" data-cp="addurl">Ajouter</button></div>' +
+          '<div class="cp-lib" id="cp-lib" hidden><input type="search" id="cp-libq" placeholder="Chercher un média (nom du fichier ou titre du post)" aria-label="Chercher dans la bibliothèque"><div class="cp-libgrid" id="cp-libgrid"></div></div>' +
           '<div class="bar" id="cp-bar" hidden><i></i></div></div>' +
         '<details class="cp-set" id="cp-set"><summary>' + icon("settings") + "Paramètres</summary><div class=\"form\">" +
           '<label>Titre (pour toi, dans le calendrier)<input id="cp-title" placeholder="Pris dans la première ligne si tu le laisses vide"></label>' +
@@ -151,6 +164,7 @@
       const alt = $("#cp-alt").value.trim(); if (alt) d.alt = alt; else delete d.alt;
     }
     function draw() {
+      warn();
       sync();
       if (!d.networks.includes(pv)) pv = d.networks[0];
       $(".cp-pvnets").innerHTML = d.networks.length > 1 ? d.networks.map((n) => '<button type="button" data-cppv="' + n + '" aria-pressed="' + (n === pv) + '">' + brand(n) + '<span class="lbl">' + esc(T(n)) + "</span></button>").join("") : "";
@@ -167,6 +181,28 @@
         '<small title="' + esc(m.name || "") + '">' + esc(m.name || "média") + '</small><button type="button" class="iconbtn" data-cpdel="' + i + '" aria-label="Retirer ' + esc(m.name || "le média") + '">' + icon("x") + "</button></span>").join("");
       if (autoFormat) { $("#cp-format").value = A.guessFormat(d.media); }
       draw();
+      (d.media || []).forEach((m) => { if (!m._probed) probe(m); });
+    }
+    // Durée, dimensions et poids d'un média, relevés dans le navigateur pour les contrôles par réseau.
+    function probe(m) {
+      m._probed = true;
+      const src = srcOf(m); if (!src) return;
+      const done = () => { warn(); };
+      if (isVid(m)) {
+        const v = document.createElement("video"); v.preload = "metadata"; v.muted = true;
+        v.onloadedmetadata = () => { if (isFinite(v.duration)) m.dur = Math.round(v.duration * 10) / 10; if (v.videoWidth) { m.w = v.videoWidth; m.h = v.videoHeight; } done(); };
+        v.src = src;
+      } else {
+        const im = new Image(); im.onload = () => { m.w = im.naturalWidth; m.h = im.naturalHeight; done(); }; im.src = src;
+      }
+    }
+    // Problèmes de médias pour les réseaux cochés, en direct.
+    function warn() {
+      const box = $("#cp-warn"); if (!box) return;
+      const fm = $("#cp-format") ? $("#cp-format").value || A.guessFormat(d.media) : d.format;
+      const list = C.mediaChecks(Object.assign({}, d, { format: fm }));
+      box.hidden = !list.length;
+      box.innerHTML = list.map((c) => '<li class="' + c.level + '">' + icon(c.level === "block" ? "alert" : "eye") + "<span>" + esc(c.text) + "</span></li>").join("");
     }
     const touch = () => { dirty = true; };
 
@@ -216,6 +252,12 @@
       if (!(b = e.target.closest("[data-cp]"))) return;
       const act = b.dataset.cp;
       if (act === "media") { const a = $("#cp-add"); a.hidden = !a.hidden; if (!a.hidden) $("#cp-url").focus(); return; }
+      if (act === "lib") { const l = $("#cp-lib"); l.hidden = !l.hidden; if (!l.hidden) { lib(); $("#cp-libq").focus(); } return; }
+      if (act === "libadd") {
+        const x = libItems[+b.dataset.i]; if (!x) return;
+        const m = JSON.parse(JSON.stringify(x.m)); delete m._pv; delete m._probed; delete m.role;
+        d.media.push(m); touch(); media(); lib(); U.toast("Média ajouté"); return;
+      }
       if (act === "addurl") {
         const u = $("#cp-url").value.trim();
         if (!/^https:\/\//i.test(u)) { U.toast("Le lien doit commencer par https://"); return; }
@@ -228,11 +270,28 @@
       if (act === "draft" || act === "go") return save(act);
     });
 
+    // Bibliothèque : les médias déjà utilisés dans les posts, du plus récent au plus ancien, sans doublon.
+    let libItems = [];
+    function lib() {
+      const norm = (x) => String(x || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+      const q = norm($("#cp-libq").value.trim());
+      libItems = A.mediaLibrary().filter((x) => !q || norm(x.m.name).includes(q) || norm(x.p.title).includes(q));
+      const have = new Set((d.media || []).map((m) => m.drive || m.url));
+      const shown = libItems.slice(0, 48);
+      $("#cp-libgrid").innerHTML = shown.length ? shown.map((x, i) => { const src = srcOf(x.m), v = isVid(x.m), on = have.has(x.m.drive || x.m.url);
+        return '<button type="button" class="cp-libit" data-cp="libadd" data-i="' + i + '"' + (on ? ' aria-pressed="true" title="Déjà dans ce post"' : ' title="' + esc(x.m.name || "") + '"') + ">" +
+          (v ? '<span class="cp-vid">' + icon("film") + "</span>" : src ? '<img loading="lazy" src="' + esc(driveThumb(src)) + '" alt="">' : '<span class="cp-vid">' + icon("image") + "</span>") +
+          '<small data-noi18n>' + esc(x.m.name || "média") + '</small><small class="muted" data-noi18n>' + esc(x.p.title || "") + "</small></button>"; }).join("") +
+          (libItems.length > shown.length ? '<p class="muted small">' + (libItems.length - shown.length) + " autres : précise ta recherche.</p>" : "")
+        : '<p class="muted small">' + (q ? "Aucun média ne correspond." : "Pas encore de média dans tes posts.") + "</p>";
+    }
+    L.addEventListener("input", (e) => { if (e.target.id === "cp-libq") lib(); });
+
     async function addFiles(files) {
       files = files.filter((f) => /^(image|video)\//.test(f.type));
       if (!files.length) { U.toast("Choisis une image ou une vidéo"); return; }
       if (S.mode !== "api") {
-        files.forEach((f) => d.media.push({ name: f.name, type: /^video/.test(f.type) ? "video" : "image", url: URL.createObjectURL(f), local: true }));
+        files.forEach((f) => d.media.push({ name: f.name, type: /^video/.test(f.type) ? "video" : "image", url: URL.createObjectURL(f), local: true, size: f.size, mime: f.type }));
         touch(); media(); U.toast("Mode démo : le fichier reste dans ce navigateur"); return;
       }
       const w = (S.state.accounts || {}).gdrivewrite;
@@ -250,7 +309,7 @@
             x.onerror = () => ko(new Error("Réseau indisponible"));
             x.send(f);
           });
-          d.media.push({ name: f.name, type: /^video/.test(f.type) ? "video" : "image", drive: r.id, url: r.url || "", _pv: URL.createObjectURL(f) });
+          d.media.push({ name: f.name, type: /^video/.test(f.type) ? "video" : "image", drive: r.id, url: r.url || "", _pv: URL.createObjectURL(f), size: f.size, mime: f.type });
           if (!d.folder) d.folder = dest;
           touch(); media();
         } catch (er) { U.toast("Envoi impossible : " + er.message); }
@@ -316,7 +375,7 @@
       if (act === "go" && !moveLater) { d.date = w.date; d.time = w.date ? w.time : null; }
       if (orig && orig.title !== d.title && !$("#cp-title").value.trim() && !autoTitle) d.title = orig.title;
       delete d.linkCheck;
-      d.media.forEach((m) => { delete m._pv; });
+      d.media.forEach((m) => { delete m._pv; delete m._probed; });
       await S.savePosts([d]);
       await S.log({ level: "change", text: (orig ? "Post modifié : " : "Nouveau post : ") + d.title + (changedText && !d.captionValidated ? " (texte à valider)" : ""), postId: d.id });
       dirty = false; A.beforeClose = null; A.closeLayer();

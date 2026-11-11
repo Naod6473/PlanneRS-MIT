@@ -304,6 +304,7 @@
       '<div class="seg" role="group" aria-label="Affichage">' + [["week", "Semaine"], ["month", "Mois"], ["grid", 'Grille<span class="lbl"> du profil</span>']].map(([k, l]) =>
         '<button data-calmode="' + k + '" aria-pressed="' + (A.calMode === k) + '">' + l + "</button>").join("") + "</div>" +
       '<span class="grow"></span>' + netMenu() +
+      (mode === "agenda" && top().some((p) => !p.date && p.status === "ready") ? '<button class="btn" data-fillweek>' + icon("spark") + '<span class="lbl">Remplir la semaine</span></button>' : "") +
       '<button class="btn primary desk" data-new>' + icon("plus") + "Nouveau post</button>";
     let html;
     if (mode === "agenda") html = agenda();
@@ -357,6 +358,7 @@
       ? '<aside class="tray closed" data-tray aria-label="Prêts à programmer"><button class="traytg" data-tray-toggle aria-expanded="false" title="Afficher les posts prêts à programmer">' + icon("left") + '<span>Prêts à programmer · ' + ready.length + "</span></button></aside>"
       : '<aside class="tray" data-tray aria-label="Prêts à programmer"><h2 class="sec-h"><span>Prêts à programmer</span><span>' + ready.length +
         ' <button class="iconbtn sm" data-tray-toggle aria-expanded="true" title="Replier">' + icon("right") + "</button></span></h2>" +
+        (ready.length ? '<button class="btn sm" data-fillweek style="width:100%;justify-content:center">' + icon("spark") + "Remplir la semaine</button>" : "") +
         '<div class="traylist">' + (ready.map((p) => card(p, { draggable: true })).join("") || '<p class="muted" style="font-size:12px">Rien en attente.</p>') + "</div>" +
         '<p class="muted" style="font-size:12px;margin:4px 0 0">Glisse une carte sur un créneau (au téléphone : appui long, puis glisse). Au clavier : ouvre la carte, puis « Changer la date ».</p></aside>';
     return '<div class="cal-wrap fit">' + h + tray + "</div>";
@@ -650,6 +652,11 @@
     const tagRow = (o) => { const r = avgAll ? o.avg / avgAll : 1; return '<div class="htrow"><span class="ht">' + esc(o.tag) + '</span><span class="muted">' + o.n + " posts</span><span class=\"htbar\"><i style=\"width:" + Math.min(100, Math.round(r * 50)) + '%"></i></span><b>' + fmtN(Math.round(o.avg)) + '</b><span class="' + (r >= 1.1 ? "up" : r <= 0.9 ? "down" : "muted") + '">' + (r >= 1 ? "+" : "") + Math.round((r - 1) * 100) + " %</span></div>"; };
     const tagBox = tags.length ? '<section class="panel"><h2 class="sec-h"><span>Hashtags qui marchent</span><span>vues moyennes</span></h2><p class="muted small" style="margin:0 0 8px">Pour chaque hashtag utilisé au moins 2 fois : la moyenne des vues des posts qui le contiennent, comparée à ta moyenne (' + fmtN(Math.round(avgAll)) + " vues). C\'est une tendance, pas une preuve : le sujet et l\'heure comptent aussi.</p>" +
       tags.slice(0, 8).map(tagRow).join("") + (tags.length > 8 ? '<details><summary class="muted" style="cursor:pointer;margin-top:6px">Les ' + (tags.length - 8) + " autres</summary>" + tags.slice(8).map(tagRow).join("") + "</details>" : "") + "</section>" : "";
+    // À republier : posts d'au moins 45 jours, au-dessus de la moyenne des vues, pas déjà repris.
+    const since = C.addDays(t, -45), reposted = new Set(posts().map((p) => p.repostOf).filter(Boolean));
+    const again = rows.filter((x) => x.p.date && x.p.date <= since && !reposted.has(x.p.id) && x.views >= avgAll && x.views > 0).sort((a, b) => b.views - a.views).slice(0, 5);
+    const againBox = again.length ? '<section class="panel"><h2 class="sec-h"><span>À republier</span><span>' + again.length + '</span></h2><p class="muted small" style="margin:0 0 8px">Des posts qui ont bien marché il y a plus de 45 jours : tes nouveaux abonnés ne les ont sans doute pas vus.</p>' +
+      again.map((x) => '<div class="rcrow">' + (x.p.thumb ? '<img src="' + safeUrl(x.p.thumb) + '" alt="">' : '<span class="noimg">' + icon("contents") + "</span>") + '<span class="nm"><b>' + esc(x.p.title) + '</b><span class="muted">' + esc(C.shortDay(x.p.date)) + " · " + fmtN(x.views) + ' vues</span></span><button class="btn" data-recycle="' + esc(x.p.id) + '">' + icon("undo") + "Republier</button></div>").join("") + "</section>" : "";
     const sortSeg = '<div class="seg small-seg" role="group" aria-label="Trier par">' + SORTS.map(([k, l]) => '<button data-stat-sort="' + k + '" aria-pressed="' + (sortBy === k) + '">' + l + "</button>").join("") + "</div>";
 
     // Le Reel le plus vu (parmi tous les Reels relevés sur Instagram).
@@ -671,7 +678,7 @@
       title: "Stats", tools,
       html: (warn.length ? '<div class="banner warn">' + warn.map(esc).join("<br>") + "</div>" : "") +
         A.statCardsHtml(st, t) + best + A.bestTimesHtml() +
-        '<div class="statgrid"><section class="panel"><div class="sec-row"><h2 class="sec-h"><span>Publications</span><span>' + rows.length + "</span></h2>" + sortSeg + "</div>" + (top ? top + '<p class="muted small" style="margin:10px 0 0">Un post a bien marché ? Ouvre-le et choisis « Reprendre plus tard » pour le reprogrammer dans quelques semaines.</p>' : '<div class="empty">Aucune publication reliée pour l\'instant.</div>') + "</section>" + tagBox + "</div>" + note,
+        '<div class="statgrid"><section class="panel"><div class="sec-row"><h2 class="sec-h"><span>Publications</span><span>' + rows.length + "</span></h2>" + sortSeg + "</div>" + (top ? top + '<p class="muted small" style="margin:10px 0 0">Un post a bien marché ? Ouvre-le et choisis « Republier » pour le reprogrammer quand tu veux.</p>' : '<div class="empty">Aucune publication reliée pour l\'instant.</div>') + "</section>" + againBox + tagBox + "</div>" + note,
     };
   };
 
@@ -687,16 +694,19 @@
     if (S.mode === "api" && !A.comments && !A.commentsLoading) { A.commentsLoading = true; setTimeout(() => A.loadComments(), 0); }
     const data = A.comments, list = data && data.comments ? data.comments : [];
     const open = list.filter((c) => !c.answered), shown = A.cmAll ? list : open;
+    const quick = ((settings().templates || {}).replies || []).filter(Boolean);
     const card = (c) => {
       const post = c.post || (c.postId && S.post(c.postId));
       return '<div class="cmt' + (c.answered ? " done" : "") + '"><div class="cm-h"><b data-noi18n>@' + esc(c.user) + '</b><time class="muted">' + esc(String(c.at || "").slice(8, 10) + "/" + String(c.at || "").slice(5, 7) + " " + String(c.at || "").slice(11, 16)) + "</time>" +
         (post ? '<button class="lk muted" data-open="' + esc(post.id) + '">sur « ' + esc(post.title) + " »</button>" : c.url ? '<a class="lk muted" href="' + safeUrl(c.url) + '" target="_blank" rel="noopener">voir la publication</a>' : "") + "</div>" +
         '<p data-noi18n>' + esc(c.text) + "</p>" + (c.replies || []).map((r) => '<p class="cm-rep' + (r.mine ? " mine" : "") + '" data-noi18n><b>@' + esc(r.user || "") + "</b> " + esc(r.text) + "</p>").join("") +
         (c.answered ? "" : '<div class="cm-new"><textarea rows="2" data-cm-text="' + esc(c.id) + '" aria-label="Réponse à @' + esc(c.user) + '" placeholder="Ta réponse…"></textarea><div class="cm-acts">' +
+          (quick.length ? '<span class="cm-quick" role="group" aria-label="Réponses rapides">' + quick.map((r, i) => '<button type="button" class="chip sm" data-cm-quick="' + i + '" data-cm-for="' + esc(c.id) + '" title="' + esc(r) + '" data-noi18n>' + esc(r.length > 28 ? r.slice(0, 27) + "…" : r) + "</button>").join("") + "</span>" : "") +
           (data.rewrite ? '<button class="btn quiet sm" data-cm-suggest="' + esc(c.id) + '">' + icon("spark") + "Proposer une réponse</button>" : "") +
           '<button class="btn sm primary" data-cm-reply="' + esc(c.id) + '">' + icon("send") + "Répondre</button></div></div>") + "</div>";
     };
     return '<h2 class="sec-h"><span>Commentaires Instagram' + (open.length ? " · " + open.length + " sans réponse" : "") + '</span><span class="seg" role="group" aria-label="Filtrer les commentaires"><button data-cmall="0" aria-pressed="' + !A.cmAll + '">Sans réponse</button><button data-cmall="1" aria-pressed="' + !!A.cmAll + '">Tous</button></span><button class="iconbtn sm" data-cm-refresh aria-label="Actualiser les commentaires" title="Actualiser">' + icon("activity") + "</button></h2>" +
+      (quick.length ? "" : '<p class="muted small" style="margin:0 0 8px"><button type="button" class="lk" data-settab="templates">Prépare des réponses rapides</button> (merci, lien en bio…) pour répondre en un clic.</p>') +
       '<div class="cmts">' + (!data ? '<p class="muted">Chargement des commentaires…</p>' : data.error ? '<p class="muted">' + esc(data.error) + "</p>" : shown.length ? shown.map(card).join("") : '<div class="empty">' + (A.cmAll ? "Aucun commentaire récent." : "Tu as répondu à tout le monde.") + "</div>") + "</div>";
   }
 
@@ -824,6 +834,8 @@
         '<section class="panel"><h2>Groupes de hashtags</h2><p>Des séries de hashtags prêtes à insérer, par thème.</p><div class="form">' +
         tags.map((g, i) => '<div class="tplgroup"><input value="' + esc(g.name) + '" data-tpl-name="' + i + '" aria-label="Nom du groupe" placeholder="Nom (ex. : Recettes)"><textarea rows="2" data-tpl-text="' + i + '" aria-label="Hashtags du groupe" placeholder="#pain #boulangerie">' + esc(g.text) + '</textarea><button class="iconbtn" data-tpl-del="' + i + '" aria-label="Supprimer ce groupe">' + icon("trash") + "</button></div>").join("") +
         '<div><button class="btn" data-tpl-add>' + icon("plus") + "Ajouter un groupe</button></div></div></section>" +
+        '<section class="panel"><h2>Réponses rapides</h2><p>Tes réponses habituelles aux commentaires, une par ligne. Dans Activité, un clic l\'insère dans la réponse ; {nom} est remplacé par le pseudo de la personne.</p><div class="form">' +
+        '<label>Réponses<textarea rows="4" data-tpl-replies placeholder="Merci {nom} !&#10;Le lien est dans la bio 😉&#10;Bonne question, on en parle bientôt !">' + esc((t.replies || []).join("\n")) + "</textarea></label></div></section>" +
         '<section class="panel"><h2>Ensembles de réseaux</h2><p>Tes combinaisons habituelles (par exemple « Instagram + Facebook »). Dans un post, un bouton coche l\'ensemble d\'un coup.</p><div class="form">' +
         (t.sets || []).map((g, i) => '<div class="setrow"><input value="' + esc(g.name) + '" data-set-name="' + i + '" aria-label="Nom de l\'ensemble" placeholder="Nom (ex. : Partout)"><div class="filters">' + netChecks("data-set-net=\"" + i + "\"", g.networks) + '</div><button class="iconbtn" data-set-del="' + i + '" aria-label="Supprimer cet ensemble">' + icon("trash") + "</button></div>").join("") +
         '<div><button class="btn" data-set-add>' + icon("plus") + "Ajouter un ensemble</button></div></div></section>" +

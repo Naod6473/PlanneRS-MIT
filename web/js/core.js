@@ -117,9 +117,45 @@
       out.push({ level: "warn", text: (p.linkCheck.bad.length > 1 ? p.linkCheck.bad.length + " liens ne répondent pas : " : "Un lien ne répond pas : ") + p.linkCheck.bad.map((b) => b.url + (b.status ? " (" + b.status + ")" : "")).join(", ") + "." });
     if (p.expires && p.date && p.date > p.expires)
       out.push({ level: "warn", text: "Contenu d'actualité : il se périme le " + longDate(p.expires) + "." });
+    mediaChecks(p).forEach((c) => out.push(c));
     (settings && settings.customChecks || []).forEach((c) => {
       if (c.contains && !(p.caption || "").includes(c.contains)) out.push({ level: "warn", text: c.label });
     });
+    return out;
+  }
+
+  // Contrôle des médias selon les réseaux cochés. Ne juge que ce qui est connu (durée, taille, dimensions
+  // relevées à l'ajout du fichier) : un média sans ces informations n'est pas bloqué.
+  const MB = 1024 * 1024;
+  const VID = { // durée min/max (s), poids max (Mo)
+    instagram: { reel: [3, 900, 1000], story: [1, 60, 100] }, facebook: { reel: [3, 90, 1000] }, tiktok: { any: [3, 600, 4000] },
+    youtube: { any: [1, 43200, 256000] }, x: { any: [0.5, 140, 512] }, linkedin: { any: [3, 1800, 5000] }, threads: { any: [0, 300, 1000] }, bluesky: { any: [0, 180, 100] },
+  };
+  const MNAMES = { instagram: "Instagram", facebook: "Facebook", tiktok: "TikTok", youtube: "YouTube", x: "X", linkedin: "LinkedIn", threads: "Threads", bluesky: "Bluesky", pinterest: "Pinterest", mastodon: "Mastodon" };
+  function mediaChecks(p) {
+    const out = [], nets = p.networks || [];
+    const ms = (p.media || []).filter((m) => m.role !== "guide" && m.role !== "cover");
+    const isV = (m) => m.type === "video" || /\.(mp4|mov|webm|m4v)(\?|$)/i.test(m.name || m.url || "");
+    const vids = ms.filter(isV), imgs = ms.filter((m) => !isV(m));
+    const fmt = (s) => s >= 60 ? Math.floor(s / 60) + " min" + (s % 60 ? " " + Math.round(s % 60) + " s" : "") : Math.round(s * 10) / 10 + " s";
+    ["tiktok", "youtube"].forEach((n) => { if (nets.includes(n) && ms.length && !vids.length) out.push({ level: "block", text: MNAMES[n] + " publie des vidéos seulement : ajoute une vidéo, ou retire " + MNAMES[n] + "." }); });
+    vids.forEach((m) => nets.forEach((n) => {
+      const r = VID[n] && (VID[n][p.format] || VID[n].any); if (!r) return;
+      if (m.dur != null && m.dur < r[0]) out.push({ level: "block", text: MNAMES[n] + " : vidéo trop courte (" + fmt(m.dur) + ", minimum " + fmt(r[0]) + ")." });
+      if (m.dur != null && m.dur > r[1]) out.push({ level: "block", text: MNAMES[n] + " : vidéo trop longue (" + fmt(m.dur) + ", maximum " + fmt(r[1]) + ")." });
+      if (m.size != null && m.size > r[2] * MB) out.push({ level: "block", text: MNAMES[n] + " : fichier trop lourd (" + Math.round(m.size / MB) + " Mo, maximum " + r[2] + " Mo)." });
+    }));
+    vids.forEach((m) => {
+      if (nets.includes("youtube") && m.w && m.h && (m.w > m.h || (m.dur != null && m.dur > 180))) out.push({ level: "warn", text: "YouTube : ce ne sera pas un Short (il faut une vidéo verticale de 3 min au plus) ; elle partira en vidéo classique." });
+      if ((p.format === "reel" || p.format === "story") && m.w && m.h && m.w >= m.h && nets.some((n) => ["instagram", "tiktok", "facebook"].includes(n))) out.push({ level: "warn", text: "Vidéo horizontale : en Reel ou en story, elle sera affichée avec des bandes. Le format vertical 9:16 est conseillé." });
+    });
+    if (nets.includes("instagram") && p.format !== "story") imgs.forEach((m) => {
+      if (m.w && m.h) { const r = m.w / m.h; if (r < 0.8 - 0.01 || r > 1.91 + 0.01) out.push({ level: "block", text: "Instagram : image " + m.w + " × " + m.h + " hors format (du 4:5 vertical au 1,91:1 horizontal). Recadre-la." }); }
+      if (m.size != null && m.size > 8 * MB) out.push({ level: "block", text: "Instagram : image trop lourde (" + Math.round(m.size / MB) + " Mo, maximum 8 Mo)." });
+      if (/\.(png|webp|gif|heic)(\?|$)/i.test(m.name || m.url || "") || /png|webp|gif|heic/.test(m.mime || "")) out.push({ level: "warn", text: "Instagram n'accepte que le JPEG par l'API : « " + (m.name || "image") + " » sera refusée si elle n'est pas convertie." });
+    });
+    if (nets.includes("instagram") && p.format === "carousel" && ms.length > 20) out.push({ level: "block", text: "Instagram : 20 médias au plus dans un carrousel (" + ms.length + " ici)." });
+    if (nets.includes("x") && imgs.length > 4) out.push({ level: "block", text: "X : 4 images au plus (" + imgs.length + " ici)." });
     return out;
   }
 
@@ -135,6 +171,6 @@
   function nowStamp(d) { d = d || new Date(); return ymd(d) + "T" + pad(d.getHours()) + ":" + pad(d.getMinutes()); }
 
   const api = { STATUS, FORMATS, STAGES, pad, ymd, parseYmd, addDays, mondayOf, toMin, at, longDate, shortDay, MONTHS, DAYS, setLang,
-    displayStatus, missed, willSend, hashtags, checks, slotOf, nowStamp, capFor, TEXT_MAX, utm, textOut };
+    displayStatus, missed, willSend, hashtags, checks, mediaChecks, slotOf, nowStamp, capFor, TEXT_MAX, utm, textOut };
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.Core = api;
 })(typeof self !== "undefined" ? self : this);

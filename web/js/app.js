@@ -139,6 +139,12 @@
     }
     if ((b = g("[data-cmall]"))) { A.cmAll = b.dataset.cmall === "1"; return A.render(); }
     if ((b = g("[data-cm-refresh]"))) { if (S.mode !== "api") return U.toast("Mode démo : commentaires fictifs"); A.comments = null; A.render(); return A.loadComments(true); }
+    if ((b = g("[data-cm-quick]"))) {
+      const id = b.dataset.cmFor, ta = document.querySelector('[data-cm-text="' + CSS.escape(id) + '"]'), r = ((S.state.settings.templates || {}).replies || [])[+b.dataset.cmQuick];
+      const c = ((A.comments || {}).comments || []).find((x) => x.id === id);
+      if (ta && r) { const v = r.replace(/\{nom\}/g, c ? "@" + c.user : "").replace(/ {2,}/g, " ").trim(); ta.value = ta.value.trim() ? ta.value.trim() + " " + v : v; ta.focus(); }
+      return;
+    }
     if ((b = g("[data-cm-suggest]"))) {
       const id = b.dataset.cmSuggest, ta = document.querySelector('[data-cm-text="' + CSS.escape(id) + '"]');
       if (S.mode !== "api") { ta.value = "Merci pour ton message ! Oui, ça marche aussi, avec un peu plus d'eau. Dis-nous ce que ça donne 😊"; return U.toast("Proposition de Claude (exemple de démo) : relis-la avant d'envoyer"); }
@@ -217,6 +223,8 @@
     if ((b = g("[data-nav]"))) { const k = +b.dataset.nav; const step = A.calMode === "month" ? 35 : 7;
       if (k === 0) { A.week = C.mondayOf(C.ymd(new Date())); A.day = null; } else if (A.calMode === "month") { const d = C.parseYmd(C.addDays(A.week, 3)); d.setMonth(d.getMonth() + k, 1); A.week = C.mondayOf(C.ymd(d)); } else A.week = C.addDays(A.week, k * step);
       A.render(); return; }
+    if ((b = g("[data-fillweek]"))) { A.fillWeek(); return; }
+    if ((b = g("[data-recycle]"))) { A.openRecycle(b.dataset.recycle); return; }
     if ((b = g("[data-calmode]"))) { A.calMode = b.dataset.calmode; A.render(); return; }
     if ((b = g("[data-gotoweek]"))) { A.week = C.mondayOf(b.dataset.gotoweek); A.calMode = "week"; A.render(); return; }
     if ((b = g("[data-day-pick]"))) { A.day = b.dataset.dayPick; A.render(); return; }
@@ -286,6 +294,7 @@
     if (d.plugNet != null) { st.auto.plugs[+d.plugNet].net = t.value; return S.saveSettings(st); }
     if (d.plugN != null) { st.auto.plugs[+d.plugN].threshold = Math.max(1, Math.round(+t.value) || 1); t.value = st.auto.plugs[+d.plugN].threshold; return S.saveSettings(st); }
     if (d.plugText != null) { st.auto.plugs[+d.plugText].comment = t.value.trim().slice(0, 2000); await S.saveSettings(st); if (t.value.trim()) U.toast("Règle enregistrée"); return; }
+    if (t.matches("[data-tpl-replies]")) { (st.templates = st.templates || {}).replies = t.value.split("\n").map((x) => x.trim()).filter(Boolean); return S.saveSettings(st); }
     if (t.matches("[data-tpl-sig]")) { (st.templates = st.templates || {}).signature = t.value; return S.saveSettings(st); }
     if (d.tplName != null) { st.templates.tags[+d.tplName].name = t.value.trim(); return S.saveSettings(st); }
     if (d.tplText != null) { st.templates.tags[+d.tplText].text = t.value.trim(); return S.saveSettings(st); }

@@ -26,7 +26,9 @@ D'où viennent les chiffres : pour 7 et 30 jours, les totaux du compte renvoyés
 
 Sous les cartes : le **Reel le plus vu**, la liste **Publications** (triée par vues, likes, commentaires, portée ou date) et les **hashtags qui marchent**.
 
-Un post a bien marché ? Ouvre-le depuis la liste et choisis **Reprendre plus tard** pour le reprogrammer dans quelques semaines ([Contenus](contenus.md#reprendre-un-post-qui-a-bien-marché)).
+Un post a bien marché ? Ouvre-le depuis la liste et choisis **Republier** pour le reprogrammer quand tu veux ([Contenus](contenus.md#republier-un-post-qui-a-bien-marché)).
+
+La carte **À republier** liste jusqu'à 5 posts publiés il y a plus de 45 jours, au-dessus de ta moyenne de vues, et pas encore republiés. Le bouton **Republier** ouvre directement la fenêtre de reprogrammation.
 
 ## Quand publier
 

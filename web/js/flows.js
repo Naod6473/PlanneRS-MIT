@@ -146,7 +146,7 @@
     else if (st === "manual" || st === "late") foot = '<button class="btn primary" data-act="manual">Poster à la main</button><button class="btn" data-act="showmove">Changer la date</button>' + (st === "late" ? '<button class="btn" data-act="ignore">Ignorer</button>' : "");
     else if (st === "scheduled") foot = '<button class="btn" data-act="showmove">Changer la date</button><button class="btn" data-act="unvalidate">Retirer la validation</button>' + (A.stageOf && A.stageOf(p) === "scheduled" ? '<button class="btn" data-unlock="' + esc(p.id) + '">' + icon("unlock") + "Débloquer</button>" : "");
     else if (st === "ready" || st === "draft") foot = '<button class="btn primary" data-act="showmove">Programmer</button>' + (st === "draft" ? '<button class="btn" data-act="toready">Marquer prêt</button>' : "");
-    else if (done) foot = (p.url ? '<a class="btn primary" href="' + safeUrl(p.url) + '" target="_blank" rel="noopener">' + icon("open") + "Voir le post</a>" : "") + (p.parent ? "" : '<button class="btn" data-act="recycle">' + icon("undo") + "Reprendre plus tard</button>");
+    else if (done) foot = (p.url ? '<a class="btn primary" href="' + safeUrl(p.url) + '" target="_blank" rel="noopener">' + icon("open") + "Voir le post</a>" : "") + (p.parent ? "" : '<button class="btn' + (p.url ? "" : " primary") + '" data-act="recycle">' + icon("undo") + "Republier</button>");
     if (!done) foot += '<button class="btn" data-act="compose">' + icon("pen") + "Modifier</button>";
     foot += '<span style="flex:1"></span><details class="moremenu"><summary class="btn quiet" aria-label="Plus d\'actions">' + icon("more") + '<span class="lbl2">Plus</span></summary><div class="mm-list" role="menu">' +
       '<button class="btn quiet" role="menuitem" data-act="dup">' + icon("dup") + "Dupliquer</button>" +
@@ -731,27 +731,34 @@
   A.openRecycle = function (id) {
     const p = S.post(id); if (!p) return;
     const t = C.ymd(new Date());
-    let d0 = C.addDays(p.date && p.date > C.addDays(t, -42) ? p.date : t, 42);
-    if (p.date) while (C.parseYmd(d0).getDay() !== C.parseYmd(p.date).getDay()) d0 = C.addDays(d0, 1);
     const slots = S.state.settings.slots || [];
-    openLayer('<div class="sh-top"><b>Reprendre plus tard</b><span style="flex:1"></span><button class="iconbtn" data-close aria-label="Fermer">' + icon("x") + "</button></div>" +
-      '<div class="sh-body"><p style="margin:0">Une copie de « <b data-noi18n>' + esc(p.title) + '</b> » avec ses médias et sa légende. La légende sera à relire et à valider : c\'est l\'occasion de la rafraîchir.</p><div class="form">' +
-      '<label>Jour<input type="date" id="rc-date" min="' + t + '" value="' + d0 + '"></label>' +
-      '<label>Créneau<select id="rc-time">' + slots.map((s) => '<option value="' + s.time + '"' + (s.time === p.time ? " selected" : "") + ">" + s.time + " · " + esc(s.label) + "</option>").join("") + (p.time && !slots.some((s) => s.time === p.time) ? '<option value="' + p.time + '" selected>' + p.time + "</option>" : "") + "</select></label></div></div>" +
-      '<div class="sh-foot"><button class="btn primary" id="rc-ok">Programmer la reprise</button><button class="btn" data-close>Annuler</button></div>', "Reprendre plus tard");
+    const sameDay = (d) => { if (p.date) while (C.parseYmd(d).getDay() !== C.parseYmd(p.date).getDay()) d = C.addDays(d, 1); return d; };
+    const quick = [["Demain", C.addDays(t, 1)], ["Dans 1 semaine", C.addDays(t, 7)], ["Dans 1 mois", sameDay(C.addDays(t, 28))], ["Dans 3 mois", sameDay(C.addDays(t, 84))]];
+    const d0 = quick[2][1];
+    const canVal = A.canValidate && A.canValidate();
+    openLayer('<div class="sh-top"><b>Republier</b><span style="flex:1"></span><button class="iconbtn" data-close aria-label="Fermer">' + icon("x") + "</button></div>" +
+      '<div class="sh-body"><p style="margin:0">Une copie de « <b data-noi18n>' + esc(p.title) + '</b> » avec ses médias, ses réseaux et sa légende.</p>' +
+      '<div class="rc-quick" role="group" aria-label="Quand">' + quick.map(([l, d]) => '<button type="button" class="chip" data-rcq="' + d + '" aria-pressed="' + (d === d0) + '">' + l + "</button>").join("") + "</div>" +
+      '<div class="form"><label>Jour<input type="date" id="rc-date" min="' + t + '" value="' + d0 + '"></label>' +
+      '<label>Créneau<select id="rc-time">' + slots.map((s) => '<option value="' + s.time + '"' + (s.time === p.time ? " selected" : "") + ">" + s.time + " · " + esc(s.label) + "</option>").join("") + (p.time && !slots.some((s) => s.time === p.time) ? '<option value="' + p.time + '" selected>' + p.time + "</option>" : "") + "</select></label>" +
+      (canVal ? '<label class="toggle"><input type="checkbox" id="rc-val"> Le texte est bon tel quel (validé, il partira à l\'heure prévue)</label>' : "") +
+      '</div><p class="muted" style="margin:0;font-size:13px">Sinon, la légende sera à relire et à valider : c\'est l\'occasion de la rafraîchir.</p></div>' +
+      '<div class="sh-foot"><button class="btn primary" id="rc-ok">' + icon("undo") + "Programmer la republication</button><button class=\"btn\" data-close>Annuler</button></div>", "Republier");
     const L = layer(); L.querySelector(".sheet").classList.add("ask");
     L.querySelector("#rc-ok").focus();
+    L.querySelectorAll("[data-rcq]").forEach((b) => b.addEventListener("click", () => { L.querySelector("#rc-date").value = b.dataset.rcq; L.querySelectorAll("[data-rcq]").forEach((x) => x.setAttribute("aria-pressed", String(x === b))); }));
     L.querySelector("#rc-ok").addEventListener("click", async () => {
       const d = L.querySelector("#rc-date").value;
       if (!d || d < t) { U.toast("Choisis une date à venir"); return; }
+      const val = !!(L.querySelector("#rc-val") && L.querySelector("#rc-val").checked);
       const c = JSON.parse(JSON.stringify(p));
       c.id = "k" + Date.now().toString(36); c.date = d; c.time = L.querySelector("#rc-time").value || p.time || "12:00";
-      c.status = "scheduled"; c.stage = "caption"; c.captionValidated = false; c.title = p.title.replace(/ \(reprise\)$/, "") + " (reprise)";
-      ["results", "failure", "url", "job", "ignored", "needsAttention", "reminded", "attempts", "comments", "ref"].forEach((k) => delete c[k]);
+      c.status = "scheduled"; c.stage = val ? "scheduled" : "caption"; c.captionValidated = val; c.title = p.title.replace(/ \(reprise\)$/, "") + " (reprise)"; c.repostOf = p.id;
+      ["results", "failure", "url", "job", "ignored", "needsAttention", "reminded", "attempts", "comments", "ref", "tries", "plugs"].forEach((k) => delete c[k]);
       await S.savePosts([c]);
-      await S.log({ level: "change", text: "Reprise de « " + p.title + " » programmée le " + C.longDate(d), postId: c.id });
+      await S.log({ level: "change", text: "Republication de « " + p.title + " » programmée le " + C.longDate(d) + " à " + c.time + (val ? "" : " (légende à valider)"), postId: c.id });
       A.closeLayer(); A.render();
-      U.toast("Reprise programmée, légende à valider", { label: "Annuler", fn: async () => { await S.deletePost(c.id); A.render(); U.toast("Reprise supprimée"); } });
+      U.toast(val ? "Republication programmée" : "Republication programmée, légende à valider", { label: "Annuler", fn: async () => { await S.deletePost(c.id); A.render(); U.toast("Republication supprimée"); } });
     });
   };
 

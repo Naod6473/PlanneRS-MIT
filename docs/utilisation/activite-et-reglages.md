@@ -17,7 +17,7 @@ updated: 2026-11-11
 
 ### Commentaires Instagram
 
-Sous l'état des connexions : les commentaires des dernières publications Instagram, **sans réponse** d'abord (« Tous » montre aussi ceux auxquels tu as répondu). Écris ta réponse et **Répondre** la publie sous le commentaire, sur Instagram. **Proposer une réponse** demande un brouillon à Claude (si la [clé Claude](../reference/assistants-ia.md#réécrire-une-légende-pour-chaque-réseau) est posée) : tu le relis et tu l'envoies toi-même, rien ne part tout seul. La liste est relue au plus toutes les 10 minutes ; le bouton d'actualisation la relit tout de suite.
+Sous l'état des connexions : les commentaires des dernières publications Instagram, **sans réponse** d'abord (« Tous » montre aussi ceux auxquels tu as répondu). Écris ta réponse et **Répondre** la publie sous le commentaire, sur Instagram. **Proposer une réponse** demande un brouillon à Claude (si la [clé Claude](../reference/assistants-ia.md#réécrire-une-légende-pour-chaque-réseau) est posée) : tu le relis et tu l'envoies toi-même, rien ne part tout seul. Les **réponses rapides** (préparées dans Réglages › Modèles) s'insèrent d'un clic dans la case de réponse ; `{nom}` devient le pseudo de la personne. La liste est relue au plus toutes les 10 minutes ; le bouton d'actualisation la relit tout de suite.
 
 Il faut l'autorisation Meta `instagram_manage_comments` sur le jeton Instagram (la même que pour le premier commentaire) ; sans elle, un message l'indique.
 
@@ -49,6 +49,8 @@ Quand assez de statistiques sont relevées (au moins 8 posts récents), le bloc 
 Sous la légende d'un post, « Insérer » ajoute la signature ou un groupe à la fin du texte.
 
 - **Ensembles de réseaux** : tes combinaisons habituelles, par exemple « Instagram + Facebook ». Dans la fiche d'un post, sous la liste des réseaux, un bouton par ensemble coche ces réseaux d'un coup ; il reste à enregistrer.
+
+- **Réponses rapides** : tes réponses habituelles aux commentaires, une par ligne (par exemple « Merci {nom} ! »). Elles apparaissent en boutons sous chaque commentaire, dans Activité.
 
 - **Liens suivis** : indique tes sites (un domaine par ligne). Au moment d'envoyer, PlanneRs ajoute `utm_source` (le réseau), `utm_medium=social` et `utm_campaign` (le titre du post) aux liens vers ces sites, pour voir dans les statistiques du site (Google Analytics, Matomo, Plausible…) ce que rapporte chaque réseau. Les légendes enregistrées ne changent pas ; l'aperçu et « Poster à la main » montrent la version envoyée. Les liens qui ont déjà des paramètres `utm_` ne sont pas touchés. Liste vide : rien n'est modifié.
 

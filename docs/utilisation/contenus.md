@@ -70,6 +70,7 @@ Toutes les images et vidéos des posts, des plus récentes aux plus anciennes, s
 - **En haut, les réseaux** : clique sur un logo pour l'ajouter ou le retirer. Le premier coché est le réseau **principal**, les autres sont des **relais**. Tes ensembles de réseaux (Réglages › Modèles) sont à côté.
 - **Le texte** : l'onglet **Tous les réseaux** est le texte commun ; un onglet par réseau permet une version propre (un point orange la signale). Le compteur indique la limite la plus courte des réseaux choisis et passe en rouge au-delà.
 - **Insérer un média** : depuis l'appareil (envoyé dans ton Drive si « Google Drive (envoi) » est connecté), en glissant un fichier sur la fenêtre, ou en collant un lien `https://`. Le format (Reel, carrousel, image, texte) se déduit des médias.
+- **Bibliothèque** (dans « Insérer un média ») : tous les médias déjà utilisés dans tes posts, du plus récent au plus ancien. Cherche par nom de fichier ou par titre de post, puis clique sur un média pour l'ajouter. Pratique pour réutiliser une vidéo ou un visuel sans le renvoyer.
 - **Adapter pour chaque réseau** (avec Claude, si la clé est configurée) : sur l'onglet **Tous les réseaux**, un clic propose un texte par réseau coché (longueur, ton, hashtags, première phrase pour YouTube). Chaque proposition arrive dans son onglet : relis-la, puis coche **Texte validé**.
 - **Paramètres** : titre (pris dans la première ligne si tu le laisses vide), format, publication à la main, premier commentaire, texte alternatif.
 - **À droite, l'aperçu** par réseau se met à jour pendant que tu écris. Sur téléphone, passe de **Écrire** à **Aperçu** en haut.
@@ -114,9 +115,13 @@ Dans **Titre, format, réseaux et options**, le champ **Description des images (
 
 Toujours dans **Titre, format, réseaux et options**, le champ **Premier commentaire** (facultatif) est posté sous le post sur Instagram et Facebook juste après la publication : pratique pour les hashtags ou un lien. Ses hashtags comptent dans la limite fixée dans les règles. S'il est refusé (le compte n'a pas le droit `instagram_manage_comments` ou `pages_manage_engagement`), le post reste publié et l'Activité le signale : ajoute-le à la main.
 
-### Reprendre un post qui a bien marché
+### Republier un post qui a bien marché
 
-Sur un post publié, **Reprendre plus tard** crée une copie avec les mêmes médias et la même légende, par défaut 6 semaines plus tard, le même jour de la semaine et au même créneau. La légende de la copie est à revalider : c'est l'occasion de la rafraîchir. Pour trouver les posts qui ont le mieux marché, trie la liste de [Stats](stats.md) par vues.
+Ouvre un post publié et clique sur **Republier**. Choisis quand : **Demain**, **Dans 1 semaine**, **Dans 1 mois** ou **Dans 3 mois** (le même jour de la semaine), ou une date précise, puis le créneau. L'app crée une copie avec les mêmes médias, les mêmes réseaux et la même légende.
+
+Coche **Le texte est bon tel quel** pour que la copie parte à l'heure prévue sans autre étape. Sinon, la légende est à revalider : c'est l'occasion de la rafraîchir.
+
+La carte **À republier** de [Stats](stats.md) propose les posts de plus de 45 jours qui ont fait plus de vues que ta moyenne, avec un bouton **Republier** sur chacun.
 
 ### Répéter un post
 
