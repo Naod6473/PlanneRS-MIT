@@ -13,7 +13,7 @@ Buffer a sa fiche dans **Réglages › Comptes**, mais pas encore de module de p
 
 ## En attendant : publier à la main
 
-1. Dans la fiche du post : **Titre, format et réseaux** › coche **Publier à la main**.
+1. Dans la fiche du post : **Modifier** › **Paramètres** › coche **Publier à la main**.
 2. À l'heure prévue (ou plus tôt, voir **Réglages › Notifications**), tu reçois un rappel.
 3. **Poster** ouvre l'aide pas à pas : enregistrer le média, copier le texte, ouvrir l'application, puis **C'est posté** (avec le lien du post).
 

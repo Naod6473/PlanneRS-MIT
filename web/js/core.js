@@ -5,7 +5,9 @@
   // Statuts affichés : chacun a un mot, une icône et une couleur réservée.
   const STATUS = {
     published: { label: "Publié", icon: "check" },
-    scheduled: { label: "Planifié", icon: "clock" },
+    idea: { label: "Idée", icon: "bulb" },
+    prep: { label: "En préparation", icon: "pen" },
+    scheduled: { label: "Programmé", icon: "clock" },
     review: { label: "À valider", icon: "eye" },
     manual: { label: "À la main", icon: "hand" },
     late: { label: "En retard", icon: "alert" },
@@ -23,6 +25,9 @@
     ["idea", "Idée"], ["writing", "Écriture"], ["media", "Médias"],
     ["caption", "Légende"], ["ready", "Prêt"], ["scheduled", "Programmé"], ["published", "Publié"],
   ];
+
+  // Les 5 étapes affichées partout (tableau, calendrier, liste, fiche). Échec et retard ne sont pas des étapes : ce sont des alertes.
+  const STEPS = [["idea", "Idée"], ["prep", "En préparation"], ["review", "À valider"], ["scheduled", "Programmé"], ["published", "Publié"]];
 
   const pad = (n) => String(n).padStart(2, "0");
   const ymd = (d) => d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
@@ -53,6 +58,21 @@
     if (missed(p, now)) return "late";
     if (!p.captionValidated) return "review";
     return "scheduled";
+  }
+
+  // Étape d'un post (une des 5 de STEPS).
+  function step(p) {
+    if (p.status === "published") return "published";
+    if (p.date && p.status !== "draft" && (p.captionValidated || p.manual)) return "scheduled";
+    const s = p.stage || "idea";
+    if (s === "idea") return "idea";
+    if (s === "writing" || s === "media" || (s === "caption" && !p.date)) return "prep";
+    return "review";
+  }
+  // Alerte à afficher en bandeau, quelle que soit l'étape : "failed", "late" ou null.
+  function alertOf(p, now) {
+    const d = displayStatus(p, now);
+    return d === "failed" || d === "late" ? d : null;
   }
 
   // Manqué : l'heure prévue est passée depuis plus de 24 h et rien n'est publié (échecs à part, ils ont leur carte).
@@ -226,7 +246,7 @@
 
   function nowStamp(d) { d = d || new Date(); return ymd(d) + "T" + pad(d.getHours()) + ":" + pad(d.getMinutes()); }
 
-  const api = { STATUS, FORMATS, STAGES, pad, ymd, parseYmd, addDays, mondayOf, toMin, at, longDate, shortDay, MONTHS, DAYS, setLang,
+  const api = { STATUS, FORMATS, STAGES, STEPS, step, alertOf, pad, ymd, parseYmd, addDays, mondayOf, toMin, at, longDate, shortDay, MONTHS, DAYS, setLang,
     displayStatus, missed, willSend, hashtags, checks, mediaChecks, slotOf, nowStamp, fold, seriesOf, matchQuery, parseCsv, toCsv, manualNets, autoNets, pendingManual, prefillUrl, capFor, TEXT_MAX, utm, textOut };
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.Core = api;
 })(typeof self !== "undefined" ? self : this);

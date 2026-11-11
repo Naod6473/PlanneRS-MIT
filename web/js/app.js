@@ -110,6 +110,7 @@
     } catch (e) { box.innerHTML = '<p class="muted" style="margin:0">Liste indisponible : ' + esc(e.message) + "</p>"; }
   };
 
+  try { A.calCompact = localStorage.getItem("planners-caldense") === "1"; } catch (x) { /* rien */ }
   try { A.trayClosed = localStorage.getItem("planners-tray") === "1"; A.dashRange = localStorage.getItem("planners-dash") || "today"; } catch (x) { /* rien */ }
   document.addEventListener("toggle", (e) => { if (e.target.matches && e.target.matches(".netdd")) A.netOpen = e.target.open; }, true);
   document.addEventListener("click", (e) => { const dd = document.querySelector(".netdd[open]"); if (dd && !dd.contains(e.target)) { dd.open = false; A.netOpen = false; } });
@@ -233,7 +234,7 @@
     if ((b = g("[data-logf]"))) { A.logFilter = b.dataset.logf; A.render(); return; }
     if ((b = g("[data-setup-hide]"))) { S.state.settings.setupHidden = true; await S.saveSettings(S.state.settings); A.render(); U.toast("« Bien démarrer » masqué", { label: "Annuler", fn: async () => { S.state.settings.setupHidden = false; await S.saveSettings(S.state.settings); A.render(); } }); return; }
     if ((b = g("[data-href]"))) { window.open(b.dataset.href, "_blank", "noopener"); return; }
-    if ((b = g("[data-settab]"))) { if (b.dataset.settab === "slots" && !S.state.settings.slotsSet) { S.state.settings.slotsSet = true; S.saveSettings(S.state.settings); } A.setTab = b.dataset.settab; if (route() !== "settings") location.hash = "#settings"; else A.render(); return; }
+    if ((b = g("[data-settab]"))) { if (b.dataset.settab === "slots" && !S.state.settings.slotsSet) { S.state.settings.slotsSet = true; S.saveSettings(S.state.settings); } A.setTab = b.dataset.settab; A.setQ = ""; if (route() !== "settings") location.hash = "#settings"; else A.render(); return; }
     if ((b = g("[data-conn]"))) { A.openConn(b.dataset.conn); return; }
     if ((b = g("[data-pend]"))) {
       const a = b.dataset.pend;
@@ -265,6 +266,8 @@
     if ((b = g("[data-slot-del]"))) { S.state.settings.slots.splice(+b.dataset.slotDel, 1); await saveSet(); return; }
     if ((b = g("[data-chk-add]"))) { (S.state.settings.customChecks = S.state.settings.customChecks || []).push({ label: "Mention du crédit absente", contains: "Crédit" }); await saveSet(); return; }
     if ((b = g("[data-chk-del]"))) { S.state.settings.customChecks.splice(+b.dataset.chkDel, 1); await saveSet(); return; }
+    if ((b = g("[data-caldense]"))) { A.calCompact = b.dataset.caldense === "1"; try { localStorage.setItem("planners-caldense", A.calCompact ? "1" : ""); } catch (x) { /* rien */ } A.render(); return; }
+    if ((b = g("[data-shortcuts]"))) { A.openShortcuts(); return; }
     if ((b = g("[data-fclear]"))) { A.q = ""; A.serie = ""; A.render(); return; }
     if ((b = g("[data-export-csv]"))) { A.exportCsv(); return; }
     if ((b = g("[data-export]"))) {
@@ -322,17 +325,117 @@
   });
   // Liste : filtre par texte, sans perdre la saisie.
   document.addEventListener("input", (e) => {
-    const sel = e.target.matches("[data-fq]") ? "[data-fq]" : e.target.matches("[data-mq]") ? "[data-mq]" : null;
+    const sel = ["[data-fq]", "[data-mq]", "[data-setq]"].find((x) => e.target.matches(x));
     if (!sel) return;
-    if (sel === "[data-mq]") A.mQ = e.target.value; else A.q = e.target.value;
+    if (sel === "[data-mq]") A.mQ = e.target.value; else if (sel === "[data-setq]") A.setQ = e.target.value; else A.q = e.target.value;
     const pos = e.target.selectionStart;
     A.render();
     const i = document.querySelector(sel); if (i) { i.focus(); try { i.setSelectionRange(pos, pos); } catch (x) { /* rien */ } }
   });
+  // Cartes « À faire » sur téléphone : glisser à droite = valider (ou poster à la main), à gauche = reporter à demain.
+  let sw = null;
+  document.addEventListener("pointerdown", (e) => {
+    const c = e.target.closest && e.target.closest(".tcard[data-swipe]");
+    if (!c || e.pointerType === "mouse" || e.target.closest("button,a,input,textarea")) return;
+    sw = { c, x: e.clientX, y: e.clientY, dx: 0, on: false };
+  });
+  document.addEventListener("pointermove", (e) => {
+    if (!sw) return;
+    const dx = e.clientX - sw.x, dy = e.clientY - sw.y;
+    if (!sw.on) { if (Math.abs(dy) > 12 && Math.abs(dy) > Math.abs(dx)) { sw = null; return; } if (Math.abs(dx) < 12) return; sw.on = true; sw.c.classList.add("dragging"); }
+    sw.dx = dx; sw.c.style.transform = "translateX(" + dx + "px)";
+    sw.c.dataset.dir = dx > 0 ? "r" : "l"; sw.c.classList.toggle("armed", Math.abs(dx) > 90);
+  }, { passive: true });
+  const swEnd = async () => {
+    if (!sw) return; const { c, dx, on } = sw; sw = null;
+    c.classList.remove("dragging", "armed"); c.style.transform = "";
+    if (!on || Math.abs(dx) < 90) return;
+    const p = S.post(c.dataset.swipe); if (!p) return;
+    const act = dx > 0 ? c.dataset.swipeR : c.dataset.swipeL;
+    if (act === "manual") { A.openManual(p.id, c.dataset.onet || undefined); return; }
+    if (act === "validate") {
+      if (A.denyValidate()) return;
+      p.captionValidated = true; if (p.stage === "caption") p.stage = "ready";
+      await S.savePosts([p]); await S.log({ level: "change", text: "Légende validée : " + p.title, postId: p.id }); A.render();
+      U.toast("Validé : il partira à " + p.time, { label: "Annuler", fn: async () => { p.captionValidated = false; await S.savePosts([p]); A.render(); } });
+      return;
+    }
+    if (act === "later" && p.date) {
+      const d0 = p.date; p.date = C.addDays(p.date, 1); p.reminded = false; p.remindedManual = false;
+      await S.savePosts([p]); await S.log({ level: "change", text: "Reporté au lendemain : " + p.title, postId: p.id }); A.render();
+      U.toast("Reporté à demain " + p.time, { label: "Annuler", fn: async () => { p.date = d0; await S.savePosts([p]); A.render(); } });
+    }
+  };
+  document.addEventListener("pointerup", swEnd);
+  document.addEventListener("pointercancel", () => { if (sw) { sw.c.classList.remove("dragging", "armed"); sw.c.style.transform = ""; sw = null; } });
+
+  // Aperçu au survol d'une carte du calendrier (souris seulement) : miniature, texte, réseaux, série.
+  let peekT = 0, peekEl = null;
+  const hidePeek = () => { clearTimeout(peekT); if (peekEl) { peekEl.remove(); peekEl = null; } };
+  if (window.matchMedia && matchMedia("(hover: hover) and (pointer: fine)").matches) {
+    document.addEventListener("mouseover", (e) => {
+      const c = e.target.closest && e.target.closest(".cal-wrap .pc[data-open], .month .pc[data-open]");
+      if (!c) return;
+      if (peekEl && peekEl.dataset.id === c.dataset.open) return;
+      hidePeek();
+      peekT = setTimeout(() => {
+        const p = S.post(c.dataset.open); if (!p || !document.body.contains(c) || document.getElementById("layer").innerHTML.trim()) return;
+        const q = A.eff ? A.eff(p) : p, cov = A.coverOf ? A.coverOf(q) : "", txt = (q.caption || q.note || "").trim(), ser = C.seriesOf(q);
+        peekEl = document.createElement("div"); peekEl.className = "peek"; peekEl.dataset.id = p.id; peekEl.setAttribute("aria-hidden", "true");
+        peekEl.innerHTML = (cov ? '<img src="' + safeUrl(cov) + '" alt="">' : "") + "<b>" + esc(q.title) + "</b>" + (txt ? "<p>" + esc(txt.length > 180 ? txt.slice(0, 179) + "…" : txt) + "</p>" : "") +
+          '<span class="muted">' + U.brands(q.networks) + esc((C.FORMATS[q.format] || "") + (q.date ? " · " + C.shortDay(q.date) + " " + (q.time || "") : "") + (ser ? " · " + ser : "")) + "</span>";
+        document.body.appendChild(peekEl);
+        const r = c.getBoundingClientRect(), w = peekEl.offsetWidth, h = peekEl.offsetHeight;
+        let x = r.right + 10; if (x + w > innerWidth - 8) x = r.left - w - 10; if (x < 8) x = 8;
+        let y = r.top; if (y + h > innerHeight - 8) y = innerHeight - h - 8; if (y < 8) y = 8;
+        peekEl.style.left = x + "px"; peekEl.style.top = y + "px";
+      }, 450);
+    });
+    document.addEventListener("mouseout", (e) => { const c = e.target.closest && e.target.closest(".pc[data-open]"); if (c && !(e.relatedTarget && c.contains(e.relatedTarget))) hidePeek(); });
+    ["scroll", "mousedown", "keydown", "hashchange"].forEach((ev) => window.addEventListener(ev, hidePeek, true));
+  }
+
+  // Raccourcis clavier (ordinateur) : jamais pendant la saisie, ni avec Ctrl/Cmd/Alt.
+  let gAt = 0;
+  A.shortcut = function (e) {
+    if (e.ctrlKey || e.metaKey || e.altKey || e.defaultPrevented) return false;
+    const t = e.target;
+    if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return false;
+    const L = document.getElementById("layer"), open = !!L.innerHTML.trim(), k = e.key;
+    const click = (sel) => { const b = (open ? L : document).querySelector(sel); if (b) { e.preventDefault(); b.click(); return true; } return false; };
+    if (k === "?") { e.preventDefault(); A.openShortcuts(); return true; }
+    if (open) {
+      if (!L.querySelector(".sheet") || L.querySelector(".composer,.review,.palette")) return false;
+      const m = { v: '[data-act="validate"]', e: '[data-act="compose"]', d: '[data-act="showmove"]', m: '[data-act="manual"],[data-manual]' }[k.toLowerCase()];
+      return m ? click(m) : false;
+    }
+    const lk = k.toLowerCase();
+    if (gAt && Date.now() - gAt < 1200) {
+      gAt = 0;
+      const to = { a: "#today", t: "#today", c: "#calendar", o: "#contents", s: "#stats", y: "#activity", r: "#settings" }[lk];
+      if (to) { e.preventDefault(); location.hash = to; return true; }
+      return false;
+    }
+    if (lk === "g") { gAt = Date.now(); return true; }
+    if (lk === "n") { e.preventDefault(); A.newPost(); return true; }
+    if (k === "/") { e.preventDefault(); const q = document.querySelector("[data-fq]"); if (q) q.focus(); else A.openSearch(); return true; }
+    if (k === "ArrowLeft") return click('[data-nav="-1"]');
+    if (k === "ArrowRight") return click('[data-nav="1"]');
+    if (lk === "t") { if (!click('[data-nav="0"]')) location.hash = "#today"; return true; }
+    return false;
+  };
+  A.openShortcuts = function () {
+    const keys = [["N", "Nouveau post"], ["/", "Chercher"], ["← →", "Semaine précédente / suivante"], ["T", "Revenir à aujourd'hui"], ["V", "Valider le post ouvert"], ["E", "Modifier le post ouvert"], ["D", "Changer la date"], ["M", "Poster à la main"],
+      ["G puis C", "Aller au calendrier"], ["G puis O", "Aller aux contenus"], ["G puis S", "Aller aux stats"], ["G puis A", "Aller à Aujourd'hui"], ["Ctrl K", "Tout chercher"], ["Échap", "Fermer"]];
+    A.openLayer('<div class="sh-top"><b>Raccourcis clavier</b><span style="flex:1"></span><button class="iconbtn" data-close aria-label="Fermer">' + U.icon("x") + "</button></div>" +
+      '<div class="sh-body"><div class="kbd-list">' + keys.map(([a, b]) => '<div class="kbd-row"><kbd>' + U.esc(a) + "</kbd><span>" + U.esc(b) + "</span></div>").join("") + '</div><p class="muted" style="margin:0;font-size:13px">Touche « ? » pour revoir cette liste.</p></div>', "Raccourcis clavier");
+    const sh = document.querySelector("#layer .sheet"); if (sh) sh.classList.add("ask");
+  };
   document.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && e.target.matches(".tl[data-open]")) { A.openPost(e.target.dataset.open); return; }
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") { e.preventDefault(); A.openSearch(); return; }
     if (e.key === "Escape" && document.getElementById("layer").innerHTML && !document.querySelector(".review")) { A.closeLayer(); return; }
+    if (A.shortcut(e)) return;
     // Piège à focus : Tab reste dans la fiche, la fenêtre ou la validation ouverte.
     if (e.key === "Tab") {
       const dlg = [...document.querySelectorAll('#layer [role="dialog"]')].pop();
@@ -350,8 +453,10 @@
   });
 
   // ------------------------------------------------------------ Kanban : changer de colonne
-  const IDX = Object.fromEntries(C.STAGES.map(([k], i) => [k, i]));
-  const label = (k) => (C.STAGES.find(([s]) => s === k) || [k, k])[1];
+  const IDX = Object.fromEntries(C.STEPS.map(([k], i) => [k, i]));
+  const label = (k) => (C.STEPS.find(([s]) => s === k) || [k, k])[1];
+  // Étape du tableau → étape interne enregistrée (on garde le détail Écriture / Médias quand il existe).
+  const rawStage = (p, to) => (to === "prep" ? (p.stage === "writing" || p.stage === "media" ? p.stage : "writing") : to === "review" ? "ready" : to);
   A.moveStage = async function (id, to) {
     const p = S.post(id); if (!p) return;
     const from = A.stageOf(p);
@@ -359,21 +464,22 @@
     if (from === "published") { U.toast("Une publication publiée ne bouge plus."); return; }
     if (from === "scheduled") { U.toast("Programmé est verrouillé : clique sur « Débloquer » d'abord."); return; }
     if (to === "published") { U.toast("Publié se remplit tout seul (robot ou « C'est posté »)."); return; }
-    if (!(await A.confirmMove("Déplacer ce contenu ?", "« " + p.title + " » : " + label(from) + " → " + label(to) + (to !== "scheduled" && IDX[to] <= IDX.caption && p.captionValidated ? ". La légende devra être revalidée." : "."), "Déplacer"))) { A.render(); return; }
+    const reval = to !== "scheduled" && p.captionValidated;
+    if (!(await A.confirmMove("Déplacer ce contenu ?", "« " + p.title + " » : " + label(from) + " → " + label(to) + (reval ? ". Le texte devra être revalidé." : "."), "Déplacer"))) { A.render(); return; }
     const before = JSON.parse(JSON.stringify(p));
     if (to === "scheduled") {
-      if (!p.captionValidated) { U.toast("Valide d'abord la légende, puis choisis la date."); A.openPost(p.id); return; }
+      if (!p.captionValidated && !p.manual) { p.stage = "ready"; await S.savePosts([p]); A.render(); U.toast("Valide d'abord le texte, puis choisis la date."); A.openPost(p.id); return; }
       if (!p.date || !p.time) { p.stage = "ready"; await S.savePosts([p]); A.render(); U.toast("Choisis la date et le créneau pour programmer."); A.openPost(p.id); return; }
       p.status = "scheduled"; p.stage = "scheduled";
     } else {
-      p.stage = to;
+      p.stage = rawStage(p, to);
       if (p.status === "failed") p.status = "draft";
-      if (IDX[to] <= IDX.caption && p.captionValidated) p.captionValidated = false;
+      if (reval) p.captionValidated = false;
     }
     await S.savePosts([p]);
     await S.log({ level: "change", text: "« " + p.title + " » : " + label(from) + " → " + label(to), postId: p.id });
     A.render();
-    U.toast("Déplacé vers " + label(to) + (to === "caption" || IDX[to] < IDX.caption ? " · légende à revalider" : ""), { label: "Annuler", fn: async () => { await S.savePosts([before]); A.render(); } });
+    U.toast("Déplacé vers " + label(to) + (reval ? " · texte à revalider" : ""), { label: "Annuler", fn: async () => { await S.savePosts([before]); A.render(); } });
   };
   A.unlockPost = async function (id) {
     const p = S.post(id); if (!p) return;
@@ -393,7 +499,7 @@
     e.preventDefault();
     const title = f.t.value.trim(); if (!title) return;
     const p = { id: "n" + Date.now().toString(36), ref: "", title, format: "reel", networks: [A.nets()[0]],
-      date: null, time: null, caption: "", captionValidated: false, manual: false, media: [], stage: f.dataset.knew, status: "draft" };
+      date: null, time: null, caption: "", captionValidated: false, manual: false, media: [], stage: rawStage({}, f.dataset.knew), status: "draft" };
     await S.savePosts([p]); await S.log({ level: "change", text: "Nouvelle carte : " + title, postId: p.id });
     A.kAdd = null; A.render(); U.toast("Ajouté dans " + label(p.stage));
   });

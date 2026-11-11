@@ -122,20 +122,6 @@
       '<label id="mv-other"' + (isSlot ? " hidden" : "") + '>Heure<input type="time" id="mv-time" value="' + (p.time || "12:00") + '"></label>' +
       (kids.length ? '<p class="muted" style="margin:0;font-size:12px">' + kids.length + " élément" + (kids.length > 1 ? "s liés suivent" : " lié suit") + " (" + kids.map((k) => esc(C.FORMATS[k.format]) + " " + k.time).join(", ") + ").</p>" : "") +
       '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" data-act="move">Déplacer</button>' + (p.date ? '<button class="btn" data-act="unschedule">Retirer du calendrier</button>' : "") + "</div></div></details>";
-    const fresh = p.status === "draft" && !p.date && !(p.caption || "").trim();
-    const info = done ? "" : '<details class="box" id="ed"' + (fresh || opts.edit ? " open" : "") + '><summary style="cursor:pointer;font-weight:600">' + icon("pen") + ' Titre, format, réseaux et options</summary><div class="form" style="margin-top:10px">' +
-      '<label>Titre<input id="ed-title" value="' + esc(p.title) + '"></label>' +
-      A.seriesField("ed-series", p) +
-      '<label>Format<select id="ed-format">' + Object.entries(C.FORMATS).map(([k, l]) => '<option value="' + k + '"' + (p.format === k ? " selected" : "") + ">" + l + "</option>").join("") + "</select></label>" +
-      '<fieldset style="border:0;padding:0;margin:0"><legend style="font-weight:600;font-size:13px;margin-bottom:4px">Réseaux</legend><div class="filters">' +
-      A.nets().map((n) => '<label class="chip"><input type="checkbox" data-ed-net="' + n + '"' + (p.networks.includes(n) ? " checked" : "") + ">" + brand(n) + esc(window.BRANDS[n].title) + "</label>").join("") + "</div>" +
-      (((set.templates || {}).sets || []).filter((g) => g.name && (g.networks || []).length).length ? '<div class="tplrow"><span class="muted">Ensembles</span>' + (set.templates.sets || []).map((g, i) => (g.name && (g.networks || []).length ? '<button type="button" class="chip sm" data-ed-set="' + i + '" title="' + esc(g.networks.map((n) => (window.BRANDS[n] ? window.BRANDS[n].title : n)).join(", ")) + '">' + esc(g.name) + "</button>" : "")).join("") + "</div>" : "") + "</fieldset>" +
-      '<label class="toggle"><input type="checkbox" id="ed-manual"' + (p.manual ? " checked" : "") + "> Publier à la main (rappel au lieu d'un envoi automatique)</label>" +
-      (p.format === "story" || !p.networks.some((n) => n === "instagram" || n === "facebook") ? "" : '<label>Premier commentaire (facultatif)<textarea id="ed-fc" rows="2" placeholder="Hashtags, lien… posté juste après la publication">' + esc(p.firstComment || "") + "</textarea></label>" +
-        '<p class="muted" style="margin:-6px 0 0;font-size:12px">Ajouté sous le post sur Instagram et Facebook. S\'il est refusé, le post reste publié et l\'Activité te le dit.</p>') +
-      (p.format === "text" ? "" : '<label>Description des images (texte alternatif)<textarea id="ed-alt" rows="2" placeholder="Ce qu\'on voit sur l\'image, pour les personnes qui ne la voient pas">' + esc(p.alt || "") + "</textarea></label>" +
-        '<p class="muted" style="margin:-6px 0 0;font-size:12px">Envoyée à Bluesky, Mastodon, X et LinkedIn, lue par les lecteurs d\'écran.</p>') +
-      '<div><button class="btn" data-act="saveinfo">Enregistrer</button></div></div></details>';
 
     let foot = "";
     if (st === "failed") {
@@ -167,10 +153,10 @@
       : '<div class="tplrow"><button type="button" class="lk muted" data-settab="templates">' + icon("plus") + "Modèles de signature et de hashtags</button></div>";
     const html = '<div class="sh-top">' + brands(p.networks, "lg") + '<span class="muted" style="font-size:13px">' + esc(C.FORMATS[p.format] || "") + (p.date ? " · " + esc(C.longDate(p.date)) + " · " + p.time : " · sans date") + "</span>" +
       '<span style="flex:1"></span><button class="iconbtn" data-close aria-label="Fermer">' + icon("x") + "</button></div>" +
-      '<div class="sh-body"><div class="meta">' + status(st) + (p.ref ? '<span class="mono">' + esc(p.ref) + "</span>" : "") + (p.category ? "<span>" + esc(p.category) + "</span>" : "") + "</div>" +
+      '<div class="sh-body">' + (st === "failed" ? "" : U.abar(p, now)) + '<div class="meta">' + U.badge(p, now) + (p.ref ? '<span class="mono">' + esc(p.ref) + "</span>" : "") + (p.category ? "<span>" + esc(p.category) + "</span>" : "") + "</div>" +
       "<h2>" + esc(p.title) + "</h2>" +
       (parent ? '<p class="muted" style="margin:0">Lié à <button class="btn quiet" style="min-height:24px;padding:0 4px" data-open="' + parent.id + '">' + esc(parent.title) + "</button> : il suit ses déplacements.</p>" : "") +
-      fail + res + (done ? "" : info) + media + igBox + netBox +
+      fail + res + media + igBox + netBox +
       (p.format === "story" ? '<div class="box"><h4>Consigne</h4><p>' + (p.note ? esc(p.note) : "Aucune.") + '</p><p class="muted">Une story n\'a pas de légende : rien n\'est écrit sous l\'image.</p></div>' :
       '<div><div class="caphead"><label for="cap" style="font-weight:600;font-size:13px">Légende</label>' + capTabs + "</div>" + '<p class="muted caphint" id="caphint" hidden></p>' + (done ? "" : '<button type="button" class="lk muted rwbtn" id="rw" data-act="rewrite" hidden>' + icon("spark") + '<span>Réécrire avec Claude</span></button>') + '<textarea id="cap" class="caption"' + (done ? " readonly" : "") + ">" + esc(p.caption || "") + "</textarea>" + tplRow + '<div class="cmeta"><span id="capn">' + (p.caption || "").length + " caractères · " + C.hashtags(p.caption) + ' hashtags</span><span><button class="btn quiet" style="min-height:26px" data-act="copy">' + icon("copy") + "Copier</button>" +
       (done ? "" : '<button class="btn sm primary" data-act="savecap" id="savecap" hidden>' + icon("check") + "Enregistrer la légende</button>" + (opts.saved ? '<span class="saved" role="status">' + icon("check") + "Enregistré</span>" : "")) + "</span></div></div>") +
@@ -210,11 +196,6 @@
       h.hidden = !L._cur; h.textContent = L._cur ? "Version pour " + nm + ". Laisse vide pour reprendre la légende commune." : "";
       const rw = L.querySelector("#rw"); if (rw) { rw.hidden = !L._cur || !(S.state.rewrite || S.mode !== "api"); rw.lastChild.textContent = "Réécrire pour " + nm + " avec Claude"; }
       count(); cap.focus();
-    }));
-    L.querySelectorAll("[data-ed-set]").forEach((b) => b.addEventListener("click", () => {
-      const g = ((set.templates || {}).sets || [])[+b.dataset.edSet]; if (!g) return;
-      L.querySelectorAll("[data-ed-net]").forEach((x) => { x.checked = g.networks.includes(x.dataset.edNet); });
-      U.toast("Réseaux cochés : " + g.name + ". Enregistre pour appliquer.");
     }));
     L.querySelectorAll("[data-tpl]").forEach((b) => b.addEventListener("click", () => {
       const t = b.dataset.tpl === "sig" ? tpl.signature : (tags[+b.dataset.tpl] || {}).text;
@@ -296,17 +277,6 @@
       case "manual": A.closeLayer(); A.openManual(p.id); return;
       case "ignore": p.ignored = true; await S.savePosts([p]); await S.log({ level: "change", text: "Rappel ignoré : " + p.title, postId: p.id }); break;
       case "toready": p.status = "ready"; p.stage = "ready"; await S.savePosts([p]); break;
-      case "saveinfo": {
-        p.title = L.querySelector("#ed-title").value.trim() || p.title;
-        { const sv = L.querySelector("#ed-series").value.trim(); if (sv) p.series = sv; else delete p.series; }
-        p.format = L.querySelector("#ed-format").value;
-        const nets = [...L.querySelectorAll("[data-ed-net]")].filter((x) => x.checked).map((x) => x.dataset.edNet);
-        if (!nets.length) { U.toast("Choisis au moins un réseau"); return; }
-        p.networks = nets; p.manual = L.querySelector("#ed-manual").checked; if (nets.length && !C.autoNets(Object.assign({}, p, { manual: false }), S.state.settings).length) p.manual = true;
-        const fc = L.querySelector("#ed-fc"); if (fc) { if (fc.value.trim()) p.firstComment = fc.value.trim(); else delete p.firstComment; }
-        const alt = L.querySelector("#ed-alt"); if (alt) { if (alt.value.trim()) p.alt = alt.value.trim(); else delete p.alt; }
-        await S.savePosts([p]); U.toast("Enregistré"); A.render(); A.openPost(p.id, { saved: true }); return;
-      }
       case "dup": {
         const c = JSON.parse(JSON.stringify(p));
         c.id = "c" + Date.now().toString(36); c.status = "ready"; c.date = null; c.time = null; c.captionValidated = false;
@@ -435,7 +405,7 @@
     const ready = S.state.posts.filter((p) => !p.parent && !p.date && (p.status === "ready" || p.status === "draft"));
     openLayer('<div class="sh-top"><b>' + esc(C.longDate(day)) + " · " + time + '</b><span style="flex:1"></span><button class="iconbtn" data-close aria-label="Fermer">' + icon("x") + "</button></div>" +
       '<div class="sh-body">' + (why ? '<p style="margin:0"><b>' + esc(why) + "</b></p>" : "") + '<p class="muted" style="margin:0">Choisis ce qui part sur ce créneau.</p><div class="todo">' +
-      (ready.map((p) => '<button class="pc" data-place="' + p.id + '">' + '<span class="row1">' + brands(p.networks) + '<span class="ref">' + esc(p.ref || "") + '</span></span><span class="ttl">' + esc(p.title) + "</span>" + status(C.displayStatus(p, C.nowStamp())) + "</button>").join("") ||
+      (ready.map((p) => '<button class="pc" data-place="' + p.id + '">' + '<span class="row1">' + brands(p.networks) + '<span class="ref">' + esc(p.ref || "") + '</span></span><span class="ttl">' + esc(p.title) + "</span>" + U.badge(p) + "</button>").join("") ||
         '<div class="empty">Rien n\'est prêt. Crée un post depuis « Contenus ».</div>') + "</div></div>", "Créneau libre");
     layer().querySelectorAll("[data-place]").forEach((b) => b.addEventListener("click", () => { A.queueMove(b.dataset.place, { date: day, time }); A.closeLayer(); A.render(); }));
   };
@@ -857,7 +827,7 @@
       const st = (A.postStats && A.postStats(p)) || {}, sum = (k) => { const v = Object.values(st).reduce((n, m) => n + (m[k] || 0), 0); return Object.keys(st).length ? v : ""; };
       const url = p.url || (Object.values(p.results || {}).find((r) => r && r.url) || {}).url || "";
       rows.push([p.date || "", p.date ? (p.time || "").slice(0, 5) : "", p.title, C.FORMATS[p.format] || p.format, (p.networks || []).map(nm).join("+"), p.caption || "",
-        (C.STATUS[C.displayStatus(p, now)] || {}).label || p.status, C.seriesOf(p), p.ref || "", url, sum("views"), sum("likes"), sum("comments")]);
+        (C.STATUS[C.step(p)] || {}).label || p.status, C.seriesOf(p), p.ref || "", url, sum("views"), sum("likes"), sum("comments")]);
     });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob(["\uFEFF" + C.toCsv(rows)], { type: "text/csv;charset=utf-8" }));

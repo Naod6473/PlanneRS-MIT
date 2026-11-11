@@ -40,7 +40,7 @@
   // Calendrier : filtre facultatif par statut (légende cliquable).
   // Recherche (titre, texte, n°…) et série : appliquées au calendrier et aux contenus.
   const shown = (p) => visible(p) && (!A.q || C.matchQuery(p, A.q)) && (!A.serie || C.seriesOf(p) === A.serie);
-  const calVis = (p) => shown(p) && (!A.calSt || C.displayStatus(p, C.nowStamp()) === A.calSt);
+  const calVis = (p) => { if (!shown(p)) return false; if (!A.calSt) return true; const L = U.look(p); return L.st === A.calSt || L.al === A.calSt || (A.calSt === "manual" && L.hand); };
   function fbar(opts) {
     const series = [...new Set(top().map(C.seriesOf).filter(Boolean))].sort((a, b) => a.localeCompare(b, "fr"));
     if (A.serie && !series.includes(A.serie)) A.serie = "";
@@ -107,7 +107,15 @@
         "<p>Prévue" + (m.length > 1 ? "s" : "") + " il y a plus de 24 h, jamais partie" + (m.length > 1 ? "s" : "") + ". La dernière : " + esc(f.title) + " (" + esc(C.shortDay(f.date)) + " " + f.time + ").</p>" +
         '<span class="go">Reprogrammer ou ignorer ' + icon("right") + "</span></a>";
     }
-    if (td.review.length) {
+    const mob = A.isMobile();
+    // Téléphone : une carte par légende à valider (les 5 premières), à glisser à droite pour valider, à gauche pour reporter.
+    if (mob && td.review.length && A.canValidate()) {
+      td.review.slice(0, 5).forEach((p) => {
+        todo += '<div class="tcard swipe" data-swipe="' + esc(p.id) + '" data-swipe-r="validate" data-swipe-l="later"><div class="head">' + brands(p.networks) + '<span class="st st-review">' + icon("eye") + "À valider · " + (p.date === t ? "" : esc(C.shortDay(p.date)) + " ") + p.time + "</span></div>" +
+          "<h3>" + esc(p.title) + '</h3><p class="clamp2">' + esc((p.caption || "").slice(0, 160)) + '</p><div class="acts"><button class="btn primary" data-open="' + p.id + '">Relire</button></div></div>';
+      });
+      if (td.review.length > 5) todo += '<div class="acts" style="margin:-4px 0 4px"><button class="btn" data-review>Les ' + td.review.length + " légendes à valider</button></div>";
+    } else if (td.review.length) {
       const f = td.review[0];
       const nets = [...new Set(td.review.flatMap((p) => p.networks))];
       todo += '<div class="tcard"><div class="head">' + brands(nets) + status("review") + "</div>" +
@@ -117,7 +125,7 @@
     }
     td.manual.forEach((p) => {
       const pm = C.pendingManual(p, S.state.settings);
-      todo += '<div class="tcard"><div class="head">' + brands(pm.length ? pm : p.networks) + '<span class="st st-manual">' + icon("hand") + "À poster · " + p.time + "</span></div>" +
+      todo += '<div class="tcard' + (mob ? " swipe" : "") + '"' + (mob ? ' data-swipe="' + esc(p.id) + '" data-swipe-r="manual" data-swipe-l="later" data-onet="' + esc(pm[0] || "") + '"' : "") + '><div class="head">' + brands(pm.length ? pm : p.networks) + '<span class="st st-manual">' + icon("hand") + "À poster · " + p.time + "</span></div>" +
         "<h3>" + esc(p.title) + '</h3><div class="acts"><button class="btn primary" data-manual="' + p.id + '" data-onet="' + esc(pm[0] || "") + '">Poster</button><button class="btn" data-open="' + p.id + '">Détails</button></div></div>';
     });
     td.expiring.forEach((p) => {
@@ -145,8 +153,8 @@
     return {
       title: "Aujourd'hui", sub: C.longDate(t),
       tools: '<span class="grow"></span><button class="btn primary" data-new aria-label="Nouveau post">' + icon("plus") + '<span class="lbl">Nouveau post</span></button>',
-      html: '<div class="today dash"><section aria-labelledby="h-todo" class="dash-main">' + setupCard() + '<h2 class="sec-h" id="h-todo"><span>À faire</span><span>' + td.count + "</span></h2>" +
-        '<div class="todo">' + todo + "</div>" + quickBar() + "</section>" +
+      html: '<div class="today dash"><section aria-labelledby="h-todo" class="dash-main">' + setupCard() + '<h2 class="sec-h" id="h-todo"><span>' + (mob ? "À faire maintenant" : "À faire") + "</span><span>" + td.count + "</span></h2>" +
+        '<div class="todo">' + todo + "</div>" + (mob && todo.includes("data-swipe") ? '<p class="muted swipe-hint">Glisse une carte à droite pour valider (ou poster), à gauche pour reporter à demain.</p>' : "") + quickBar() + "</section>" +
         '<aside class="dash-side" aria-labelledby="h-prog"><div class="kpis two">' + kpi("today", pub + " / " + day.length, "publiés aujourd'hui", pub === day.length && day.length ? "ok" : "") +
         kpi("ahead", k.ahead + " j", "de planning d'avance" + (k.holes ? " · " + k.holes + " trou" + (k.holes > 1 ? "s" : "") : ""), k.holes ? "warn" : "") + "</div>" +
         '<div class="sec-row"><h2 class="sec-h" id="h-prog"><span>Au programme</span></h2>' + seg + "</div>" + gal + "</aside></div>",
@@ -183,10 +191,10 @@
     list.slice().sort((a, b) => C.at(a).localeCompare(C.at(b))).forEach((p) => {
       if (byDay && p.date !== cur) { cur = p.date; out += '<h3 class="prog-d">' + esc(p.date === t ? "Aujourd'hui" : p.date === C.addDays(t, 1) ? "Demain" : C.longDate(p.date)) + "</h3>"; }
       if (!marked && p.time > hm) { marked = true; out += '<div class="prog-now" aria-label="Maintenant"><span>' + hm + "</span></div>"; }
-      const st = C.displayStatus(p, now), kids = kidsOf(p.id).length;
-      out += '<button class="prow is-' + st + (p.ignored ? " is-off" : "") + '" data-open="' + esc(p.id) + '"><span class="tm mono">' + (p.time || "") + "</span>" +
+      const L = U.look(p, now), kids = kidsOf(p.id).length;
+      out += '<button class="prow ' + L.cls + (p.ignored ? " is-off" : "") + '" data-open="' + esc(p.id) + '"><span class="tm mono">' + (p.time || "") + "</span>" +
         (coverOf(p) ? '<img src="' + esc(coverOf(p)) + '" alt="" loading="lazy">' : '<span class="ph">' + icon(p.format === "reel" || p.format === "video" ? "film" : "contents") + "</span>") +
-        '<span class="nm"><b>' + esc(p.title) + '</b><span class="sub">' + brands(p.networks) + esc(C.FORMATS[p.format] || "") + (kids ? " +" + kids : "") + "</span></span>" + status(st) + "</button>";
+        '<span class="nm"><b>' + esc(p.title) + '</b><span class="sub">' + brands(p.networks) + esc(C.FORMATS[p.format] || "") + (kids ? " +" + kids : "") + "</span>" + U.abar(p, now) + "</span>" + U.badge(p, now) + "</button>";
     });
     return out + "</div>";
   }
@@ -201,11 +209,11 @@
   // Vignette d'un contenu : image, heure, réseaux et statut, teintée selon le statut.
   function tile(p, opts) {
     opts = opts || {};
-    const st = C.displayStatus(p, C.nowStamp());
+    const L = U.look(p), st = L.st;
     const off = p.ignored ? " is-off" : "";
     const img = p.thumb ? '<img src="' + safeUrl(p.thumb) + '" alt="" loading="lazy">' : '<span class="ph">' + icon(p.format === "reel" || p.format === "video" ? "film" : "contents") + "<i>" + esc(C.FORMATS[p.format] || "") + "</i></span>";
     const kids = kidsOf(p.id).length;
-    return '<button class="vg is-' + st + off + (opts.small ? " sm" : "") + '" data-open="' + esc(p.id) + '" title="' + esc(p.title + " · " + C.STATUS[st].label) + '">' +
+    return '<button class="vg ' + L.cls + off + (opts.small ? " sm" : "") + '" data-open="' + esc(p.id) + '" title="' + esc(p.title + " · " + C.STATUS[st].label + (L.al ? " · " + C.STATUS[L.al].label : "")) + '">' +
       '<span class="pic">' + img + '<span class="tm">' + (p.time || "") + "</span>" + '<span class="sti c-' + st + '">' + icon(C.STATUS[st].icon) + "</span>" + likesBadge(p, opts.small) + "</span>" +
       (opts.small ? "" : '<span class="meta">' + brands(p.networks) + '<span class="fmt">' + esc(C.FORMATS[p.format] || "") + (kids ? " +" + kids : "") + "</span></span>" +
         '<span class="ttl">' + esc(p.title) + "</span>") + "</button>";
@@ -292,7 +300,7 @@
     return { title: "Publications du jour", sub: C.longDate(t), tools: back, html: '<div class="lead">' + legend() + "</div>" + dayGroups(d) };
   };
   function legend() {
-    return '<div class="legend">' + ["published", "scheduled", "review", "manual", "ready", "failed"].map((s) => '<span class="lg is-' + s + '"><i></i>' + C.STATUS[s].label + "</span>").join("") + "</div>";
+    return '<div class="legend">' + C.STEPS.map(([s]) => s).concat(["manual", "failed"]).map((s) => '<span class="lg is-' + s + '"><i></i>' + C.STATUS[s].label + "</span>").join("") + "</div>";
   }
 
   // ---------------------------------------------------------------- Calendrier
@@ -320,7 +328,7 @@
       '<button class="btn" data-nav="0" title="Aujourd\'hui">' + icon("calendar") + '<span class="lbl">Aujourd\'hui</span></button>' +
       '<div class="seg" role="group" aria-label="Affichage">' + [["week", "Semaine"], ["month", "Mois"], ["grid", 'Grille<span class="lbl"> du profil</span>']].map(([k, l]) =>
         '<button data-calmode="' + k + '" aria-pressed="' + (A.calMode === k) + '">' + l + "</button>").join("") + "</div>" +
-      '<span class="grow"></span>' + netMenu() +
+      '<span class="grow"></span>' + (mode === "week" || mode === "month" ? '<div class="seg small-seg" role="group" aria-label="Densité"><button data-caldense="1" aria-pressed="' + !!A.calCompact + '">Compact</button><button data-caldense="0" aria-pressed="' + !A.calCompact + '">Détaillé</button></div>' : "") + netMenu() +
       (mode === "agenda" && top().some((p) => !p.date && p.status === "ready") ? '<button class="btn" data-fillweek>' + icon("spark") + '<span class="lbl">Remplir la semaine</span></button>' : "") +
       '<button class="btn primary desk" data-new>' + icon("plus") + "Nouveau post</button>";
     let html;
@@ -329,7 +337,7 @@
     else if (mode === "grid") html = profileGrid();
     else html = weekGrid();
     if (mode !== "grid") {
-      const sts = ["scheduled", "review", "manual", "late", "failed", "published"];
+      const sts = ["prep", "review", "scheduled", "published", "manual", "late", "failed"];
       html = fbar({ results: true }) + '<div class="callegend" role="group" aria-label="Statuts (cliquer pour filtrer)">' + sts.map((k) => '<button class="lg c-' + k + '" data-calst="' + k + '" aria-pressed="' + (A.calSt === k) + '">' + icon(C.STATUS[k].icon) + "<span>" + C.STATUS[k].label + "</span></button>").join("") +
         (A.calSt ? '<button class="lg clear" data-calst="">' + icon("x") + "<span>Tout afficher</span></button>" : "") + "</div>" + html;
     }
@@ -378,7 +386,7 @@
         (ready.length ? '<button class="btn sm" data-fillweek style="width:100%;justify-content:center">' + icon("spark") + "Remplir la semaine</button>" : "") +
         '<div class="traylist">' + (ready.map((p) => card(p, { draggable: true })).join("") || '<p class="muted" style="font-size:12px">Rien en attente.</p>') + "</div>" +
         '<p class="muted" style="font-size:12px;margin:4px 0 0">Glisse une carte sur un créneau (au téléphone : appui long, puis glisse). Au clavier : ouvre la carte, puis « Changer la date ».</p></aside>';
-    return '<div class="cal-wrap fit">' + h + tray + "</div>";
+    return '<div class="cal-wrap ' + (A.calCompact ? "fit" : "detailed") + '">' + h + tray + "</div>";
   }
 
   function month() {
@@ -394,7 +402,7 @@
       const items = top().filter((p) => p.date === d && calVis(p)).sort((a, b) => a.time.localeCompare(b.time));
       const out = C.parseYmd(d).getMonth() !== mid.getMonth();
       h += '<div class="mday' + (out ? " out" : "") + (d === t ? " is-today" : "") + '" data-day="' + d + '"><span class="d">' + C.parseYmd(d).getDate() + "</span>" +
-        items.slice(0, items.length > 5 ? 4 : 5).map((p) => { const st = C.displayStatus(p, now); return '<button class="mline" data-open="' + p.id + '"' + (p.status !== "published" ? ' data-drag="' + p.id + '"' : "") + ' title="' + esc(C.STATUS[st].label + " · " + p.title) + '"><span class="ic c-' + st + '">' + icon(C.STATUS[st].icon) + "</span>" + brand(p.networks[0]) + '<span class="x"><span class="mono">' + p.time + "</span> " + esc(p.title) + "</span></button>"; }).join("") +
+        items.slice(0, items.length > 5 ? 4 : 5).map((p) => { const L = U.look(p, now), st = L.al || L.st; return '<button class="mline ' + L.cls + '" data-open="' + p.id + '"' + (p.status !== "published" ? ' data-drag="' + p.id + '"' : "") + ' title="' + esc(C.STATUS[st].label + " · " + p.title) + '"><span class="ic c-' + st + '">' + icon(C.STATUS[st].icon) + "</span>" + brand(p.networks[0]) + '<span class="x"><span class="mono">' + p.time + "</span> " + esc(p.title) + "</span></button>"; }).join("") +
         (items.length > 5 ? '<button class="mline muted" data-gotoweek="' + d + '">+ ' + (items.length - 4) + " autres</button>" : "") + "</div>";
     }
     return h + "</div>";
@@ -439,15 +447,15 @@
 
   // ---------------------------------------------------------------- Contenus
   // Colonne du Kanban d'un contenu.
-  A.stageOf = (p) => (p.status === "published" ? "published" : p.date && p.status === "scheduled" ? "scheduled" : p.stage === "scheduled" || p.stage === "published" ? "ready" : p.stage || "idea");
+  A.stageOf = (p) => C.step(p);
   function kcard(p, k) {
-    const st = C.displayStatus(p, C.nowStamp());
+    const L = U.look(p);
     const locked = k === "published" || k === "scheduled";
     const dots = [["Texte", !!(p.caption || p.note)], ["Média", (p.media || []).length > 0], ["Validé", !!p.captionValidated]];
-    const opts = C.STAGES.filter(([s]) => s !== "published" && s !== k).map(([s, l]) => '<option value="' + s + '">' + esc(l) + "</option>").join("");
-    return '<div class="kc pc is-' + st + (locked ? " locked" : "") + '" data-open="' + esc(p.id) + '"' + (locked ? "" : ' data-kdrag="' + esc(p.id) + '"') + ' role="button" tabindex="0">' +
+    const opts = C.STEPS.filter(([s]) => s !== "published" && s !== k).map(([s, l]) => '<option value="' + s + '">' + esc(l) + "</option>").join("");
+    return '<div class="kc pc ' + L.cls + (locked ? " locked" : "") + '" data-open="' + esc(p.id) + '"' + (locked ? "" : ' data-kdrag="' + esc(p.id) + '"') + ' role="button" tabindex="0">' + U.abar(p) +
       '<span class="row1">' + (p.thumb ? '<img class="thumb" src="' + safeUrl(p.thumb) + '" alt="" draggable="false">' : "") + brands(p.networks) +
-      '<span class="fmt muted">' + esc(C.FORMATS[p.format] || "") + (p.date ? " · " + esc(C.shortDay(p.date)) + " " + (p.time || "") : "") + "</span>" + (locked ? '<span class="lk2" title="Verrouillé">' + icon("lock") + "</span>" : "") + "</span>" +
+      '<span class="fmt muted">' + esc(C.FORMATS[p.format] || "") + (p.date ? " · " + esc(C.shortDay(p.date)) + " " + (p.time || "") : "") + "</span>" + (L.hand ? '<span class="hand" title="À poster à la main">' + icon("hand") + "</span>" : "") + (locked ? '<span class="lk2" title="Verrouillé">' + icon("lock") + "</span>" : "") + "</span>" +
       '<span class="ttl">' + esc(p.title) + "</span>" +
       '<span class="krow"><span class="kreq">' + dots.map(([l, ok]) => '<span class="' + (ok ? "ok" : "") + '" title="' + (ok ? l + " : fait" : l + " : pas encore") + '">' + icon(ok ? "check" : "dot") + l + "</span>").join("") + "</span>" +
       (!locked ? '<label class="kmove" title="Changer d\'étape">' + icon("swap") + '<select data-kmove="' + esc(p.id) + '" aria-label="Déplacer vers"><option value="">Déplacer vers…</option>' + opts + "</select></label>" : "") + "</span></div>";
@@ -467,7 +475,7 @@
       const items0 = all.filter(fOk);
       html = (fmts.length > 1 ? '<div class="kfilters"><span class="muted">Format</span><div class="seg small-seg">' + [["", "Tous"]].concat(fmts.map((f) => [f, C.FORMATS[f] || f])).map(([k, l]) => '<button data-kformat="' + k + '" aria-pressed="' + ((A.kFormat || "") === k) + '">' + esc(l) + "</button>").join("") + "</div>" +
         '<span class="muted kh">Glisse une carte vers une autre colonne' + (A.isMobile() ? " (ou utilise ⇄)" : "") + ". Programmé et Publié sont verrouillés.</span></div>" : "") +
-        '<div class="board fit kanban">' + C.STAGES.map(([k, l]) => {
+        '<div class="board fit kanban k5">' + C.STEPS.map(([k, l]) => {
         let items = items0.filter((p) => A.stageOf(p) === k);
         items = k === "published" ? items.sort((a, b) => (C.at(b) || "").localeCompare(C.at(a) || "")) : items.sort((a, b) => (C.at(a) || "z").localeCompare(C.at(b) || "z"));
         // Publié : seulement les 7 derniers jours (le reste dans la Liste, période « Passés »).
@@ -496,7 +504,7 @@
           const on = r.ps.every((p) => A.sel && A.sel.has(p.id));
           return '<tr class="clk' + (on ? " sel" : "") + '" data-open="' + p0.id + '"><td class="lsel"><input type="checkbox" data-sel="' + esc(r.ps.map((p) => p.id).join(",")) + '" aria-label="Sélectionner"' + (on ? " checked" : "") + '></td><td class="ld">' + (p0.date ? '<b>' + esc(C.shortDay(p0.date)) + '</b><span class="mono">' + (p0.time || "") + "</span>" : '<span class="muted">Sans date</span>') + "</td>" +
             '<td><span class="mono muted">' + esc(p0.ref || "") + "</span> " + esc(p0.title.replace(/ \(carrousel\)$/, "")) + (p0.category ? '<span class="lcat">' + esc(p0.category) + "</span>" : "") + "</td>" +
-            '<td><div class="lpubs">' + r.ps.map((p) => '<span class="lpub" data-open="' + p.id + '">' + brands(p.networks) + '<span class="lfmt">' + esc(C.FORMATS[p.format] || "") + (p.date && p.date !== p0.date ? " · " + esc(C.shortDay(p.date)) : "") + (p.time && p !== p0 ? " " + p.time : "") + "</span>" + status(C.displayStatus(p, now)) + "</span>").join("") + "</div></td></tr>";
+            '<td><div class="lpubs">' + r.ps.map((p) => '<span class="lpub" data-open="' + p.id + '">' + brands(p.networks) + '<span class="lfmt">' + esc(C.FORMATS[p.format] || "") + (p.date && p.date !== p0.date ? " · " + esc(C.shortDay(p.date)) : "") + (p.time && p !== p0 ? " " + p.time : "") + "</span>" + U.badge(p, now) + (C.alertOf(p, now) ? status(C.alertOf(p, now)) : "") + "</span>").join("") + "</div></td></tr>";
         }).join("") + "</tbody></table></div>" : '<div class="empty">Rien ici.</div>');
     }
     if (A.contentsMode !== "media") html = fbar() + html;
@@ -758,8 +766,24 @@
   // ---------------------------------------------------------------- Réglages
   A.views.settings = function () {
     const tabs = [["accounts", "Comptes"], ["storage", "Stockage et médias"], ["slots", "Créneaux"], ["templates", "Modèles"], ["auto", "Automatisations"], ["rules", "Règles et contrôles"], ["notify", "Notifications"], ["space", "Espace"]];
-    const nav = '<nav class="subnav" aria-label="Rubriques des réglages">' + tabs.map(([k, l]) => '<button data-settab="' + k + '" aria-current="' + (A.setTab === k) + '">' + l + "</button>").join("") + "</nav>";
-    return { title: "Réglages", html: '<div class="set">' + nav + "<div>" + (SET[A.setTab] || SET.accounts)() + "</div></div>" };
+    // L'essentiel d'abord, le reste replié sous « Avancé » ; une recherche parcourt toutes les rubriques.
+    const ESS = ["accounts", "slots", "rules", "notify"], ADV = ["storage", "templates", "auto", "space"];
+    const lab = Object.fromEntries(tabs);
+    const btn = (k) => '<button data-settab="' + k + '" aria-current="' + (A.setTab === k && !A.setQ) + '">' + lab[k] + "</button>";
+    const nav = '<nav class="subnav" aria-label="Rubriques des réglages"><label class="lsearch setq">' + icon("search") + '<input type="search" data-setq placeholder="Chercher un réglage" value="' + esc(A.setQ || "") + '" aria-label="Chercher un réglage"></label>' +
+      '<span class="subnav-h">Essentiel</span>' + ESS.map(btn).join("") + '<span class="subnav-h">Avancé</span>' + ADV.map(btn).join("") + "</nav>";
+    let body;
+    if (A.setQ && A.setQ.trim()) {
+      const q = C.fold(A.setQ), box = document.createElement("div"), hits = [];
+      ESS.concat(ADV).forEach((k) => {
+        box.innerHTML = SET[k]();
+        [...box.querySelectorAll("section.panel")].forEach((sec) => {
+          if (C.fold(sec.textContent + " " + lab[k]).includes(q)) hits.push('<p class="set-from muted">' + esc(lab[k]) + "</p>" + sec.outerHTML);
+        });
+      });
+      body = '<p class="muted" style="margin:0 0 10px">' + hits.length + " rubrique" + (hits.length > 1 ? "s" : "") + " pour « " + esc(A.setQ.trim()) + " »</p>" + (hits.join("") || '<div class="empty">Aucun réglage ne correspond.</div>');
+    } else body = (SET[A.setTab] || SET.accounts)();
+    return { title: "Réglages", html: '<div class="set">' + nav + "<div>" + body + "</div></div>" };
   };
 
   function accRow(c, a) {
@@ -922,7 +946,7 @@
       '<label class="btn" style="cursor:pointer">' + icon("plus") + 'Importer un CSV<input type="file" accept=".csv,text/csv" data-import-csv hidden></label><button class="btn quiet" data-csv-model>' + icon("download") + "Modèle CSV</button><button class=\"btn\" data-export-csv>" + icon("download") + "Exporter le planning (CSV)</button></div>" +
       '<p style="margin:14px 0 8px">Tes publications Instagram faites avant PlanneRs (jusqu\'à 500) : elles arrivent comme « publiées », avec leur légende et leur lien, pour les retrouver dans le calendrier et les Stats et pouvoir les reprendre. Rien n\'est publié, rien n\'est recréé en double.</p>' +
       '<button class="btn" data-ig-history>' + brand("instagram") + "Récupérer l'historique Instagram</button></section>" +
-      '<section class="panel"><h2>Aide</h2><p>La visite guidée présente chaque menu en une minute.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-tour>' + icon("today") + "Revoir la visite guidée</button>" +
+      '<section class="panel"><h2>Aide</h2><p>La visite guidée présente chaque menu en une minute.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-tour>' + icon("today") + "Revoir la visite guidée</button>" +'<button class="btn" data-shortcuts>' + icon("today") + "Raccourcis clavier</button>" +
       '<a class="btn" href="' + docsBase() + 'README.md" target="_blank" rel="noopener">' + icon("right") + "Lire la documentation</a></div></section>",
   };
 })();

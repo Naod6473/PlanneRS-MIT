@@ -57,29 +57,58 @@
     return '<span class="st st-' + key + '">' + icon(s.icon) + s.label + "</span>";
   }
 
+  // Étape (une des 5), alerte éventuelle (échec, retard) et petite main « à poster à la main ».
+  function look(p, now) {
+    const st = C.step(p), al = C.alertOf(p, now || C.nowStamp());
+    const set = ((window.Store || {}).state || {}).settings;
+    const hand = st !== "published" && C.manualNets(p, set).length > 0;
+    return { st, al, hand, cls: "is-" + st + (al ? " is-" + al : "") + (hand ? " has-hand" : "") };
+  }
+  function lateBy(p, now) {
+    const a = C.at(p); if (!a) return "";
+    const ms = new Date(now.replace(" ", "T")) - new Date(a); if (!(ms > 0)) return "";
+    const m = Math.round(ms / 60000);
+    return m < 60 ? m + " min" : m < 48 * 60 ? Math.round(m / 60) + " h" : Math.round(m / 1440) + " j";
+  }
+  // Bandeau rouge d'alerte, posé en haut de la carte.
+  function abar(p, now, short) {
+    now = now || C.nowStamp();
+    const al = C.alertOf(p, now); if (!al) return "";
+    const txt = short ? C.STATUS[al].label : al === "failed" ? (p.failure && p.failure.what ? "Échec : " + p.failure.what : "Échec") : "En retard" + (lateBy(p, now) ? " de " + lateBy(p, now) : "");
+    return '<span class="abar a-' + al + '">' + icon(al === "failed" ? "x" : "alert") + '<span class="t">' + esc(txt) + "</span></span>";
+  }
+  // Pastille d'étape (+ main violette si une partie est à poster à la main).
+  function badge(p, now) {
+    const l = look(p, now);
+    return status(l.st) + (l.hand ? '<span class="hand" title="À poster à la main">' + icon("hand") + "</span>" : "");
+  }
+
   // Composant unique « carte de post ». size : "card" (défaut) ou "compact".
   function card(p, opts) {
     opts = opts || {};
     const now = C.nowStamp();
-    const st = C.displayStatus(p, now);
+    const L = look(p, now), st = L.st;
     const kids = (opts.kids || []).map((k) => C.FORMATS[k.format] === "Story" && k.role === "teaser" ? "+ teaser " + k.time : "+ " + (C.FORMATS[k.format] || "") + " " + (k.time || "")).join(" · ");
     const thumb = p.thumb ? '<img class="thumb" src="' + safeUrl(p.thumb) + '" alt="" draggable="false">' : "";
     const drag = opts.draggable ? ' data-drag="' + esc(p.id) + '"' : "";
     if (opts.size === "mini") {
-      const label = p.title + ", " + C.STATUS[st].label + (kids ? " (" + kids + ")" : "");
-      return '<button class="pc mini is-' + st + '" data-open="' + esc(p.id) + '"' + drag + ' title="' + esc(label) + '" aria-label="' + esc(label) + '">' +
-        '<span class="row1">' + thumb + brands(p.networks) + '<span class="sti c-' + st + '">' + icon(C.STATUS[st].icon) + "</span></span>" +
+      const label = p.title + ", " + C.STATUS[st].label + (L.al ? ", " + C.STATUS[L.al].label : "") + (kids ? " (" + kids + ")" : "");
+      // Mode « Détaillé » du calendrier : grande miniature en haut de la carte.
+      const cov = !(window.App || {}).calCompact && (window.App || {}).coverOf ? window.App.coverOf(p) : "";
+      return '<button class="pc mini ' + L.cls + ((window.App || {}).calCompact ? "" : " big") + '" data-open="' + esc(p.id) + '"' + drag + ' aria-label="' + esc(label) + '">' +
+        abar(p, now, true) + (cov ? '<img class="mthumb" src="' + safeUrl(cov) + '" alt="" loading="lazy" draggable="false">' : "") +
+        '<span class="row1">' + (cov ? "" : thumb) + brands(p.networks) + (L.hand ? '<span class="hand">' + icon("hand") + "</span>" : "") + '<span class="sti c-' + st + '">' + icon(C.STATUS[st].icon) + "</span></span>" +
         '<span class="ttl"><span class="fmtp">' + esc(C.FORMATS[p.format] || "") + " · </span>" + esc(p.title) + "</span>" + (kids ? '<span class="kids">' + esc(kids) + "</span>" : "") + "</button>";
     }
     if (opts.size === "compact") {
-      return '<button class="pc compact is-' + st + '" data-open="' + esc(p.id) + '"' + drag + ">" + brands(p.networks) +
-        '<span class="ttl">' + (p.time ? '<span class="mono">' + p.time + "</span> " : "") + esc(p.title) + "</span>" + status(st) + "</button>";
+      return '<button class="pc compact ' + L.cls + '" data-open="' + esc(p.id) + '"' + drag + ">" + abar(p, now) + brands(p.networks) +
+        '<span class="ttl">' + (p.time ? '<span class="mono">' + p.time + "</span> " : "") + esc(p.title) + "</span>" + badge(p, now) + "</button>";
     }
-    return '<button class="pc is-' + st + '" data-open="' + esc(p.id) + '"' + drag + ' aria-label="' + esc(p.title + ", " + C.STATUS[st].label) + '">' +
-      '<span class="row1">' + thumb + brands(p.networks) + (p.ref ? '<span class="ref">' + esc(p.ref) + "</span>" : "") + "</span>" +
+    return '<button class="pc ' + L.cls + '" data-open="' + esc(p.id) + '"' + drag + ' aria-label="' + esc(p.title + ", " + C.STATUS[st].label + (L.al ? ", " + C.STATUS[L.al].label : "")) + '">' +
+      abar(p, now) + '<span class="row1">' + thumb + brands(p.networks) + (p.ref ? '<span class="ref">' + esc(p.ref) + "</span>" : "") + "</span>" +
       '<span class="ttl">' + esc(p.title) + "</span>" +
       (opts.showTime && p.time ? '<span class="sub mono">' + p.time + " · " + (C.FORMATS[p.format] || "") + "</span>" : "") +
-      "<span>" + status(st) + "</span>" +
+      '<span class="bdg">' + badge(p, now) + "</span>" +
       (kids ? '<span class="kids">' + esc(kids) + "</span>" : "") +
       (p.expires && !p.date ? '<span class="sub exp" style="color:var(--main)">Se périme le ' + esc(C.longDate(p.expires)) + "</span>" : "") +
       "</button>";
@@ -105,5 +134,5 @@
     }
   }
 
-  window.UI = { icon, esc, safeUrl, brand, brands, status, card, toast, copy, ICONS };
+  window.UI = { icon, esc, safeUrl, brand, brands, status, card, look, abar, badge, toast, copy, ICONS };
 })();

@@ -24,7 +24,7 @@ Le menu des réseaux (en haut à droite) affiche ou masque chaque réseau.
 
 Au-dessus du calendrier, la case **Chercher** filtre les posts sur leur titre, leur texte, leur numéro, leurs hashtags ou leur note : tous les mots doivent y être, sans tenir compte des accents ni des majuscules. Les résultats de toutes les dates s'affichent en dessous (les 8 premiers) : clique sur l'un d'eux pour l'ouvrir. La liste **Séries** ne garde qu'une série. **Effacer** remet tout. Les mêmes filtres s'appliquent dans Contenus.
 
-Une série vient du champ **Série** d'un post (dans « Titre, format, réseaux et options » ou les Paramètres de la fenêtre de création). Sans ce champ, elle est déduite du titre quand il a la forme « Nom de la série · ép. 2 : … ».
+Une série vient du champ **Série** d'un post (dans les Paramètres de la fenêtre de création). Sans ce champ, elle est déduite du titre quand il a la forme « Nom de la série · ép. 2 : … ».
 
 ## Déplacer un post
 

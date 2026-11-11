@@ -357,7 +357,7 @@
     {
       "path": "utilisation/contenus.md",
       "title": "Contenus",
-      "description": "Le tableau Kanban de production (Idée, Écriture, Médias, Légende, Prêt, Programmé, Publié), ses verrous, la fiche d'un post et l'aperçu Instagram.",
+      "description": "Le tableau de production en 5 étapes (Idée, En préparation, À valider, Programmé, Publié), les alertes, ses verrous, la fiche d'un post et l'aperçu Instagram.",
       "category": "Utilisation",
       "tags": [
         "contenus",
@@ -380,6 +380,11 @@
           "level": 2,
           "text": "Le tableau",
           "anchor": "le-tableau"
+        },
+        {
+          "level": 3,
+          "text": "Les alertes",
+          "anchor": "les-alertes"
         },
         {
           "level": 3,

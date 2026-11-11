@@ -21,7 +21,7 @@
   // Dates déjà écrites en anglais par Core (« Tuesday 10 November », « Tue 10 ») : remplacées par « @ » dans les clés.
   const DATE = /\b(?:Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday) \d{1,2}(?: (?:January|February|March|April|May|June|July|August|September|October|November|December))?\b|\b(?:Sun|Mon|Tue|Wed|Thu|Fri|Sat) \d{1,2}\b/g;
   function fill(m, dates, nums) { let i = 0, j = 0; return m.replace(/@/g, () => (dates[j++] || "")).replace(/#/g, () => (i < nums.length ? nums[i++] : "")); }
-  const PREFIX = [["Configurer ", "Set up "], ["Se connecter à ", "Connect to "], ["Version pour ", "Version for "], ["Aller à ", "Go to "]];
+  const PREFIX = [["Configurer ", "Set up "], ["Se connecter à ", "Connect to "], ["Version pour ", "Version for "], ["Aller à ", "Go to "], ["En retard de ", "Late by "], ["Échec : ", "Failed: "]];
   function one(t) {
     if (D[t] != null) return D[t];
     if (t.startsWith("· ")) { const r = one(t.slice(2)); return r == null ? null : "· " + r; }

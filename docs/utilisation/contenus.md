@@ -1,6 +1,6 @@
 ---
 title: Contenus
-description: Le tableau Kanban de production (Idée, Écriture, Médias, Légende, Prêt, Programmé, Publié), ses verrous, la fiche d'un post et l'aperçu Instagram.
+description: Le tableau de production en 5 étapes (Idée, En préparation, À valider, Programmé, Publié), les alertes, ses verrous, la fiche d'un post et l'aperçu Instagram.
 category: Utilisation
 tags: [contenus, créer un post, fenêtre de création, kanban, idée, légende, validation, verrou, fiche, aperçu instagram, reel, carrousel]
 order: 3
@@ -13,19 +13,21 @@ La case de recherche et la liste des séries, en haut du tableau et de la liste,
 
 ## Le tableau
 
-Sept colonnes suivent un contenu de l'idée à la publication :
+Cinq colonnes suivent un contenu de l'idée à la publication. Ce sont les mêmes étapes, avec la même pastille (couleur, icône et mot), dans le tableau, le calendrier, la liste et la fiche d'un post :
 
-| Colonne | Sens |
-|---|---|
-| Idée | À creuser |
-| Écriture | Texte ou script en cours |
-| Médias | Images ou vidéo en cours |
-| Légende | Légende à écrire ou à valider |
-| Prêt | Validé, sans date |
-| Programmé | Validé et daté : il partira tout seul |
-| Publié | Parti (les 10 derniers) |
+| Étape | Couleur | Sens |
+|---|---|---|
+| Idée | Gris | Un sujet, pas encore de texte ni de média |
+| En préparation | Orange | Texte ou média en cours |
+| À valider | Bleu | Tout est prêt, il manque ton OK (ou une date). Rien ne part sans lui |
+| Programmé | Bleu foncé | Validé et daté : il partira tout seul. Une petite flèche violette indique un réseau « à poster à la main » |
+| Publié | Vert | En ligne (les 7 derniers jours ; les plus anciens sont dans la Liste) |
 
-Chaque carte montre trois points : texte, médias, légende validée. Le filtre de format (Reel, carrousel…) est en haut.
+### Les alertes
+
+« Échec » et « En retard » ne sont pas des étapes : ils s'affichent en **bandeau rouge** en haut de la carte, quelle que soit l'étape. On voit d'un coup d'œil où en est le post et s'il y a un problème. Le bandeau dit ce qui ne va pas (« Échec : Instagram a refusé la publication », « En retard de 2 h »).
+
+Chaque carte montre trois points : texte, médias, texte validé. Le filtre de format (Reel, carrousel…) est en haut.
 
 ### Déplacer une carte
 
@@ -38,7 +40,7 @@ Règles :
 - **Publié** ne bouge jamais, et se remplit tout seul : robot, « C'est posté », ou post publié en dehors de PlanneRs (à la main, par un script ou un assistant) et repéré sur Instagram au même format, à moins d'une heure et demie de l'heure prévue (vérifié toutes les 10 minutes tant qu'un post Instagram attend).
 - **Programmé** est verrouillé : clique sur **Débloquer** pour pouvoir déplacer la carte.
 - Pour entrer dans **Programmé**, il faut une légende validée **et** une date.
-- Revenir en **Légende** ou avant retire la validation de la légende : elle devra être revalidée.
+- Revenir en **À valider** ou avant retire la validation : le texte devra être revalidé.
 
 Le « + » en haut de chaque colonne crée une carte directement à cette étape.
 
@@ -74,7 +76,7 @@ Toutes les images et vidéos des posts, des plus récentes aux plus anciennes, s
 - **Insérer un média** : depuis l'appareil (envoyé dans ton Drive si « Google Drive (envoi) » est connecté), en glissant un fichier sur la fenêtre, ou en collant un lien `https://`. Le format (Reel, carrousel, image, texte) se déduit des médias.
 - **Bibliothèque** (dans « Insérer un média ») : tous les médias déjà utilisés dans tes posts, du plus récent au plus ancien. Cherche par nom de fichier ou par titre de post, puis clique sur un média pour l'ajouter. Pratique pour réutiliser une vidéo ou un visuel sans le renvoyer.
 - **Adapter pour chaque réseau** (avec Claude, si la clé est configurée) : sur l'onglet **Tous les réseaux**, un clic propose un texte par réseau coché (longueur, ton, hashtags, première phrase pour YouTube). Chaque proposition arrive dans son onglet : relis-la, puis coche **Texte validé**.
-- **Paramètres** : titre (pris dans la première ligne si tu le laisses vide), format, publication à la main, premier commentaire, texte alternatif.
+- **Paramètres** : titre (pris dans la première ligne si tu le laisses vide), série, format, publication à la main, premier commentaire, texte alternatif.
 - **À droite, l'aperçu** par réseau se met à jour pendant que tu écris. Sur téléphone, passe de **Écrire** à **Aperçu** en haut.
 - **En bas** : le jour et le créneau (si tes stats le permettent, **Conseillé : 12 h** choisit l'heure où tes posts marchent le mieux), puis **Programmer** (avec une date), **Ajouter à « Prêts à programmer »** (sans date) ou **Enregistrer en brouillon**. Si tu as le droit de valider, coche **Texte validé** pour qu'il parte à l'heure prévue ; toute modification du texte décoche la case.
 
@@ -82,14 +84,14 @@ Rien n'est enregistré avant ces boutons : fermer la fenêtre demande confirmati
 
 ## La fiche d'un post
 
-Un clic sur une carte ouvre sa fiche :
+Un clic sur une carte ouvre sa fiche. Elle sert à **voir et agir** (valider, changer la date, poster, réessayer) ; pour modifier le titre, le format, les réseaux ou les options, **Modifier** ouvre la fenêtre de création, le seul éditeur :
 
-- statut, réseaux, format, date ;
+- étape, alerte éventuelle (bandeau rouge), réseaux, format, date ;
 - **médias** : lecteur vidéo ou images, liens vers les fichiers et le dossier de stockage ;
 - **Aperçu sur Instagram** : le post tel qu'il apparaîtra, en vue **Fil** (4:5, légende coupée à 125 caractères avec « plus »), **Reel** (9:16) ou **Profil** (case 3:4, pour vérifier le cadrage de la couverture) ;
 - **légende** avec compteur de caractères et de hashtags, « Copier », « Valider la légende » ;
 - **Avant envoi** : ce qui bloque ou mérite attention ;
-- **Changer la date**, **Titre, format et réseaux**, « Publier à la main » ;
+- **Changer la date**, **Modifier** (fenêtre de création) ;
 - **Commentaires** : les échanges sur le post (voir [Équipe et validation client](equipe-et-client.md)) ;
 - **Plus** : dupliquer, répéter, lien de validation client, supprimer.
 
@@ -111,11 +113,11 @@ Si ton instance a une clé Claude, **Réécrire pour … avec Claude** propose u
 
 ### Description des images
 
-Dans **Titre, format, réseaux et options**, le champ **Description des images (texte alternatif)** décrit ce qu'on voit sur l'image, pour les personnes malvoyantes. Elle est envoyée à Bluesky, Mastodon, X et LinkedIn avec chaque image. L'assistant IA peut la remplir (outil `planners_update_post`, ou une description par image avec `planners_add_media`).
+Dans les **Paramètres** de la fenêtre de création, le champ **Description des images (texte alternatif)** décrit ce qu'on voit sur l'image, pour les personnes malvoyantes. Elle est envoyée à Bluesky, Mastodon, X et LinkedIn avec chaque image. L'assistant IA peut la remplir (outil `planners_update_post`, ou une description par image avec `planners_add_media`).
 
 ### Premier commentaire
 
-Toujours dans **Titre, format, réseaux et options**, le champ **Premier commentaire** (facultatif) est posté sous le post sur Instagram et Facebook juste après la publication : pratique pour les hashtags ou un lien. Ses hashtags comptent dans la limite fixée dans les règles. S'il est refusé (le compte n'a pas le droit `instagram_manage_comments` ou `pages_manage_engagement`), le post reste publié et l'Activité le signale : ajoute-le à la main.
+Toujours dans ces **Paramètres**, le champ **Premier commentaire** (facultatif) est posté sous le post sur Instagram et Facebook juste après la publication : pratique pour les hashtags ou un lien. Ses hashtags comptent dans la limite fixée dans les règles. S'il est refusé (le compte n'a pas le droit `instagram_manage_comments` ou `pages_manage_engagement`), le post reste publié et l'Activité le signale : ajoute-le à la main.
 
 ### Republier un post qui a bien marché
 

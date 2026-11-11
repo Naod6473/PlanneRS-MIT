@@ -63,7 +63,7 @@ Voir [Stockage : vue d'ensemble](../stockage/README.md).
 4. **Valider la légende**.
 5. **Changer la date** › choisis le jour et le créneau, ou glisse la carte dans le calendrier.
 
-Le post passe en **Planifié** : il partira à l'heure prévue.
+Le post passe en **Programmé** : il partira à l'heure prévue.
 
 ## 7. Passer en publication réelle
 

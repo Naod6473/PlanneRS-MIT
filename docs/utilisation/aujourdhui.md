@@ -24,18 +24,19 @@ Chaque indicateur est cliquable et ouvre la liste correspondante.
 
 ## Au programme
 
-Les vignettes des publications d'**Aujourd'hui**, de **Demain** ou des **7 jours**. Leur couleur indique le statut :
+Les vignettes des publications d'**Aujourd'hui**, de **Demain** ou des **7 jours**. Leur couleur indique l'étape, la même partout ([les 5 étapes](contenus.md#le-tableau)) :
 
-| Couleur | Statut |
+| Couleur | Étape |
 |---|---|
+| Gris | Idée |
+| Orange | En préparation |
+| Bleu | À valider |
+| Bleu foncé | Programmé (partira tout seul) |
 | Vert | Publié |
-| Bleu | Planifié (partira tout seul) |
-| Gris | À valider, ou ignoré (en pointillés) |
-| Violet | À poster à la main |
-| Orange | À planifier (brouillon, ou prêt sans date) |
-| Rouge | Échec ou en retard |
 
-Le statut s'affiche aussi avec une icône et un mot, pas seulement avec la couleur. Un repère rouge marque l'heure actuelle dans la journée.
+Une petite flèche violette signale un réseau à poster à la main. Un échec ou un retard ajoute un bandeau rouge sur la vignette. Un post ignoré est en pointillés.
+
+L'étape s'affiche aussi avec une icône et un mot, pas seulement avec la couleur. Un repère rouge marque l'heure actuelle dans la journée.
 
 ## À faire
 
