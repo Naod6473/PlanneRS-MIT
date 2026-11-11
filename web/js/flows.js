@@ -126,7 +126,8 @@
       '<label>Titre<input id="ed-title" value="' + esc(p.title) + '"></label>' +
       '<label>Format<select id="ed-format">' + Object.entries(C.FORMATS).map(([k, l]) => '<option value="' + k + '"' + (p.format === k ? " selected" : "") + ">" + l + "</option>").join("") + "</select></label>" +
       '<fieldset style="border:0;padding:0;margin:0"><legend style="font-weight:600;font-size:13px;margin-bottom:4px">Réseaux</legend><div class="filters">' +
-      (set.networks || []).map((n) => '<label class="chip"><input type="checkbox" data-ed-net="' + n + '"' + (p.networks.includes(n) ? " checked" : "") + ">" + brand(n) + esc(window.BRANDS[n].title) + "</label>").join("") + "</div></fieldset>" +
+      (set.networks || []).map((n) => '<label class="chip"><input type="checkbox" data-ed-net="' + n + '"' + (p.networks.includes(n) ? " checked" : "") + ">" + brand(n) + esc(window.BRANDS[n].title) + "</label>").join("") + "</div>" +
+      (((set.templates || {}).sets || []).filter((g) => g.name && (g.networks || []).length).length ? '<div class="tplrow"><span class="muted">Ensembles</span>' + (set.templates.sets || []).map((g, i) => (g.name && (g.networks || []).length ? '<button type="button" class="chip sm" data-ed-set="' + i + '" title="' + esc(g.networks.map((n) => (window.BRANDS[n] ? window.BRANDS[n].title : n)).join(", ")) + '">' + esc(g.name) + "</button>" : "")).join("") + "</div>" : "") + "</fieldset>" +
       '<label class="toggle"><input type="checkbox" id="ed-manual"' + (p.manual ? " checked" : "") + "> Publier à la main (rappel au lieu d'un envoi automatique)</label>" +
       (p.format === "story" || !p.networks.some((n) => n === "instagram" || n === "facebook") ? "" : '<label>Premier commentaire (facultatif)<textarea id="ed-fc" rows="2" placeholder="Hashtags, lien… posté juste après la publication">' + esc(p.firstComment || "") + "</textarea></label>" +
         '<p class="muted" style="margin:-6px 0 0;font-size:12px">Ajouté sous le post sur Instagram et Facebook. S\'il est refusé, le post reste publié et l\'Activité te le dit.</p>') +
@@ -204,6 +205,11 @@
       h.hidden = !L._cur; h.textContent = L._cur ? "Version pour " + nm + ". Laisse vide pour reprendre la légende commune." : "";
       const rw = L.querySelector("#rw"); if (rw) { rw.hidden = !L._cur || !(S.state.rewrite || S.mode !== "api"); rw.lastChild.textContent = "Réécrire pour " + nm + " avec Claude"; }
       count(); cap.focus();
+    }));
+    L.querySelectorAll("[data-ed-set]").forEach((b) => b.addEventListener("click", () => {
+      const g = ((set.templates || {}).sets || [])[+b.dataset.edSet]; if (!g) return;
+      L.querySelectorAll("[data-ed-net]").forEach((x) => { x.checked = g.networks.includes(x.dataset.edNet); });
+      U.toast("Réseaux cochés : " + g.name + ". Enregistre pour appliquer.");
     }));
     L.querySelectorAll("[data-tpl]").forEach((b) => b.addEventListener("click", () => {
       const t = b.dataset.tpl === "sig" ? tpl.signature : (tags[+b.dataset.tpl] || {}).text;

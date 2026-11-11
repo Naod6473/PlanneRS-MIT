@@ -2,9 +2,9 @@
 title: Installation sur Cloudflare
 description: Installer PlanneRs sur un Worker Cloudflare avec une base D1, protéger l'accès avec Cloudflare Access et le mettre en ligne sur son domaine.
 category: Démarrage
-tags: [installation, cloudflare, worker, d1, access, domaine, wrangler, déploiement]
+tags: [installation, cloudflare, worker, d1, access, domaine, wrangler, déploiement, une commande, npx, windows, mac, linux]
 order: 1
-updated: 2026-11-10
+updated: 2026-11-11
 ---
 
 # Installation sur Cloudflare
@@ -12,12 +12,38 @@ updated: 2026-11-10
 Il te faut :
 
 - un compte Cloudflare, l'offre gratuite suffit : [créer un compte](https://dash.cloudflare.com/sign-up) ;
-- pour l'installation sans terminal, un compte GitHub avec une copie (fork) du dépôt ;
-- pour l'installation en ligne de commande, Node.js 20 ou plus.
+- pour l'installation en une commande, [Node.js](https://nodejs.org) 20 ou plus ;
+- pour l'installation sans terminal, un compte GitHub.
 
-Compte 20 minutes. À la fin, PlanneRs tourne à ton adresse, seules les personnes autorisées peuvent l'ouvrir, et le robot de publication est en **simulation** : rien ne part tant que tu ne l'as pas décidé.
+Compte 10 à 20 minutes. À la fin, PlanneRs tourne à ton adresse, seules les personnes autorisées peuvent l'ouvrir, et le robot de publication est en **simulation** : rien ne part tant que tu ne l'as pas décidé.
 
-## Le plus simple : le bouton « Deploy to Cloudflare »
+Trois façons de faire, de la plus rapide à la plus manuelle : [une commande](#en-une-commande), [un bouton](#sans-terminal--le-bouton-de-déploiement) si tu ne veux pas de terminal, ou [pas à pas](#méthode-b--en-ligne-de-commande). Tu peux aussi te faire [guider par une IA](installation-avec-une-ia.md).
+
+## En une commande
+
+La même sur Windows (PowerShell), macOS et Linux. Ouvre un terminal dans le dossier où tu veux garder le code, puis :
+
+```bash
+npx github:Naod6473/PlanneRS-MIT
+```
+
+Le script fait tout dans l'ordre et t'explique chaque étape :
+
+1. il copie le code dans un dossier `planners` ;
+2. il installe les outils ;
+3. il te connecte à Cloudflare : une page s'ouvre dans ton navigateur, tu cliques sur **Allow** ;
+4. il crée la base de données et ses tables ;
+5. il met le site en ligne et affiche son adresse ;
+6. il génère la clé de chiffrement et te l'affiche une fois : garde-la dans ton gestionnaire de mots de passe ;
+7. il t'indique comment [protéger l'accès](#protéger-laccès-avec-cloudflare-access) et enregistre les deux valeurs si tu les colles.
+
+Si une étape échoue (connexion coupée, fenêtre fermée), relance la même commande : elle reprend où elle en est et ne recrée rien. Une clé de chiffrement déjà en place n'est jamais remplacée.
+
+Pour voir ce que le script ferait sans rien lancer : `npx github:Naod6473/PlanneRS-MIT --dry-run`. Le code du script est dans [`scripts/install.mjs`](../../scripts/install.mjs).
+
+Garde le dossier `planners` : pour une mise à jour, remplace le code par la nouvelle version (en gardant ton `wrangler.toml`) puis lance `npm run deploy` dedans.
+
+## Sans terminal : le bouton de déploiement
 
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/Naod6473/PlanneRS-MIT)
 

@@ -4,7 +4,11 @@
   "private": true,
   "description": "Planifier, valider et suivre ses publications sur les réseaux sociaux. Auto-hébergé sur Cloudflare.",
   "license": "MIT",
+  "bin": {
+    "planners-install": "scripts/install.mjs"
+  },
   "scripts": {
+    "setup": "node scripts/install.mjs",
     "dev": "wrangler dev",
     "demo": "node scripts/serve-demo.mjs",
     "test": "node --test test/*.test.mjs",

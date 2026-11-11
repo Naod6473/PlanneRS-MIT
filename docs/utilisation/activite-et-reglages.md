@@ -4,7 +4,7 @@ description: Le journal d'activité, l'état des comptes et du robot, puis chaqu
 category: Utilisation
 tags: [activité, journal, robot, réglages, créneaux, règles, notifications, espace, import, export, sauvegarde]
 order: 5
-updated: 2026-11-10
+updated: 2026-11-11
 ---
 
 # Activité et réglages
@@ -48,7 +48,13 @@ Quand assez de statistiques sont relevées (au moins 8 posts récents), le bloc 
 
 Sous la légende d'un post, « Insérer » ajoute la signature ou un groupe à la fin du texte.
 
+- **Ensembles de réseaux** : tes combinaisons habituelles, par exemple « Instagram + Facebook ». Dans la fiche d'un post, sous la liste des réseaux, un bouton par ensemble coche ces réseaux d'un coup ; il reste à enregistrer.
+
 - **Liens suivis** : indique tes sites (un domaine par ligne). Au moment d'envoyer, PlanneRs ajoute `utm_source` (le réseau), `utm_medium=social` et `utm_campaign` (le titre du post) aux liens vers ces sites, pour voir dans les statistiques du site (Google Analytics, Matomo, Plausible…) ce que rapporte chaque réseau. Les légendes enregistrées ne changent pas ; l'aperçu et « Poster à la main » montrent la version envoyée. Les liens qui ont déjà des paramètres `utm_` ne sont pas touchés. Liste vide : rien n'est modifié.
+
+### Automatisations
+
+Flux RSS repris en posts à relire, commentaire ajouté quand un post dépasse un nombre de likes, lien vers l'API : voir [Automatisations](automatisations.md).
 
 ### Règles et contrôles
 

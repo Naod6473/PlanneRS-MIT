@@ -21,7 +21,7 @@
         "documentation"
       ],
       "order": 0,
-      "updated": "2026-11-10",
+      "updated": "2026-11-11",
       "headings": [
         {
           "level": 2,
@@ -73,15 +73,25 @@
         "access",
         "domaine",
         "wrangler",
-        "déploiement"
+        "déploiement",
+        "une commande",
+        "npx",
+        "windows",
+        "mac",
+        "linux"
       ],
       "order": 1,
-      "updated": "2026-11-10",
+      "updated": "2026-11-11",
       "headings": [
         {
           "level": 2,
-          "text": "Le plus simple : le bouton « Deploy to Cloudflare »",
-          "anchor": "le-plus-simple--le-bouton--deploy-to-cloudflare-"
+          "text": "En une commande",
+          "anchor": "en-une-commande"
+        },
+        {
+          "level": 2,
+          "text": "Sans terminal : le bouton de déploiement",
+          "anchor": "sans-terminal--le-bouton-de-déploiement"
         },
         {
           "level": 2,
@@ -210,6 +220,41 @@
           "level": 2,
           "text": "Et ensuite",
           "anchor": "et-ensuite"
+        }
+      ]
+    },
+    {
+      "path": "demarrage/installation-avec-une-ia.md",
+      "title": "Installer avec l'aide d'une IA",
+      "description": "Un texte à coller dans Claude Code, Codex ou un autre assistant qui a accès à un terminal, pour qu'il installe PlanneRs sur ton compte Cloudflare en te guidant.",
+      "category": "Démarrage",
+      "tags": [
+        "installation",
+        "ia",
+        "claude code",
+        "codex",
+        "assistant",
+        "terminal",
+        "cloudflare",
+        "guidé"
+      ],
+      "order": 3,
+      "updated": "2026-11-11",
+      "headings": [
+        {
+          "level": 2,
+          "text": "Le texte à coller",
+          "anchor": "le-texte-à-coller"
+        },
+        {
+          "level": 2,
+          "text": "Ce que l'assistant ne peut pas faire seul",
+          "anchor": "ce-que-lassistant-ne-peut-pas-faire-seul"
+        },
+        {
+          "level": 2,
+          "text": "Sans assistant",
+          "anchor": "sans-assistant"
         }
       ]
     },
@@ -451,7 +496,7 @@
         "sauvegarde"
       ],
       "order": 5,
-      "updated": "2026-11-10",
+      "updated": "2026-11-11",
       "headings": [
         {
           "level": 2,
@@ -487,6 +532,11 @@
           "level": 3,
           "text": "Modèles",
           "anchor": "modèles"
+        },
+        {
+          "level": 3,
+          "text": "Automatisations",
+          "anchor": "automatisations"
         },
         {
           "level": 3,
@@ -546,6 +596,43 @@
           "level": 3,
           "text": "Laisser passer le lien dans Cloudflare Access",
           "anchor": "laisser-passer-le-lien-dans-cloudflare-access"
+        }
+      ]
+    },
+    {
+      "path": "utilisation/automatisations.md",
+      "title": "Automatisations",
+      "description": "Reprendre automatiquement les articles d'un flux RSS comme posts à relire, ajouter un commentaire quand un post dépasse un nombre de likes, et brancher un autre outil.",
+      "category": "Utilisation",
+      "tags": [
+        "automatisation",
+        "rss",
+        "atom",
+        "flux",
+        "blog",
+        "commentaire automatique",
+        "likes",
+        "seuil",
+        "n8n",
+        "api"
+      ],
+      "order": 7,
+      "updated": "2026-11-11",
+      "headings": [
+        {
+          "level": 2,
+          "text": "Reprendre un flux RSS",
+          "anchor": "reprendre-un-flux-rss"
+        },
+        {
+          "level": 2,
+          "text": "Après la publication",
+          "anchor": "après-la-publication"
+        },
+        {
+          "level": 2,
+          "text": "Brancher un autre outil",
+          "anchor": "brancher-un-autre-outil"
         }
       ]
     },
@@ -1649,6 +1736,54 @@
           "level": 2,
           "text": "Détails techniques",
           "anchor": "détails-techniques"
+        }
+      ]
+    },
+    {
+      "path": "reference/api.md",
+      "title": "API pour n8n, Make, Zapier ou un script",
+      "description": "Lire le planning et créer des posts depuis un autre outil avec quatre adresses HTTP simples, protégées par un jeton de service Cloudflare Access.",
+      "category": "Référence",
+      "tags": [
+        "api",
+        "rest",
+        "http",
+        "n8n",
+        "make",
+        "zapier",
+        "script",
+        "automatisation",
+        "jeton de service",
+        "cloudflare access",
+        "curl"
+      ],
+      "order": 6,
+      "updated": "2026-11-11",
+      "headings": [
+        {
+          "level": 2,
+          "text": "Accès",
+          "anchor": "accès"
+        },
+        {
+          "level": 2,
+          "text": "Les adresses",
+          "anchor": "les-adresses"
+        },
+        {
+          "level": 2,
+          "text": "Créer un post",
+          "anchor": "créer-un-post"
+        },
+        {
+          "level": 2,
+          "text": "Exemples",
+          "anchor": "exemples"
+        },
+        {
+          "level": 2,
+          "text": "Pour aller plus loin",
+          "anchor": "pour-aller-plus-loin"
         }
       ]
     }

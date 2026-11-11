@@ -598,7 +598,7 @@ table.list tr.clk:hover td{background:var(--panel2)}
   .srow{grid-template-columns:18px 36px minmax(0,1fr)}
   .srow .nums{grid-column:3;font-size:12px}
   .cal-wrap{grid-template-columns:1fr}
-  .set{grid-template-columns:1fr}
+  .set{grid-template-columns:minmax(0,1fr)}.set .panel p{overflow-wrap:anywhere}
   .subnav{flex-direction:row;overflow-x:auto}
   .subnav button{flex:none}
   .pending{left:12px;right:12px;bottom:76px;flex-wrap:wrap}
@@ -905,3 +905,9 @@ table.list tr.sel td{background:var(--rev-bg)}
 .cm-rep.mine{border-left-color:var(--ink3)}
 .cm-acts{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:6px}
 @media (max-width:760px){.cmt .cm-new{flex-direction:column;align-items:stretch}.cmt .cm-acts{margin-top:0}}
+/* Réglages : ensembles de réseaux, flux RSS, actions après publication. */
+.setrow{display:grid;grid-template-columns:minmax(0,240px) minmax(0,1fr) auto;gap:8px;align-items:center}
+.plugrow{display:grid;grid-template-columns:max-content max-content minmax(0,1fr) auto;gap:8px;align-items:start}
+.form label.plugn{display:flex;grid-auto-flow:column;align-items:center;gap:6px;font-weight:400;white-space:nowrap}
+.form label.plugn input{width:84px}
+@media (max-width:760px){.setrow{grid-template-columns:minmax(0,1fr) auto}.setrow .filters{grid-column:1/-1;grid-row:2}.plugrow{grid-template-columns:minmax(0,1fr) max-content auto}.plugrow textarea{grid-column:1/-1;grid-row:2}}

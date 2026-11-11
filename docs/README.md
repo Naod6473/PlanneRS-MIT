@@ -4,7 +4,7 @@ description: Sommaire de la documentation, classée par catégorie, avec les mot
 category: Sommaire
 tags: [sommaire, index, documentation]
 order: 0
-updated: 2026-11-10
+updated: 2026-11-11
 ---
 
 # Documentation de PlanneRs
@@ -19,7 +19,8 @@ Chaque page commence par un en-tête (`title`, `description`, `category`, `tags`
 
 | Page | Contenu |
 |---|---|
-| [Installation](demarrage/installation.md) | Cloudflare (Worker, D1, Access), domaine, secret de chiffrement, mise en ligne |
+| [Installation](demarrage/installation.md) | En une commande, par un bouton ou pas à pas : Cloudflare (Worker, D1, Access), domaine, secret de chiffrement |
+| [Installer avec l'aide d'une IA](demarrage/installation-avec-une-ia.md) | Le texte à coller dans Claude Code ou Codex pour être guidé |
 | [Premiers pas](demarrage/premiers-pas.md) | Créer son espace, créneaux, premier compte, premier post, passer en publication réelle |
 
 ## Utilisation
@@ -31,6 +32,7 @@ Chaque page commence par un en-tête (`title`, `description`, `category`, `tags`
 | [Contenus](utilisation/contenus.md) | Tableau Kanban (Idée → Publié), verrous, fiche d'un post, aperçu Instagram |
 | [Stats](utilisation/stats.md) | Abonnés, vues, portée, meilleur Reel, tri des publications |
 | [Activité et réglages](utilisation/activite-et-reglages.md) | Journal, état des comptes et du robot, créneaux, règles, notifications, import et export |
+| [Automatisations](utilisation/automatisations.md) | Flux RSS repris en posts à relire, commentaire automatique au-delà d'un nombre de likes |
 
 ## Réseaux sociaux
 
@@ -75,6 +77,7 @@ Chaque page commence par un en-tête (`title`, `description`, `category`, `tags`
 |---|---|
 | [Dépannage](reference/depannage.md) | Messages d'erreur des réseaux, causes, solutions |
 | [Sécurité](reference/securite.md) | Chiffrement des identifiants, accès, révocation |
+| [API](reference/api.md) | Lire le planning et créer des posts depuis n8n, Make, Zapier ou un script |
 | [Architecture](reference/architecture.md) | Données, robot, écrire un connecteur |
 | [Glossaire](reference/glossaire.md) | Statuts, créneau, relais, jeton, hébergement public… |
 

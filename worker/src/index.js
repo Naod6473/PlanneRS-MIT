@@ -36,6 +36,8 @@ import { aiClient } from "./ai.js";
 import * as igHistory from "./history.js";
 import * as igComments from "./comments.js";
 import { graph } from "./adapters/meta.js";
+import * as rss from "./rss.js";
+import * as plugs from "./plugs.js";
 
 const ADAPTERS = { instagram, facebook, threads, linkedin, x, bluesky, mastodon, pinterest, youtube };
 const STORAGE = { gdrive, gdrivewrite, onedrive, dropbox, webdav, ghpages, r2: s3 };
@@ -223,6 +225,26 @@ async function api(request, env, path, url, auth) {
     const s = await db.loadState(env), post = s.posts.find((p) => c.key && (mediaKey(p.url) === c.key));
     try { return json(await rewriter.suggestReply(aiClient(env), c, post, s.settings || {})); } catch (e) { return err(e.message, 502); }
   }
+  // API simple pour n8n, Make, Zapier ou un script (voir docs/reference/api.md). Même contrôle d'accès que le reste
+  // (jeton de service Cloudflare Access) ; un post créé par l'API n'est jamais validé : il attend une relecture.
+  if (path === "v1" || path.startsWith("v1/")) {
+    const s0 = await state(env);
+    const deps = { state: async () => s0, save: async (ps) => { ps.forEach((p) => { if (!s0.posts.includes(p)) s0.posts.push(p); }); await db.savePosts(env, ps); }, log: (e) => db.addLog(env, e), now: localNow(s0.settings.timezone), me, who: " (API" + (me ? ", " + me : "") + ")", canValidate: async () => false };
+    const q = Object.fromEntries(url.searchParams), sub = path.slice(3);
+    try {
+      if (sub === "today" && m === "GET") return json(await mcp.callTool("planners_today", {}, deps));
+      if (sub === "posts" && m === "GET") return json(await mcp.callTool("planners_list_posts", { from: q.from, to: q.to, status: q.status, query: q.query, limit: q.limit ? +q.limit : undefined }, deps));
+      if (sub === "posts" && m === "POST") {
+        const b = body || {};
+        const c = await mcp.callTool("planners_create_post", { title: b.title, format: b.format, networks: b.networks, date: b.date, time: b.time, caption: b.caption, note: b.note }, deps);
+        for (const u of [].concat(b.media || []).slice(0, 10)) await mcp.callTool("planners_add_media", typeof u === "string" ? { id: c.created.id, url: u } : { id: c.created.id, url: u && u.url, type: u && u.type, alt: u && u.alt }, deps);
+        return json(await mcp.callTool("planners_get_post", { id: c.created.id }, deps), 201);
+      }
+      if ((r0 = sub.match(/^posts\/([^/]+)$/)) && m === "GET") return json(await mcp.callTool("planners_get_post", { id: decodeURIComponent(r0[1]) }, deps));
+    } catch (e) { return err(e.message, /introuvable/i.test(e.message) ? 404 : 400); }
+    return err("Introuvable. Voir docs/reference/api.md", 404);
+  }
+  if (path === "rss/run" && m === "POST") return json(await runRss(env, true));
   if (path === "ical" && m === "GET") { const c = (await db.getKV(env, "ical")) || {}; return json(c.token ? { url: url.origin + "/cal/" + c.token + ".ics" } : {}); }
   if (path === "ical" && m === "POST") { const token = share.newToken(); await db.putKV(env, "ical", { token, by: me }); return json({ url: url.origin + "/cal/" + token + ".ics" }); }
   if (path === "ical" && m === "DELETE") { await db.putKV(env, "ical", {}); return json({ ok: true }); }
@@ -497,6 +519,30 @@ async function runWeekly(env, force) {
   return w;
 }
 
+// Flux RSS (Réglages › Automatisations) : relus une fois par heure. Un nouvel article devient un post à relire.
+async function runRss(env, force) {
+  const settings = Object.assign({}, DEFAULT_SETTINGS, (await db.getKV(env, "settings")) || {});
+  const feeds = ((settings.auto || {}).feeds || []).filter((f) => f && f.url);
+  const mark = (await db.getKV(env, "rss")) || {};
+  if (!feeds.length || (!force && mark.at && Date.now() - mark.at < 55 * 60000)) return { created: 0, errors: 0, feeds: feeds.length };
+  await db.putKV(env, "rss", Object.assign({}, mark, { at: Date.now() }));
+  const r = await rss.run(feeds, mark.memo, settings, {
+    now: localNow(settings.timezone), save: (ps) => db.savePosts(env, ps), log: (e) => db.addLog(env, e),
+    fetch: async (u) => { const x = await fetch(u, { headers: { accept: "application/rss+xml, application/atom+xml, application/xml, text/xml", "user-agent": "PlanneRs" }, signal: AbortSignal.timeout(15000) }); if (!x.ok) throw new Error("Le site a répondu " + x.status + "."); return (await x.text()).slice(0, 2e6); },
+  });
+  await db.putKV(env, "rss", { at: Date.now(), memo: r.memo });
+  return { created: r.created, errors: r.errors, feeds: feeds.length };
+}
+
+// Actions après publication (Réglages › Automatisations), après chaque relevé des statistiques.
+// Robot à l'arrêt : aucune action automatique.
+async function runPlugs(env, st) {
+  const s = await state(env);
+  const rules = (s.settings.auto || {}).plugs || [];
+  if (!rules.length || (s.settings.rules || {}).robotEnabled === false) return { done: 0 };
+  return plugs.run(rules, s.posts, st, { env, adapters: ADAPTERS, cred: (n) => credFor(env, n), save: (ps) => db.savePosts(env, ps), log: (e) => db.addLog(env, e), now: localNow(s.settings.timezone), dryRun: env.DRY_RUN !== "false", settings: s.settings }, mediaKey);
+}
+
 // Relevé des statistiques : une fois par jour à partir de 7 h (heure de l'espace), ou à la demande.
 async function stats(env, onlyIfDue) {
   const settings = Object.assign({}, DEFAULT_SETTINGS, (await db.getKV(env, "settings")) || {});
@@ -506,6 +552,7 @@ async function stats(env, onlyIfDue) {
   const s = await collectStats(env, (n) => credFor(env, n), prev, today);
   s.day = today;
   await db.putKV(env, "stats", s);
+  if (onlyIfDue) await runPlugs(env, s).catch(() => null);
   return s;
 }
 
@@ -545,6 +592,6 @@ export default {
     catch (e) { return err("Erreur du serveur : " + e.message, 500); }
   },
   async scheduled(event, env, ctx) {
-    ctx.waitUntil(robot(env).finally(() => syncInstagram(env).catch(() => null)).finally(() => stats(env, true).catch(() => null)).finally(() => runDaily(env).catch(() => null)).finally(() => runWeekly(env).catch(() => null)));
+    ctx.waitUntil(robot(env).finally(() => syncInstagram(env).catch(() => null)).finally(() => stats(env, true).catch(() => null)).finally(() => runDaily(env).catch(() => null)).finally(() => runWeekly(env).catch(() => null)).finally(() => runRss(env).catch(() => null)));
   },
 };

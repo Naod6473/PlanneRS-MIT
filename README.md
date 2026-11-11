@@ -11,6 +11,33 @@ Auto-hébergé sur Cloudflare (gratuit pour un usage personnel), sans abonnement
 
 *Two short intro videos (in French).*
 
+## Installer en une commande
+
+```bash
+npx github:Naod6473/PlanneRS-MIT
+```
+
+La même commande sur Windows, macOS et Linux (il faut [Node.js](https://nodejs.org) 20 ou plus). Elle crée la base, met le site en ligne sur ton compte Cloudflare, génère la clé de chiffrement et t'affiche l'adresse. Compter 5 à 10 minutes.
+
+Pas de terminal ? Un bouton fait la même chose depuis le navigateur :
+
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/Naod6473/PlanneRS-MIT)
+
+Le guide complet : [docs/demarrage/installation.md](docs/demarrage/installation.md). Tu peux aussi te faire [guider par une IA](docs/demarrage/installation-avec-une-ia.md).
+
+### Pourquoi c'est simple
+
+| | PlanneRs | Un outil classique à héberger soi-même |
+|---|---|---|
+| Ce qu'il faut | Un compte Cloudflare gratuit | Un serveur (VPS) à louer |
+| Ce qui tourne | Un Worker et une base D1, gérés par Cloudflare | Plusieurs conteneurs : application, base de données, cache, file de tâches |
+| Installation | Une commande ou un bouton | Docker, variables d'environnement, nom de domaine, certificat |
+| Mises à jour | Un déploiement de quelques secondes | Nouvelles images, migrations, redémarrages |
+| Sauvegardes | Chaque semaine, automatiques | À mettre en place |
+| Coût | 0 € pour un usage personnel | Le serveur, chaque mois |
+
+Ce que PlanneRs ne fait pas, volontairement : génération d'images ou de vidéos par IA, gestion d'agence multi-clients. Il fait une chose, bien : planifier, valider, publier, suivre.
+
 ## Ce que ça fait
 
 - **Aujourd'hui** : ce qui t'attend d'abord (échecs, posts manqués, posts à faire à la main, légendes à valider), puis le programme du jour.
@@ -19,6 +46,7 @@ Auto-hébergé sur Cloudflare (gratuit pour un usage personnel), sans abonnement
 - **Stats** : abonnés, vues, portée et classement des publications.
 - **Activité** : état des comptes et du robot, journal en clair.
 - **Réglages** : comptes, stockage des médias, créneaux, modèles, règles d'envoi, notifications, équipe.
+- **Automatisations** : un flux RSS repris en posts à relire, un commentaire ajouté quand un post dépasse un nombre de likes, une [API](docs/reference/api.md) pour n8n, Make ou Zapier ([guide](docs/utilisation/automatisations.md)).
 - **Assistants IA** : un serveur MCP intégré (`/mcp`) pour Claude, Codex ou ChatGPT : lire le planning, préparer, modifier et valider des posts ([guide](docs/reference/assistants-ia.md)).
 
 Principes :
@@ -51,12 +79,6 @@ npm run demo        # puis ouvre http://localhost:8787/?demo
 ```
 
 Ou `npm run build:demo` pour obtenir `dist/demo.html`, un seul fichier à ouvrir dans le navigateur. Les données de démo sont fictives et restent dans ton navigateur.
-
-## Installer
-
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/Naod6473/PlanneRS-MIT)
-
-Le bouton copie le dépôt sur ton GitHub, crée la base D1 et déploie le Worker sur ton compte Cloudflare. Il reste deux réglages : la clé `ENCRYPTION_KEY` et Cloudflare Access. Le guide complet, avec les autres méthodes : [docs/demarrage/installation.md](docs/demarrage/installation.md). Compter 10 à 20 minutes.
 
 ## Organisation du code
 

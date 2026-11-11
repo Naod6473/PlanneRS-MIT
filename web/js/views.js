@@ -722,7 +722,7 @@
 
   // ---------------------------------------------------------------- Réglages
   A.views.settings = function () {
-    const tabs = [["accounts", "Comptes"], ["storage", "Stockage et médias"], ["slots", "Créneaux"], ["templates", "Modèles"], ["rules", "Règles et contrôles"], ["notify", "Notifications"], ["space", "Espace"]];
+    const tabs = [["accounts", "Comptes"], ["storage", "Stockage et médias"], ["slots", "Créneaux"], ["templates", "Modèles"], ["auto", "Automatisations"], ["rules", "Règles et contrôles"], ["notify", "Notifications"], ["space", "Espace"]];
     const nav = '<nav class="subnav" aria-label="Rubriques des réglages">' + tabs.map(([k, l]) => '<button data-settab="' + k + '" aria-current="' + (A.setTab === k) + '">' + l + "</button>").join("") + "</nav>";
     return { title: "Réglages", html: '<div class="set">' + nav + "<div>" + (SET[A.setTab] || SET.accounts)() + "</div></div>" };
   };
@@ -762,6 +762,10 @@
       best.map((b) => { const hh = String(b.h).padStart(2, "0"); return '<div><b class="mono">' + hh + ':00</b><span class="muted">' + (b.gain > 0 ? "+" + b.gain + " % de vues" : "dans la moyenne") + " · " + b.n + " posts</span>" +
         (have.has(hh) ? '<span class="st st-published">' + icon("check") + "Déjà un créneau</span>" : '<button class="btn sm" data-slot-suggest="' + hh + ':00">' + icon("plus") + "Ajouter</button>") + "</div>"; }).join("") + "</div></section>";
   }
+  // Cases à cocher des réseaux de l'espace (ensembles, flux).
+  function netChecks(attr, picked) {
+    return (settings().networks || []).map((n) => '<label class="chip"><input type="checkbox" ' + attr + ' value="' + n + '"' + ((picked || []).includes(n) ? " checked" : "") + ">" + brand(n) + esc(window.BRANDS[n] ? window.BRANDS[n].title : n) + "</label>").join("");
+  }
   const SET = {
     accounts: () => connGroup("social", "Comptes connectés", "Les réseaux sur lesquels PlanneRs publie ou te rappelle de publier."),
     storage: () => {
@@ -787,9 +791,27 @@
         '<section class="panel"><h2>Groupes de hashtags</h2><p>Des séries de hashtags prêtes à insérer, par thème.</p><div class="form">' +
         tags.map((g, i) => '<div class="tplgroup"><input value="' + esc(g.name) + '" data-tpl-name="' + i + '" aria-label="Nom du groupe" placeholder="Nom (ex. : Recettes)"><textarea rows="2" data-tpl-text="' + i + '" aria-label="Hashtags du groupe" placeholder="#pain #boulangerie">' + esc(g.text) + '</textarea><button class="iconbtn" data-tpl-del="' + i + '" aria-label="Supprimer ce groupe">' + icon("trash") + "</button></div>").join("") +
         '<div><button class="btn" data-tpl-add>' + icon("plus") + "Ajouter un groupe</button></div></div></section>" +
+        '<section class="panel"><h2>Ensembles de réseaux</h2><p>Tes combinaisons habituelles (par exemple « Instagram + Facebook »). Dans un post, un bouton coche l\'ensemble d\'un coup.</p><div class="form">' +
+        (t.sets || []).map((g, i) => '<div class="setrow"><input value="' + esc(g.name) + '" data-set-name="' + i + '" aria-label="Nom de l\'ensemble" placeholder="Nom (ex. : Partout)"><div class="filters">' + netChecks("data-set-net=\"" + i + "\"", g.networks) + '</div><button class="iconbtn" data-set-del="' + i + '" aria-label="Supprimer cet ensemble">' + icon("trash") + "</button></div>").join("") +
+        '<div><button class="btn" data-set-add>' + icon("plus") + "Ajouter un ensemble</button></div></div></section>" +
         '<section class="panel"><h2>Liens suivis</h2><p>Pour savoir, dans les statistiques de ton site, ce que rapporte chaque réseau : au moment d\'envoyer, PlanneRs ajoute aux liens vers ton site les paramètres utm_source (le réseau), utm_medium et utm_campaign (le titre du post). Tes légendes ne changent pas.</p><div class="form">' +
         '<label>Tes sites (un domaine par ligne)<textarea rows="2" data-utm-domains placeholder="exemple.fr">' + esc(((settings().utm || {}).domains || []).join("\n")) + "</textarea></label>" +
         '<p class="muted" style="margin:0;font-size:12px">Vide : aucun lien n\'est modifié. Exemple : exemple.fr/recette devient exemple.fr/recette?utm_source=instagram&amp;utm_medium=social&amp;utm_campaign=pain-au-levain.</p></div></section>';
+    },
+    auto: () => {
+      const au = settings().auto || {}, demo = S.mode === "demo";
+      return '<section class="panel"><h2>Reprendre un flux RSS</h2><p>Chaque nouvel article de ton blog ou de ton site devient un post à relire, avec son titre, son lien et son image. Il arrive dans « Prêts à programmer » : rien ne part sans ta validation. Le flux est relu toutes les heures.</p><div class="form">' +
+        (au.feeds || []).map((f, i) => '<div class="setrow"><input type="url" value="' + esc(f.url || "") + '" data-feed-url="' + i + '" aria-label="Adresse du flux" placeholder="https://exemple.fr/feed"><div class="filters">' + netChecks("data-feed-net=\"" + i + "\"", f.networks) + '</div><button class="iconbtn" data-feed-del="' + i + '" aria-label="Supprimer ce flux">' + icon("trash") + "</button></div>").join("") +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-feed-add>' + icon("plus") + "Ajouter un flux</button>" + ((au.feeds || []).length ? '<button class="btn quiet" data-feed-run>' + icon("swap") + "Relire maintenant</button>" : "") + "</div>" +
+        '<p class="muted" style="margin:0;font-size:12px">' + (demo ? "En démo, les flux sont enregistrés mais pas relus : il faut PlanneRs installé sur ton serveur. " : "") + "À l'ajout d'un flux, les articles déjà en ligne ne sont pas repris : seuls les suivants le seront. Sans réseau coché, le post prend ton premier réseau.</p></div></section>" +
+        '<section class="panel"><h2>Après la publication</h2><p>Quand un post dépasse un nombre de likes, PlanneRs ajoute un commentaire sous ce post (un lien, une question, une offre). Une seule fois par post, vérifié chaque jour avec les statistiques, sur les posts des 14 derniers jours.</p><div class="form">' +
+        (au.plugs || []).map((r, i) => '<div class="plugrow"><select data-plug-net="' + i + '" aria-label="Réseau"><option value="instagram"' + (r.net !== "facebook" ? " selected" : "") + '>Instagram</option><option value="facebook"' + (r.net === "facebook" ? " selected" : "") + '>Facebook</option></select>' +
+          '<label class="plugn">à partir de<input type="number" min="1" value="' + (+r.threshold || 100) + '" data-plug-n="' + i + '" aria-label="Nombre de likes"><span>likes</span></label>' +
+          '<textarea rows="2" data-plug-text="' + i + '" aria-label="Commentaire à ajouter" placeholder="Ex. : La recette complète est ici : https://exemple.fr/recette">' + esc(r.comment || "") + '</textarea><button class="iconbtn" data-plug-del="' + i + '" aria-label="Supprimer cette règle">' + icon("trash") + "</button></div>").join("") +
+        '<div><button class="btn" data-plug-add>' + icon("plus") + "Ajouter une règle</button></div>" +
+        '<p class="muted" style="margin:0;font-size:12px">' + ((settings().rules || {}).robotEnabled === false ? "Le robot est à l'arrêt (Règles et contrôles) : aucune action automatique ne part. " : "") + (S.state.dryRun !== false && !demo ? "Robot en simulation : les commentaires sont seulement notés dans le journal. " : "") + "Une règle sans texte ne fait rien.</p></div></section>" +
+        '<section class="panel"><h2>Brancher un autre outil</h2><p>n8n, Make, Zapier ou un script peuvent lire ton planning et créer des posts, qui attendent toujours ta validation. Dans l\'autre sens, le webhook (Notifications) prévient ton outil d\'un rappel ou d\'un échec.</p>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn" href="' + docsBase() + 'reference/api.md" target="_blank" rel="noopener">' + icon("right") + "Lire le guide de l'API</a></div></section>";
     },
     rules: () => {
       const r = settings().rules || {};

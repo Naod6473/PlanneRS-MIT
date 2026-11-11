@@ -235,6 +235,19 @@
     }
     if ((b = g("[data-search]"))) { e.preventDefault(); A.openSearch(); return; }
     if ((b = g("[data-theme-toggle]"))) { e.preventDefault(); toggleTheme(); return; }
+    if ((b = g("[data-set-add]"))) { const t = (S.state.settings.templates = S.state.settings.templates || {}); (t.sets = t.sets || []).push({ name: "", networks: (S.state.settings.networks || []).slice(0, 2) }); await saveSet(); const i = document.querySelectorAll("[data-set-name]"); if (i.length) i[i.length - 1].focus(); return; }
+    if ((b = g("[data-set-del]"))) { S.state.settings.templates.sets.splice(+b.dataset.setDel, 1); await saveSet(); return; }
+    if ((b = g("[data-feed-add]"))) { const au = (S.state.settings.auto = S.state.settings.auto || {}); (au.feeds = au.feeds || []).push({ url: "", networks: [] }); await saveSet(); const i = document.querySelectorAll("[data-feed-url]"); if (i.length) i[i.length - 1].focus(); return; }
+    if ((b = g("[data-feed-del]"))) { S.state.settings.auto.feeds.splice(+b.dataset.feedDel, 1); await saveSet(); return; }
+    if ((b = g("[data-feed-run]"))) {
+      if (S.mode !== "api") { U.toast("Mode démo : les flux sont relus sur ton serveur"); return; }
+      b.disabled = true;
+      try { const r = await S.call("POST", "rss/run", {}); await S.init(); A.render(); U.toast(r.errors ? r.errors + (r.errors > 1 ? " flux illisibles" : " flux illisible") + " : voir Activité" : r.created ? r.created + (r.created > 1 ? " nouveaux posts à relire" : " nouveau post à relire") : "Flux relus : rien de nouveau"); }
+      catch (x) { b.disabled = false; U.toast("Lecture impossible : " + x.message); }
+      return;
+    }
+    if ((b = g("[data-plug-add]"))) { const au = (S.state.settings.auto = S.state.settings.auto || {}); (au.plugs = au.plugs || []).push({ id: "k" + Date.now().toString(36), net: "instagram", threshold: 100, comment: "" }); await saveSet(); const i = document.querySelectorAll("[data-plug-text]"); if (i.length) i[i.length - 1].focus(); return; }
+    if ((b = g("[data-plug-del]"))) { S.state.settings.auto.plugs.splice(+b.dataset.plugDel, 1); await saveSet(); return; }
     if ((b = g("[data-tpl-add]"))) { const t = (S.state.settings.templates = S.state.settings.templates || {}); (t.tags = t.tags || []).push({ name: "", text: "" }); await saveSet(); const i = document.querySelectorAll("[data-tpl-name]"); if (i.length) i[i.length - 1].focus(); return; }
     if ((b = g("[data-tpl-del]"))) { S.state.settings.templates.tags.splice(+b.dataset.tplDel, 1); await saveSet(); return; }
     if ((b = g("[data-slot-suggest]"))) { S.state.settings.slots.push({ time: b.dataset.slotSuggest, label: "Bon horaire" }); S.state.settings.slotsSet = true; await saveSet(); U.toast("Créneau " + b.dataset.slotSuggest + " ajouté"); return; }
@@ -264,6 +277,13 @@
       st.ai = Object.assign({}, st.ai, { validate: t.checked }); await S.saveSettings(st); U.toast(t.checked ? "L'assistant peut valider" : "Seuls les humains valident"); return A.render();
     }
     if (t.matches("[data-team-validators]")) { st.team = Object.assign({}, st.team, { validators: t.value.split(/[\s,;]+/).map((x) => x.trim()).filter((x) => x.includes("@")) }); await S.saveSettings(st); U.toast("Validateurs enregistrés"); return A.render(); }
+    if (d.setName != null) { st.templates.sets[+d.setName].name = t.value.trim(); return S.saveSettings(st); }
+    if (d.setNet != null) { const g0 = st.templates.sets[+d.setNet]; g0.networks = (st.networks || []).filter((n) => (n === t.value ? t.checked : (g0.networks || []).includes(n))); return S.saveSettings(st); }
+    if (d.feedUrl != null) { const v = t.value.trim(); if (v && !/^https?:\/\/\S+\.\S+/.test(v)) { U.toast("Adresse du flux : elle doit commencer par https://"); return; } st.auto.feeds[+d.feedUrl].url = v; await S.saveSettings(st); if (v) U.toast("Flux enregistré"); return; }
+    if (d.feedNet != null) { const f = st.auto.feeds[+d.feedNet]; f.networks = (st.networks || []).filter((n) => (n === t.value ? t.checked : (f.networks || []).includes(n))); return S.saveSettings(st); }
+    if (d.plugNet != null) { st.auto.plugs[+d.plugNet].net = t.value; return S.saveSettings(st); }
+    if (d.plugN != null) { st.auto.plugs[+d.plugN].threshold = Math.max(1, Math.round(+t.value) || 1); t.value = st.auto.plugs[+d.plugN].threshold; return S.saveSettings(st); }
+    if (d.plugText != null) { st.auto.plugs[+d.plugText].comment = t.value.trim().slice(0, 2000); await S.saveSettings(st); if (t.value.trim()) U.toast("Règle enregistrée"); return; }
     if (t.matches("[data-tpl-sig]")) { (st.templates = st.templates || {}).signature = t.value; return S.saveSettings(st); }
     if (d.tplName != null) { st.templates.tags[+d.tplName].name = t.value.trim(); return S.saveSettings(st); }
     if (d.tplText != null) { st.templates.tags[+d.tplText].text = t.value.trim(); return S.saveSettings(st); }

@@ -61,7 +61,7 @@ export async function callTool(name, args, deps) {
   const set = st.settings || {}, now = deps.now, today = now.slice(0, 10);
   const posts = st.posts || [];
   const get = (id) => { const p = posts.find((x) => x.id === id); need(p, "Post introuvable : " + id); return p; };
-  const who = deps.me ? " (assistant IA, " + deps.me + ")" : " (assistant IA)";
+  const who = deps.who || (deps.me ? " (assistant IA, " + deps.me + ")" : " (assistant IA)");
   const top = posts.filter((p) => !p.parent);
 
   switch (name) {
