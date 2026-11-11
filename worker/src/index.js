@@ -583,6 +583,14 @@ async function stats(env, onlyIfDue) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    // Adresse publique (sans Cloudflare Access) : elle ne sert que la page de présentation,
+    // demandée par Google et TikTok pour vérifier l'app. Tout le reste y est refusé.
+    if (env.PUBLIC_HOST && url.hostname === env.PUBLIC_HOST) {
+      if (url.pathname === "/" || url.pathname === "/accueil.html" || url.pathname === "/accueil") {
+        return env.ASSETS.fetch(new Request(new URL("/accueil", url), { method: "GET" }));
+      }
+      return Response.redirect(url.origin + "/", 302);
+    }
     // Lien de validation client : public, limité aux posts partagés (voir share.js).
     const v = url.pathname.match(/^\/v\/([A-Za-z0-9_-]+)\/?$/);
     if (v) {
