@@ -15,6 +15,12 @@ updated: 2026-11-10
 - **Robot de publication** : en marche, en simulation ou à l'arrêt, et l'heure de son dernier passage.
 - **Journal** : tout ce qui s'est passé, en clair (publication réussie, échec avec sa raison, changement de date, légende validée…). Filtre par type en haut.
 
+### Commentaires Instagram
+
+Sous l'état des connexions : les commentaires des dernières publications Instagram, **sans réponse** d'abord (« Tous » montre aussi ceux auxquels tu as répondu). Écris ta réponse et **Répondre** la publie sous le commentaire, sur Instagram. **Proposer une réponse** demande un brouillon à Claude (si la [clé Claude](../reference/assistants-ia.md#réécrire-une-légende-pour-chaque-réseau) est posée) : tu le relis et tu l'envoies toi-même, rien ne part tout seul. La liste est relue au plus toutes les 10 minutes ; le bouton d'actualisation la relit tout de suite.
+
+Il faut l'autorisation Meta `instagram_manage_comments` sur le jeton Instagram (la même que pour le premier commentaire) ; sans elle, un message l'indique.
+
 ## Réglages
 
 ### Comptes

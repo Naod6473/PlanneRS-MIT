@@ -63,3 +63,21 @@ export async function rewrite(client, post, net, settings) {
   const max = Core.TEXT_MAX[net];
   return { text, over: !!(max && [...text].length > max), model: res.model || MODEL };
 }
+
+// Réponse proposée à un commentaire. Jamais envoyée toute seule : elle arrive dans la zone de réponse.
+export const REPLY_SYSTEM = "Tu proposes des réponses aux commentaires reçus sur les réseaux sociaux d'un compte. Réponse courte (une à trois phrases), chaleureuse, dans la langue du commentaire, au ton du compte, tutoiement si le compte tutoie. Tu réponds à la question posée sans rien inventer ; si tu ne sais pas, tu remercies et tu proposes d'en reparler. Pas de hashtag. Tu réponds uniquement avec le texte de la réponse.";
+
+export function replyPrompt(c, post, settings) {
+  const brand = settings && settings.workspace && settings.workspace.name;
+  return [(brand ? "Compte : " + brand + "." : ""), post && post.title ? "Publication : " + post.title + "." : "",
+    "", "<legende>", (post && post.caption) || c.caption || "", "</legende>", "", "Commentaire de @" + (c.user || "") + " :", "<commentaire>", c.text || "", "</commentaire>"]
+    .filter((l, i, a) => l !== "" || (a[i - 1] !== "" && i > 0)).join("\n");
+}
+
+export async function suggestReply(client, c, post, settings) {
+  const res = await client.beta.messages.create({
+    model: MODEL, max_tokens: 2000, betas: ["server-side-fallback-2026-07-01"], fallbacks: "default", output_config: { effort: "low" },
+    system: REPLY_SYSTEM, messages: [{ role: "user", content: replyPrompt(c, post, settings) }],
+  });
+  return { text: textOf(res).replace(/^<\/?commentaire>|<\/?commentaire>$/g, "").trim() };
+}

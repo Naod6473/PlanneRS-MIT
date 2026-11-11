@@ -666,6 +666,31 @@
     };
   };
 
+  // Commentaires Instagram : ceux sans réponse d'abord, réponse sur place, proposition de Claude.
+  const DEMO_COMMENTS = () => { const p = top().filter((x) => x.status === "published").slice(-3); const at = (h) => new Date(Date.now() - h * 3600e3).toISOString(); return { username: "demo", rewrite: true, comments: [
+    { id: "d1", user: "marie.cuisine", text: "Super astuce ! Ça marche aussi avec de la farine de seigle ?", at: at(2), url: p[0] && p[0].url, key: "", post: p[0], replies: [], answered: false },
+    { id: "d2", user: "thomas_b", text: "Vous êtes ouverts le dimanche matin ?", at: at(5), post: p[1], replies: [], answered: false },
+    { id: "d3", user: "lea.v", text: "Le meilleur croissant du quartier 🥐", at: at(26), post: p[2], replies: [{ text: "Merci Léa, à très vite !", user: "demo", mine: true }], answered: true }] }; };
+  function commentsBox() {
+    const ig = (S.state.accounts || {}).instagram;
+    if (S.mode === "api" && !(ig && ig.status === "ok")) return "";
+    if (S.mode === "demo" && !A.comments) A.comments = DEMO_COMMENTS();
+    if (S.mode === "api" && !A.comments && !A.commentsLoading) { A.commentsLoading = true; setTimeout(() => A.loadComments(), 0); }
+    const data = A.comments, list = data && data.comments ? data.comments : [];
+    const open = list.filter((c) => !c.answered), shown = A.cmAll ? list : open;
+    const card = (c) => {
+      const post = c.post || (c.postId && S.post(c.postId));
+      return '<div class="cmt' + (c.answered ? " done" : "") + '"><div class="cm-h"><b data-noi18n>@' + esc(c.user) + '</b><time class="muted">' + esc(String(c.at || "").slice(8, 10) + "/" + String(c.at || "").slice(5, 7) + " " + String(c.at || "").slice(11, 16)) + "</time>" +
+        (post ? '<button class="lk muted" data-open="' + esc(post.id) + '">sur « ' + esc(post.title) + " »</button>" : c.url ? '<a class="lk muted" href="' + safeUrl(c.url) + '" target="_blank" rel="noopener">voir la publication</a>' : "") + "</div>" +
+        '<p data-noi18n>' + esc(c.text) + "</p>" + (c.replies || []).map((r) => '<p class="cm-rep' + (r.mine ? " mine" : "") + '" data-noi18n><b>@' + esc(r.user || "") + "</b> " + esc(r.text) + "</p>").join("") +
+        (c.answered ? "" : '<div class="cm-new"><textarea rows="2" data-cm-text="' + esc(c.id) + '" aria-label="Réponse à @' + esc(c.user) + '" placeholder="Ta réponse…"></textarea><div class="cm-acts">' +
+          (data.rewrite ? '<button class="btn quiet sm" data-cm-suggest="' + esc(c.id) + '">' + icon("spark") + "Proposer une réponse</button>" : "") +
+          '<button class="btn sm primary" data-cm-reply="' + esc(c.id) + '">' + icon("send") + "Répondre</button></div></div>") + "</div>";
+    };
+    return '<h2 class="sec-h"><span>Commentaires Instagram' + (open.length ? " · " + open.length + " sans réponse" : "") + '</span><span class="seg" role="group" aria-label="Filtrer les commentaires"><button data-cmall="0" aria-pressed="' + !A.cmAll + '">Sans réponse</button><button data-cmall="1" aria-pressed="' + !!A.cmAll + '">Tous</button></span><button class="iconbtn sm" data-cm-refresh aria-label="Actualiser les commentaires" title="Actualiser">' + icon("activity") + "</button></h2>" +
+      '<div class="cmts">' + (!data ? '<p class="muted">Chargement des commentaires…</p>' : data.error ? '<p class="muted">' + esc(data.error) + "</p>" : shown.length ? shown.map(card).join("") : '<div class="empty">' + (A.cmAll ? "Aucun commentaire récent." : "Tu as répondu à tout le monde.") + "</div>") + "</div>";
+  }
+
   A.views.activity = function () {
     const acc = S.state.accounts || {};
     const all = [].concat(window.CONNECTORS.social, window.CONNECTORS.storage, window.CONNECTORS.notify);
@@ -689,6 +714,7 @@
     return {
       title: "Activité",
       html: '<h2 class="sec-h"><span>État des connexions</span></h2><div class="tiles">' + robotTile + tiles + "</div>" +
+        commentsBox() +
         '<h2 class="sec-h"><span>Journal</span><span class="seg" role="group" aria-label="Filtrer le journal">' + filters.map(([k, l]) => '<button data-logf="' + k + '" aria-pressed="' + (A.logFilter === k) + '">' + l + "</button>").join("") + "</span></h2>" +
         '<div class="log">' + (lines || '<div class="empty">Rien dans le journal.</div>') + "</div>",
     };

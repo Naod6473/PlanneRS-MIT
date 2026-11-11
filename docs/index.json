@@ -459,6 +459,11 @@
           "anchor": "activité"
         },
         {
+          "level": 3,
+          "text": "Commentaires Instagram",
+          "anchor": "commentaires-instagram"
+        },
+        {
           "level": 2,
           "text": "Réglages",
           "anchor": "réglages"

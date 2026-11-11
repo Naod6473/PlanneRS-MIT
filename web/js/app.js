@@ -76,6 +76,14 @@
     }
   };
 
+  // Commentaires Instagram (Activité).
+  A.loadComments = async function (fresh) {
+    try { A.comments = await S.call("GET", "comments" + (fresh ? "?fresh=1" : "")); }
+    catch (e) { A.comments = { error: "Commentaires indisponibles : " + e.message, comments: [] }; }
+    A.commentsLoading = false;
+    if ((location.hash || "#today") === "#activity") A.render();
+  };
+
   // Lien d'agenda (Réglages › Notifications).
   A.loadIcal = async function (r) {
     const box = document.getElementById("ical-box");
@@ -128,6 +136,24 @@
         networks: [(S.state.settings.networks || ["instagram"])[0]], date: null, time: null, caption: "", captionValidated: false, manual: false, media: [JSON.parse(JSON.stringify(m))], folder: src.folder, stage: "media", status: "draft" };
       await S.savePosts([p]); await S.log({ level: "change", text: "Nouveau post à partir d'un média de « " + src.title + " »", postId: p.id });
       A.render(); A.openPost(p.id); return U.toast("Nouveau post créé avec ce média");
+    }
+    if ((b = g("[data-cmall]"))) { A.cmAll = b.dataset.cmall === "1"; return A.render(); }
+    if ((b = g("[data-cm-refresh]"))) { if (S.mode !== "api") return U.toast("Mode démo : commentaires fictifs"); A.comments = null; A.render(); return A.loadComments(true); }
+    if ((b = g("[data-cm-suggest]"))) {
+      const id = b.dataset.cmSuggest, ta = document.querySelector('[data-cm-text="' + CSS.escape(id) + '"]');
+      if (S.mode !== "api") { ta.value = "Merci pour ton message ! Oui, ça marche aussi, avec un peu plus d'eau. Dis-nous ce que ça donne 😊"; return U.toast("Proposition de Claude (exemple de démo) : relis-la avant d'envoyer"); }
+      b.disabled = true; U.toast("Claude prépare une réponse…");
+      try { const r = await S.call("POST", "comments/" + encodeURIComponent(id) + "/suggest"); ta.value = r.text; ta.focus(); U.toast("Proposition de Claude : relis-la avant d'envoyer"); }
+      catch (x) { U.toast("Proposition impossible : " + x.message); } finally { b.disabled = false; }
+      return;
+    }
+    if ((b = g("[data-cm-reply]"))) {
+      const id = b.dataset.cmReply, ta = document.querySelector('[data-cm-text="' + CSS.escape(id) + '"]'), text = (ta.value || "").trim();
+      if (!text) { ta.focus(); return U.toast("Écris une réponse"); }
+      const c = A.comments.comments.find((x) => x.id === id);
+      if (S.mode === "api") { b.disabled = true; try { await S.call("POST", "comments/" + encodeURIComponent(id) + "/reply", { text }); } catch (x) { b.disabled = false; return U.toast("Réponse impossible : " + x.message); } }
+      if (c) { c.answered = true; c.replies = (c.replies || []).concat({ text, user: A.comments.username, mine: true }); }
+      A.render(); return U.toast(S.mode === "api" ? "Réponse publiée sur Instagram" : "Mode démo : rien n'est publié");
     }
     if ((b = g("[data-weekly-preview]"))) {
       if (S.mode !== "api") { U.toast("Mode démo : le bilan est calculé sur ton serveur"); return; }

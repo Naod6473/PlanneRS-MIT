@@ -34,6 +34,7 @@ import * as links from "./links.js";
 import * as rewriter from "./rewrite.js";
 import { aiClient } from "./ai.js";
 import * as igHistory from "./history.js";
+import * as igComments from "./comments.js";
 import { graph } from "./adapters/meta.js";
 
 const ADAPTERS = { instagram, facebook, threads, linkedin, x, bluesky, mastodon, pinterest, youtube };
@@ -192,6 +193,35 @@ async function api(request, env, path, url, auth) {
       await db.addLog(env, { at: localNow(st.timezone), level: "change", text: "Historique Instagram récupéré : " + r.created.length + " publications ajoutées" + (r.skipped ? ", " + r.skipped + " déjà présentes" : "") + (me ? " (par " + me + ")" : "") + "." });
     }
     return json({ created: r.created.length, skipped: r.skipped, posts: r.created });
+  }
+  // Commentaires Instagram : liste (gardée 10 minutes, ?fresh=1 pour relire), réponse, proposition de Claude.
+  if (path === "comments" && m === "GET") {
+    const cred = await db.getCred(env, "instagram");
+    if (!cred || !cred.token || !cred.accountId) return err("Instagram n'est pas connecté (Réglages › Comptes).", 409);
+    const cache = await db.getKV(env, "comments");
+    const link = async (r) => { const ps = (await db.loadState(env)).posts, k = {}; ps.forEach((p) => { const x = mediaKey(p.url); if (x && !p.parent) k[x] = p.id; }); r.comments.forEach((c) => { c.postId = k[c.key] || null; }); return json(Object.assign({ rewrite: !!env.ANTHROPIC_API_KEY }, r)); };
+    if (cache && !url.searchParams.get("fresh") && Date.now() - Date.parse(cache.at) < 10 * 60000) return link(cache);
+    try { const r = await igComments.fetchRecent(env, cred); await db.putKV(env, "comments", r); return link(r); }
+    catch (e) { return err((e.why || e.message) + " Il faut l'autorisation « instagram_manage_comments » sur le jeton Meta.", 502); }
+  }
+  if ((r0 = path.match(/^comments\/([0-9]+)\/reply$/)) && m === "POST") {
+    const text = String((body && body.text) || "").trim().slice(0, 2200);
+    if (!text) return err("Écris une réponse");
+    const cred = await db.getCred(env, "instagram");
+    if (!cred || !cred.token) return err("Instagram n'est pas connecté.", 409);
+    try { await igComments.reply(env, cred, r0[1], text); } catch (e) { return err(e.why || e.message, 502); }
+    const cache = await db.getKV(env, "comments");
+    if (cache) { const c = cache.comments.find((x) => x.id === r0[1]); if (c) { c.answered = true; c.replies.push({ text, user: cache.username, at: new Date().toISOString(), mine: true }); await db.putKV(env, "comments", cache); } }
+    const st = (await db.getKV(env, "settings")) || {};
+    await db.addLog(env, { at: localNow(st.timezone), level: "change", text: "Réponse à un commentaire Instagram" + (me ? " (par " + me + ")" : "") + " : " + text.slice(0, 140) });
+    return json({ ok: true });
+  }
+  if ((r0 = path.match(/^comments\/([0-9]+)\/suggest$/)) && m === "POST") {
+    if (!env.ANTHROPIC_API_KEY) return err("Pour une proposition de Claude, ajoute le secret ANTHROPIC_API_KEY au Worker.", 409);
+    const cache = await db.getKV(env, "comments"), c = cache && cache.comments.find((x) => x.id === r0[1]);
+    if (!c) return err("Commentaire introuvable : actualise la liste.", 404);
+    const s = await db.loadState(env), post = s.posts.find((p) => c.key && (mediaKey(p.url) === c.key));
+    try { return json(await rewriter.suggestReply(aiClient(env), c, post, s.settings || {})); } catch (e) { return err(e.message, 502); }
   }
   if (path === "ical" && m === "GET") { const c = (await db.getKV(env, "ical")) || {}; return json(c.token ? { url: url.origin + "/cal/" + c.token + ".ics" } : {}); }
   if (path === "ical" && m === "POST") { const token = share.newToken(); await db.putKV(env, "ical", { token, by: me }); return json({ url: url.origin + "/cal/" + token + ".ics" }); }
