@@ -140,3 +140,34 @@ test("premier commentaire : posté après la publication, un refus ne casse rien
   assert.equal(p.results.facebook.comment, false);
   assert.ok(logs.some((l) => /Premier commentaire impossible sur Facebook/.test(l.text)));
 });
+
+test("robot à l'arrêt : seuls les réseaux cochés partent, le statut du post ne bouge pas", async () => {
+  const p = post({ networks: ["instagram", "tiktok"] });
+  let ig = 0;
+  const { deps } = setup([p], { instagram: { publish: async () => { ig++; return { status: "ok" }; } }, tiktok: ok });
+  deps.settings.rules.robotEnabled = false;
+  deps.settings.rules.robotNets = ["tiktok"];
+  const s = await runRobot(deps);
+  assert.equal(ig, 0);
+  assert.equal(p.results.tiktok.status, "ok");
+  assert.equal(p.status, "scheduled");
+  assert.equal(s.sent, 1);
+  await runRobot(deps); // déjà envoyé : rien de plus
+  assert.equal(ig, 0);
+});
+
+test("robot à l'arrêt : réseau coché en échec, un nouvel essai puis signalé sans toucher aux autres", async () => {
+  const p = post({ networks: ["instagram", "tiktok"] });
+  const { deps, notes } = setup([p], { instagram: ok, tiktok: ko() });
+  deps.settings.rules.robotEnabled = false;
+  deps.settings.rules.robotNets = ["tiktok"];
+  await runRobot(deps);
+  assert.equal(p.results.tiktok, undefined);
+  await runRobot(deps);
+  assert.equal(p.results.tiktok.status, "failed");
+  assert.equal(p.status, "scheduled");
+  assert.equal(p.results.instagram, undefined);
+  assert.equal(notes.at(-1).event, "failed");
+  await runRobot(deps);
+  assert.equal(notes.filter((n) => n.event === "failed").length, 1);
+});

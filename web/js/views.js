@@ -809,6 +809,7 @@
       const r = settings().rules || {};
       return '<section class="panel"><h2>Règles d\'envoi</h2><p>Elles s\'appliquent à tous les posts de cet espace.</p><div class="form">' +
         '<label class="toggle"><input type="checkbox" data-rule="robotEnabled"' + (r.robotEnabled !== false ? " checked" : "") + "> Robot de publication en marche (décoche si un autre outil publie encore à sa place)</label>" +
+        (r.robotEnabled === false ? '<div><p class="muted" style="margin:0 0 6px">Robot à l\'arrêt : envoyer quand même automatiquement vers ces réseaux (les autres restent à l\'outil qui publie à sa place).</p><div class="filters">' + netChecks('data-rule-net=""', r.robotNets || []) + "</div></div>" : "") +
         '<label class="toggle"><input type="checkbox" data-rule="requireValidation"' + (r.requireValidation !== false ? " checked" : "") + "> Ne rien envoyer sans légende validée</label>" +
         '<label class="toggle"><input type="checkbox" data-rule="confirmMoves"' + (r.confirmMoves !== false ? " checked" : "") + "> Demander une confirmation avant de déplacer un contenu (calendrier et Contenus)</label>" +
         '<label class="toggle"><input type="checkbox" data-rule="noRetryRelay"' + (r.noRetryRelay ? " checked" : "") + "> Ne pas relancer un relais si le réseau principal a déjà publié (évite les doublons)</label>" +

@@ -61,6 +61,7 @@ Flux RSS repris en posts à relire, commentaire ajouté quand un post dépasse u
 | Réglage | Effet |
 |---|---|
 | Robot de publication en marche | Décoché : le robot ne publie rien (les rappels « à la main » et les stats continuent). |
+| Envoyer quand même vers (robot à l'arrêt) | Les réseaux cochés partent quand même à l'heure prévue (ex. TikTok pendant qu'un autre outil publie Instagram). Le post reste « Programmé » tant que tous ses réseaux ne sont pas publiés. |
 | Ne rien envoyer sans légende validée | Un post non validé reste « À valider » et ne part pas. |
 | Demander une confirmation avant de déplacer un contenu | Fenêtre « Déplacer ce contenu ? » dans le calendrier et Contenus. |
 | Ne pas relancer un relais si le réseau principal a déjà publié | Si Facebook échoue alors qu'Instagram a publié, pas de nouvel essai automatique (évite le doublon). |

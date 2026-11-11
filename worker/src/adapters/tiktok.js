@@ -135,7 +135,8 @@ export async function publish(env, post, cred, job, saveCred) {
 export async function test(env, cred, saveCred) {
   if (!cred || !cred.clientKey || !cred.clientSecret) throw notConnected("TikTok");
   const t = await token(cred, saveCred);
-  const r = await fetch(API + "user/info/?fields=open_id,display_name,username", { headers: { authorization: "Bearer " + t } });
+  // Le nom d'utilisateur demande le droit user.info.profile : on s'en tient à user.info.basic.
+  const r = await fetch(API + "user/info/?fields=open_id,display_name", { headers: { authorization: "Bearer " + t } });
   const j = await r.json().catch(() => ({}));
   const e = j.error || {};
   if (!r.ok || (e.code && e.code !== "ok")) throw explain(r.status, e.code || "", e.message || "");

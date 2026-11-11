@@ -44,11 +44,29 @@ export async function runRobot(deps) {
       }
       continue;
     }
-    if (off) continue;
+    // Robot à l'arrêt : seuls les réseaux cochés dans « Envoyer quand même vers » partent (ex. TikTok,
+    // pendant qu'un autre outil publie encore Instagram). Le statut du post n'est pas touché.
+    const only = off ? (rules.robotNets || []) : null;
+    if (off && !only.length) continue;
     // 2. Posts automatiques arrivés à l'heure (ou un envoi en cours).
     const due = Core.willSend(p) && Core.at(p) <= now;
     if (!due) continue;
     const late = minutesBetween(Core.at(p), now);
+    if (off) {
+      const res = p.results || {}, job = p.job || {};
+      const nets = (p.networks || []).filter((n) => only.includes(n) && (!res[n] || job[n]));
+      if (!nets.length) continue;
+      if (late > LATE_LIMIT_MIN && !nets.some((n) => job[n])) {
+        p.results = res;
+        nets.forEach((n) => { res[n] = { status: "failed", error: "Heure passée depuis plus de 6 h : rien envoyé." }; });
+        p.needsAttention = true; touch(p); summary.failed++;
+        await deps.log({ at: now, level: "error", text: "Pas envoyé à temps sur " + nets.map(netName).join(", ") + " : " + p.title, postId: p.id });
+        continue;
+      }
+      await sendPost(p, deps, rules, summary, nets, true);
+      touch(p);
+      continue;
+    }
     if (late > LATE_LIMIT_MIN && !p.job) {
       p.status = "failed"; touch(p); summary.failed++;
       p.failure = { what: "Rien n'a été envoyé : l'heure prévue est passée depuis plus de 6 h.", why: "Le robot n'a pas pu passer à temps (serveur arrêté ou en panne).", todo: "Reprogramme-le ou poste-le à la main." };
@@ -63,7 +81,7 @@ export async function runRobot(deps) {
 }
 
 // Envoie un post : d'abord le réseau principal (le premier), puis les relais.
-export async function sendPost(p, deps, rules, summary, onlyNets) {
+export async function sendPost(p, deps, rules, summary, onlyNets, partial) {
   const { now } = deps;
   p.results = p.results || {};
   const nets = (p.networks || []).filter((n) => !onlyNets || onlyNets.includes(n));
@@ -77,13 +95,20 @@ export async function sendPost(p, deps, rules, summary, onlyNets) {
         await deps.log({ at: now, level: "error", text: "Médias pas encore prêts pour « " + p.title + " » : nouvel essai au prochain passage.", why: e.why || e.message, postId: p.id });
         return;
       }
+      if (partial) {
+        nets.forEach((n) => { p.results[n] = { status: "failed", error: e.why || e.message }; });
+        p.needsAttention = true; summary.failed++;
+        p.failure = { what: "Pas publié sur " + nets.map(netName).join(", ") + ".", why: e.why || e.message, todo: e.todo || "Corrige le média, puis reprogramme-le." };
+        await deps.log({ at: now, level: "error", text: "Médias refusés pour « " + p.title + " ».", why: e.why || e.message, postId: p.id });
+        return deps.notify({ event: "failed", title: "Échec : " + p.title, text: p.failure.what + " " + p.failure.todo, post: p });
+      }
       p.results[n0] = { status: "failed", error: e.why || e.message };
       return fail(p, deps, summary, n0, e);
     }
   }
   for (let i = 0; i < nets.length; i++) {
     const n = nets[i];
-    const primary = n === p.networks[0];
+    const primary = !partial && n === p.networks[0];
     if (p.results[n] && p.results[n].status === "ok") continue;
     const ad = deps.adapters[n];
     const cred = ad ? await deps.cred(n) : null;
@@ -130,6 +155,20 @@ export async function sendPost(p, deps, rules, summary, onlyNets) {
         }
         return fail(p, deps, summary, n, e);
       }
+      if (partial) {
+        // Réseau envoyé seul (robot à l'arrêt pour les autres) : un nouvel essai si l'erreur s'y prête.
+        p.tries = p.tries || {};
+        if (e.retryable !== false && !p.tries[n]) {
+          p.tries[n] = 1; delete p.results[n];
+          await deps.log({ at: now, level: "error", text: netName(n) + " a refusé « " + p.title + " » : nouvel essai au prochain passage.", why: e.why || e.message, postId: p.id });
+          continue;
+        }
+        p.needsAttention = true; summary.failed++;
+        p.failure = { what: "Pas publié sur " + netName(n) + ".", why: e.why || e.message, todo: e.todo || "Réessaie, ou poste-le à la main." };
+        await deps.log({ at: now, level: "error", text: netName(n) + " a refusé « " + p.title + " ».", why: (e.code ? "Erreur " + e.code + " : " : "") + (e.why || e.message), postId: p.id });
+        await deps.notify({ event: "failed", title: "Échec : " + p.title, text: p.failure.what + " " + p.failure.todo, post: p });
+        continue;
+      }
       // Relais en échec : le principal est publié, on ne relance pas (évite les doublons).
       p.needsAttention = true;
       p.failure = { what: "Publié sur " + netName(p.networks[0]) + ", mais pas sur " + netName(n) + ".", why: e.why || e.message, todo: rules.noRetryRelay ? "Publie-le à la main sur " + netName(n) + " : relancer créerait un doublon." : (e.todo || "Réessaie.") };
@@ -138,6 +177,11 @@ export async function sendPost(p, deps, rules, summary, onlyNets) {
     }
   }
   const allOk = (p.networks || []).every((n) => p.results[n] && ["ok", "skipped"].includes(p.results[n].status));
+  if (partial) {
+    if ((p.networks || []).every((n) => p.results[n] && p.results[n].status === "ok")) { p.status = "published"; p.stage = "published"; delete p.job; }
+    if (nets.some((n) => p.results[n] && p.results[n].status === "ok")) summary.sent++;
+    return;
+  }
   if (p.results[p.networks[0]] && p.results[p.networks[0]].status === "ok") {
     p.status = "published"; p.stage = "published"; delete p.job; summary.sent++;
     if (allOk && !Object.values(p.results).some((r) => r.status === "skipped")) { delete p.failure; p.needsAttention = false; }

@@ -43,6 +43,10 @@ updated: 2026-11-11
 3. Brouillon : **Activité** indique « Envoyé dans les brouillons TikTok ». Ouvre l'appli : une notification t'attend.
 4. Direct : le post passe en **Publié** avec le lien de la vidéo.
 
+Pour une publication directe **publique**, TikTok doit d'abord auditer l'app (portail développeur › ton app › « Submit for review », puis la demande d'audit Content Posting API). Avant l'audit, mets la visibilité sur « privé » : la vidéo part toute seule mais seul le compte la voit. TikTok limite aussi le nombre de publications par jour et par compte (une quinzaine environ) ; au-delà, l'erreur « limite d'envois atteinte » s'affiche.
+
+Si le robot est à l'arrêt parce qu'un autre outil publie tes autres réseaux, coche TikTok dans **Réglages › Règles › Envoyer quand même vers**.
+
 Si TikTok traite la vidéo depuis plus d'une heure, le post passe en échec : regarde dans l'appli avant de relancer, pour éviter un doublon.
 
 ## Erreurs fréquentes

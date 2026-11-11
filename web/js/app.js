@@ -291,6 +291,7 @@
     if (d.tplText != null) { st.templates.tags[+d.tplText].text = t.value.trim(); return S.saveSettings(st); }
     if (d.slotTime != null) { st.slots[+d.slotTime].time = t.value; return saveSet(); }
     if (d.slotLabel != null) { st.slots[+d.slotLabel].label = t.value; return saveSet(); }
+    if (d.ruleNet != null) { st.rules.robotNets = A.nets().filter((n) => (n === t.value ? t.checked : (st.rules.robotNets || []).includes(n))); return saveSet(); }
     if (d.rule) { st.rules[d.rule] = t.checked; return saveSet(); }
     if (d.ruleNum) { st.rules[d.ruleNum] = Math.max(0, +t.value || 0); return saveSet(); }
     if (d.chkLabel != null) { st.customChecks[+d.chkLabel].label = t.value; return saveSet(); }
