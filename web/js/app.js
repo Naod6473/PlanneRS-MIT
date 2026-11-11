@@ -133,7 +133,7 @@
       const [pid, i] = b.dataset.reuse.split(":"), src = S.post(pid), m = src && (src.media || [])[+i];
       if (!m) return;
       const p = { id: "u" + Date.now().toString(36), ref: "", title: (m.name || "Média").replace(/\.[^.]+$/, "").replace(/[_-]+/g, " "), format: /video/.test(m.type || "") || /\.(mp4|mov|webm)$/i.test(m.name || "") ? "reel" : "image",
-        networks: [(S.state.settings.networks || ["instagram"])[0]], date: null, time: null, caption: "", captionValidated: false, manual: false, media: [JSON.parse(JSON.stringify(m))], folder: src.folder, stage: "media", status: "draft" };
+        networks: [A.nets()[0]], date: null, time: null, caption: "", captionValidated: false, manual: false, media: [JSON.parse(JSON.stringify(m))], folder: src.folder, stage: "media", status: "draft" };
       await S.savePosts([p]); await S.log({ level: "change", text: "Nouveau post à partir d'un média de « " + src.title + " »", postId: p.id });
       A.render(); A.openPost(p.id); return U.toast("Nouveau post créé avec ce média");
     }
@@ -236,7 +236,7 @@
     }
     if ((b = g("[data-search]"))) { e.preventDefault(); A.openSearch(); return; }
     if ((b = g("[data-theme-toggle]"))) { e.preventDefault(); toggleTheme(); return; }
-    if ((b = g("[data-set-add]"))) { const t = (S.state.settings.templates = S.state.settings.templates || {}); (t.sets = t.sets || []).push({ name: "", networks: (S.state.settings.networks || []).slice(0, 2) }); await saveSet(); const i = document.querySelectorAll("[data-set-name]"); if (i.length) i[i.length - 1].focus(); return; }
+    if ((b = g("[data-set-add]"))) { const t = (S.state.settings.templates = S.state.settings.templates || {}); (t.sets = t.sets || []).push({ name: "", networks: A.nets().slice(0, 2) }); await saveSet(); const i = document.querySelectorAll("[data-set-name]"); if (i.length) i[i.length - 1].focus(); return; }
     if ((b = g("[data-set-del]"))) { S.state.settings.templates.sets.splice(+b.dataset.setDel, 1); await saveSet(); return; }
     if ((b = g("[data-feed-add]"))) { const au = (S.state.settings.auto = S.state.settings.auto || {}); (au.feeds = au.feeds || []).push({ url: "", networks: [] }); await saveSet(); const i = document.querySelectorAll("[data-feed-url]"); if (i.length) i[i.length - 1].focus(); return; }
     if ((b = g("[data-feed-del]"))) { S.state.settings.auto.feeds.splice(+b.dataset.feedDel, 1); await saveSet(); return; }
@@ -280,9 +280,9 @@
     }
     if (t.matches("[data-team-validators]")) { st.team = Object.assign({}, st.team, { validators: t.value.split(/[\s,;]+/).map((x) => x.trim()).filter((x) => x.includes("@")) }); await S.saveSettings(st); U.toast("Validateurs enregistrés"); return A.render(); }
     if (d.setName != null) { st.templates.sets[+d.setName].name = t.value.trim(); return S.saveSettings(st); }
-    if (d.setNet != null) { const g0 = st.templates.sets[+d.setNet]; g0.networks = (st.networks || []).filter((n) => (n === t.value ? t.checked : (g0.networks || []).includes(n))); return S.saveSettings(st); }
+    if (d.setNet != null) { const g0 = st.templates.sets[+d.setNet]; g0.networks = A.nets().filter((n) => (n === t.value ? t.checked : (g0.networks || []).includes(n))); return S.saveSettings(st); }
     if (d.feedUrl != null) { const v = t.value.trim(); if (v && !/^https?:\/\/\S+\.\S+/.test(v)) { U.toast("Adresse du flux : elle doit commencer par https://"); return; } st.auto.feeds[+d.feedUrl].url = v; await S.saveSettings(st); if (v) U.toast("Flux enregistré"); return; }
-    if (d.feedNet != null) { const f = st.auto.feeds[+d.feedNet]; f.networks = (st.networks || []).filter((n) => (n === t.value ? t.checked : (f.networks || []).includes(n))); return S.saveSettings(st); }
+    if (d.feedNet != null) { const f = st.auto.feeds[+d.feedNet]; f.networks = A.nets().filter((n) => (n === t.value ? t.checked : (f.networks || []).includes(n))); return S.saveSettings(st); }
     if (d.plugNet != null) { st.auto.plugs[+d.plugNet].net = t.value; return S.saveSettings(st); }
     if (d.plugN != null) { st.auto.plugs[+d.plugN].threshold = Math.max(1, Math.round(+t.value) || 1); t.value = st.auto.plugs[+d.plugN].threshold; return S.saveSettings(st); }
     if (d.plugText != null) { st.auto.plugs[+d.plugText].comment = t.value.trim().slice(0, 2000); await S.saveSettings(st); if (t.value.trim()) U.toast("Règle enregistrée"); return; }
@@ -378,7 +378,7 @@
     const f = e.target.closest("[data-knew]"); if (!f) return;
     e.preventDefault();
     const title = f.t.value.trim(); if (!title) return;
-    const p = { id: "n" + Date.now().toString(36), ref: "", title, format: "reel", networks: [(S.state.settings.networks || ["instagram"])[0]],
+    const p = { id: "n" + Date.now().toString(36), ref: "", title, format: "reel", networks: [A.nets()[0]],
       date: null, time: null, caption: "", captionValidated: false, manual: false, media: [], stage: f.dataset.knew, status: "draft" };
     await S.savePosts([p]); await S.log({ level: "change", text: "Nouvelle carte : " + title, postId: p.id });
     A.kAdd = null; A.render(); U.toast("Ajouté dans " + label(p.stage));

@@ -13,6 +13,7 @@
     instagram: [["followers", "Abonnés", "ig", null, 3], ["reach", "Comptes touchés", "igReach", "reach", 1], ["views", "Vues", "igViews", "views", 3],
       ["likes", "Likes", "igLikes", "likes", 2], ["comments", "Commentaires", "igComments", "comments", 1], ["shares", "Partages", "igShares", "shares", 2],
       ["saves", "Enregistrements", "igSaves", "saved", 3], ["replies", "Réponses aux stories", "igReplies", null, 1], ["profile_views", "Visites du profil", "igProfile", null, 2]],
+    youtube: [["followers", "Abonnés", "yt", null, 3], ["views", "Vues", "ytViewsDay", "views", 1], ["likes", "Likes", null, "likes", 2], ["comments", "Commentaires", null, "comments", 1]],
     facebook: [["followers", "Abonnés", "fb", null, 3], ["likes", "Réactions", null, "likes", 2], ["comments", "Commentaires", null, "comments", 1], ["shares", "Partages", null, "shares", 2]],
   };
   const fmt = (n) => (n == null ? "—" : Math.abs(n) >= 10000 ? (n / 1000).toFixed(Math.abs(n) >= 1e5 ? 0 : 1).replace(".", ",") + " k" : String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, " "));
@@ -101,12 +102,12 @@
   document.addEventListener("pointerdown", hover);
 
   A.statCardsHtml = function (st, today) {
-    const nets = ["instagram", "facebook"].filter((n) => st[n] && (st[n].account || (st[n].media || []).length));
+    const nets = ["instagram", "facebook", "youtube"].filter((n) => st[n] && (st[n].account || (st[n].media || []).length));
     if (!nets.length) return "";
     const net = nets.includes(A.statChan) ? A.statChan : nets[0];
     const n = PERIODS.some(([d]) => d === A.statDays) ? A.statDays : 7;
     const acc = st[net] || {};
-    const name = (x) => (x === "instagram" ? "@" + ((st.instagram.account || {}).username || "Instagram") : (st.facebook.account || {}).name || "Page Facebook");
+    const name = (x) => (x === "instagram" ? "@" + ((st.instagram.account || {}).username || "Instagram") : x === "youtube" ? (st.youtube.account || {}).name || "YouTube" : (st.facebook.account || {}).name || "Page Facebook");
     const side = '<nav class="sc-side" aria-label="Comptes"><h2>Comptes</h2>' + nets.map((x) => '<button type="button" data-stat-chan="' + x + '" aria-pressed="' + (x === net) + '">' + brand(x, "lg") + '<span data-noi18n>' + esc(name(x)) + "</span></button>").join("") + "</nav>";
     const cards = CARDS[net].map((card) => {
       const r = A.statCard(st, net, card, n, today);
@@ -116,7 +117,7 @@
         : r.delta != null ? '<span class="sc-d ' + (r.delta > 0 ? "up" : r.delta < 0 ? "down" : "") + '" title="Par rapport aux ' + n + ' jours d\'avant (' + fmt(r.prev) + ')">' + (r.delta > 0 ? "▲ " : r.delta < 0 ? "▼ " : "") + Math.abs(r.delta) + " %</span>" : "";
       return '<section class="sc-card"><div class="sc-h"><i style="background:' + color + '"></i><span>' + esc(card[1]) + "</span>" + badge + "</div>" + area(r.pts, color, card[1], card[0] === "followers") + '<b class="sc-v">' + fmt(r.value) + "</b></section>";
     }).join("");
-    const err = acc.insightsError ? '<p class="muted small">Une partie des chiffres manque : ' + esc(acc.insightsError) + "</p>" : "";
+    const err = acc.error ? '<p class="muted small">Relevé impossible : ' + esc(acc.error) + "</p>" : acc.insightsError ? '<p class="muted small">Une partie des chiffres manque : ' + esc(acc.insightsError) + "</p>" : "";
     return '<div class="sc">' + side + '<div class="sc-main"><div class="sc-top"><label><span class="sr">Période</span><select data-stat-days>' + PERIODS.map(([d, l]) => '<option value="' + d + '"' + (d === n ? " selected" : "") + ">" + l + "</option>").join("") + "</select></label>" +
       '<span class="muted small">Écart : par rapport aux ' + n + " jours d'avant</span></div>" + err + '<div class="sc-grid">' + cards + "</div></div></div>";
   };

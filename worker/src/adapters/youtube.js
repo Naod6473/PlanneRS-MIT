@@ -12,7 +12,7 @@ export const fields = [
   { key: "privacy", label: "Visibilité : public, unlisted (non répertoriée) ou private (facultatif, public par défaut)", optional: true },
 ];
 
-async function token(cred) {
+export async function token(cred) {
   if (!cred.refreshToken) throw Object.assign(new PublishError("Étape 2 : autorise l'accès.", { why: "Clique sur « Autoriser avec Google » pour terminer.", retryable: false }), { pending: true });
   const r = await fetch("https://oauth2.googleapis.com/token", { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({ client_id: cred.clientId, client_secret: cred.clientSecret, refresh_token: cred.refreshToken, grant_type: "refresh_token" }) });

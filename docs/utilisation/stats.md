@@ -11,14 +11,16 @@ updated: 2026-11-11
 
 ## Ce qui est affiché
 
-À gauche, les **comptes** (Instagram, Page Facebook) : clique sur l'un d'eux. En haut, la **période** : 7, 30 ou 90 jours. Chaque carte donne le total de la période, l'écart avec la période d'avant (▲ en vert, ▼ en rouge, survole pour voir l'ancien chiffre) et la courbe jour par jour.
+À gauche, les **comptes** connectés (Instagram, Page Facebook, chaîne YouTube) : clique sur l'un d'eux. En haut, la **période** : 7, 30 ou 90 jours. Chaque carte donne le total de la période, l'écart avec la période d'avant (▲ en vert, ▼ en rouge, survole pour voir l'ancien chiffre) et la courbe jour par jour.
 
-| Carte | Instagram | Facebook |
-|---|---|---|
-| Abonnés (écart = gagnés sur la période) | Oui | Oui |
-| Comptes touchés, vues | Oui | |
-| Likes (réactions sur Facebook), commentaires, partages | Oui | Oui, d'après les posts de la période |
-| Enregistrements, réponses aux stories, visites du profil | Oui | |
+| Carte | Instagram | Facebook | YouTube |
+|---|---|---|---|
+| Abonnés (écart = gagnés sur la période) | Oui | Oui | Oui |
+| Vues | Oui | | Oui (vues de la chaîne par jour, d'un relevé à l'autre) |
+| Comptes touchés | Oui | | |
+| Likes (réactions sur Facebook), commentaires | Oui | Oui, d'après les posts de la période | Oui, d'après les vidéos de la période |
+| Partages | Oui | Oui | |
+| Enregistrements, réponses aux stories, visites du profil | Oui | | |
 
 D'où viennent les chiffres : pour 7 et 30 jours, les totaux du compte renvoyés par Instagram ; pour 90 jours et pour les courbes, les relevés quotidiens. La portée est reprise jour par jour sur les 30 derniers jours dès le premier relevé ; les autres courbes se remplissent au fil des jours. Une carte sans aucune donnée n'est pas affichée.
 

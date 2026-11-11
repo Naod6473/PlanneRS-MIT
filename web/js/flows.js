@@ -126,7 +126,7 @@
       '<label>Titre<input id="ed-title" value="' + esc(p.title) + '"></label>' +
       '<label>Format<select id="ed-format">' + Object.entries(C.FORMATS).map(([k, l]) => '<option value="' + k + '"' + (p.format === k ? " selected" : "") + ">" + l + "</option>").join("") + "</select></label>" +
       '<fieldset style="border:0;padding:0;margin:0"><legend style="font-weight:600;font-size:13px;margin-bottom:4px">Réseaux</legend><div class="filters">' +
-      (set.networks || []).map((n) => '<label class="chip"><input type="checkbox" data-ed-net="' + n + '"' + (p.networks.includes(n) ? " checked" : "") + ">" + brand(n) + esc(window.BRANDS[n].title) + "</label>").join("") + "</div>" +
+      A.nets().map((n) => '<label class="chip"><input type="checkbox" data-ed-net="' + n + '"' + (p.networks.includes(n) ? " checked" : "") + ">" + brand(n) + esc(window.BRANDS[n].title) + "</label>").join("") + "</div>" +
       (((set.templates || {}).sets || []).filter((g) => g.name && (g.networks || []).length).length ? '<div class="tplrow"><span class="muted">Ensembles</span>' + (set.templates.sets || []).map((g, i) => (g.name && (g.networks || []).length ? '<button type="button" class="chip sm" data-ed-set="' + i + '" title="' + esc(g.networks.map((n) => (window.BRANDS[n] ? window.BRANDS[n].title : n)).join(", ")) + '">' + esc(g.name) + "</button>" : "")).join("") + "</div>" : "") + "</fieldset>" +
       '<label class="toggle"><input type="checkbox" id="ed-manual"' + (p.manual ? " checked" : "") + "> Publier à la main (rappel au lieu d'un envoi automatique)</label>" +
       (p.format === "story" || !p.networks.some((n) => n === "instagram" || n === "facebook") ? "" : '<label>Premier commentaire (facultatif)<textarea id="ed-fc" rows="2" placeholder="Hashtags, lien… posté juste après la publication">' + esc(p.firstComment || "") + "</textarea></label>" +
@@ -439,7 +439,7 @@
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   A.canDictate = !!SR;
   const top = (html, title) => '<div class="sh-top"><b>' + esc(title) + '</b><span style="flex:1"></span><button class="iconbtn" data-close aria-label="Fermer">' + icon("x") + "</button></div>" + html;
-  const defaultNets = () => [(S.state.settings.networks || ["instagram"])[0]];
+  const defaultNets = () => [A.nets()[0]];
   async function addIdea(o) {
     const p = Object.assign({ id: "n" + Date.now().toString(36), ref: "", format: "reel", networks: defaultNets(), date: null, time: null, caption: "", captionValidated: false, manual: false, media: [], stage: "idea", status: "draft" }, o);
     await S.savePosts([p]); await S.log({ level: "change", text: "Nouvelle idée : " + p.title, postId: p.id });
@@ -790,7 +790,7 @@
       if (time && /^\d{1,2}:\d{2}$/.test(time)) time = time.padStart(5, "0"); else if (time) { errors.push("Ligne " + line + " : heure illisible (« " + time + " »)."); return; }
       const fv = norm(get(ci.format)); const fm = fmts.find(([key, l]) => norm(key) === fv || norm(l) === fv);
       const nets = get(ci.nets).split(/[+|,/ ]+/).map(norm).filter(Boolean).map((n) => (brandsAll.find(([id, b]) => norm(id) === n || norm(b.title) === n) || [])[0]).filter(Boolean);
-      posts.push({ id: "i" + base + k, ref: "", title, format: fm ? fm[0] : "image", networks: nets.length ? [...new Set(nets)] : [(S.state.settings.networks || ["instagram"])[0]],
+      posts.push({ id: "i" + base + k, ref: "", title, format: fm ? fm[0] : "image", networks: nets.length ? [...new Set(nets)] : [A.nets()[0]],
         date, time: date ? time || ((S.state.settings.slots || [])[0] || {}).time || "12:00" : null, caption: get(ci.cap), captionValidated: false, manual: false, media: [],
         stage: date ? "scheduled" : "ready", status: date ? "scheduled" : "ready" });
     });

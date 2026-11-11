@@ -50,7 +50,7 @@
   }
 
   A.compose = function (id) {
-    const set = S.state.settings, nets0 = set.networks || ["instagram"];
+    const set = S.state.settings, nets0 = A.nets();
     const orig = id ? S.post(id) : null;
     if (id && !orig) return;
     const d = orig ? JSON.parse(JSON.stringify(orig)) : { id: "n" + Date.now().toString(36), ref: "", title: "", format: "", networks: [nets0[0]], date: null, time: null, caption: "", captionValidated: false, manual: false, media: [], stage: "idea", status: "draft" };

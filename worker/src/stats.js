@@ -6,6 +6,7 @@
 //        https://developers.facebook.com/docs/graph-api/reference/page/published_posts/
 import { graph } from "./adapters/meta.js";
 import { pageToken } from "./adapters/facebook.js";
+import { token as ytToken } from "./adapters/youtube.js";
 
 const HISTORY_DAYS = 120;
 const MEDIA_INSIGHTS = 20; // nombre de publications récentes dont on lit la portée (limite d'appels par exécution)
@@ -22,6 +23,8 @@ export function mediaKey(url) {
   if (m) return "ig:" + m[1];
   m = /facebook\.com\/.*?(\d{8,})/.exec(u);
   if (m) return "fb:" + m[1];
+  m = /(?:youtube\.com\/(?:shorts\/|watch\?v=)|youtu\.be\/)([\w-]{6,})/.exec(u);
+  if (m) return "yt:" + m[1];
   return "";
 }
 
@@ -99,6 +102,26 @@ export async function facebook(env, cred) {
   return out;
 }
 
+// YouTube : abonnés et vues de la chaîne, puis vues, likes et commentaires des 50 dernières vidéos (API Data v3).
+export async function youtube(env, cred) {
+  const out = { at: new Date().toISOString() };
+  const t = await ytToken(cred), H = { authorization: "Bearer " + t };
+  const get = async (path) => { const r = await fetch("https://www.googleapis.com/youtube/v3/" + path, { headers: H }); const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error((j.error && j.error.message) || "YouTube " + r.status); return j; };
+  const c = ((await get("channels?part=snippet,statistics,contentDetails&mine=true")).items || [])[0];
+  if (!c) throw new Error("Aucune chaîne sur ce compte Google.");
+  const st = c.statistics || {};
+  out.account = { name: c.snippet.title, followers: st.hiddenSubscriberCount ? null : +st.subscriberCount || 0, views: +st.viewCount || 0, videos: +st.videoCount || 0 };
+  const up = ((c.contentDetails || {}).relatedPlaylists || {}).uploads;
+  out.media = [];
+  if (up) {
+    const ids = ((await get("playlistItems?part=contentDetails&maxResults=50&playlistId=" + encodeURIComponent(up))).items || []).map((x) => x.contentDetails.videoId).filter(Boolean);
+    if (ids.length) out.media = ((await get("videos?part=snippet,statistics&id=" + ids.join(","))).items || []).map((v) => ({
+      net: "youtube", id: v.id, key: "yt:" + v.id, url: "https://www.youtube.com/shorts/" + v.id, at: v.snippet.publishedAt, kind: "short", title: v.snippet.title,
+      views: +v.statistics.viewCount || 0, likes: +v.statistics.likeCount || 0, comments: +v.statistics.commentCount || 0 }));
+  }
+  return out;
+}
+
 // Relevé complet. getCred(net) renvoie les identifiants ; prev : relevé précédent (pour l'historique).
 export async function collect(env, getCred, prev, today) {
   const s = { updated: new Date().toISOString(), history: (prev && prev.history) || [] };
@@ -106,11 +129,19 @@ export async function collect(env, getCred, prev, today) {
   if (ig && ig.token && ig.accountId) { try { s.instagram = await instagram(env, ig, prev && prev.instagram); } catch (e) { s.instagram = { error: why(e) }; } }
   const fb = await getCred("facebook");
   if (fb && fb.token && fb.pageId) { try { s.facebook = await facebook(env, fb); } catch (e) { s.facebook = { error: why(e) }; } }
+  const yt = await getCred("youtube");
+  if (yt && yt.clientId && yt.refreshToken) { try { s.youtube = await youtube(env, yt); } catch (e) { s.youtube = { error: why(e) }; } }
   const point = { d: today };
+  if (s.youtube && s.youtube.account) {
+    point.yt = s.youtube.account.followers; point.ytViews = s.youtube.account.views;
+    // Vues du jour = écart avec le dernier relevé de la veille ou d'avant (la chaîne ne donne qu'un total).
+    const last = [...s.history].reverse().find((h) => h.d < today && h.ytViews != null);
+    if (last) point.ytViewsDay = Math.max(0, point.ytViews - last.ytViews);
+  }
   if (s.instagram && s.instagram.account) { point.ig = s.instagram.account.followers; if (s.instagram.day) { const d = s.instagram.day; point.igReach = d.reach; point.igEng = d.accounts_engaged; point.igViews = d.views; point.igProfile = d.profile_views;
     for (const [k, f] of [["likes", "igLikes"], ["comments", "igComments"], ["shares", "igShares"], ["saves", "igSaves"], ["replies", "igReplies"]]) if (d[k] != null) point[f] = d[k]; } }
   if (s.facebook && s.facebook.account) point.fb = s.facebook.account.followers;
-  if (point.ig != null || point.fb != null) s.history = s.history.filter((h) => h.d !== today).concat(point).slice(-HISTORY_DAYS);
+  if (point.ig != null || point.fb != null || point.yt != null || point.ytViews != null) s.history = s.history.filter((h) => h.d !== today).concat(point).slice(-HISTORY_DAYS);
   // Portée des 30 derniers jours : complète les jours sans relevé (le relevé du jour garde la priorité).
   const rd = (s.instagram && s.instagram.reachDaily) || [];
   if (rd.length) {

@@ -63,3 +63,18 @@ test("Stats : périodes 7/30 jours, période précédente, portée jour par jour
   assert.ok(seen.filter((m) => /likes/.test(m)).length === 1, "la liste complète n'est tentée qu'une fois");
   assert.deepEqual(s.history.map((h) => [h.d, h.ig, h.igReach]), [["2026-11-07", undefined, 40], ["2026-11-08", 8, 55], ["2026-11-10", 9, 300]]);
 });
+
+test("Stats : YouTube, abonnés, vues du jour par écart, chiffres des vidéos", async () => {
+  route([
+    [/oauth2\.googleapis\.com\/token/, () => J({ access_token: "a" })],
+    [/youtube\/v3\/channels/, () => J({ items: [{ snippet: { title: "Ma chaîne" }, statistics: { subscriberCount: "12", viewCount: "1500", videoCount: "3" }, contentDetails: { relatedPlaylists: { uploads: "UU1" } } }] })],
+    [/youtube\/v3\/playlistItems/, () => J({ items: [{ contentDetails: { videoId: "vid123" } }] })],
+    [/youtube\/v3\/videos/, () => J({ items: [{ id: "vid123", snippet: { publishedAt: "2026-11-10T11:30:00Z", title: "Short" }, statistics: { viewCount: "300", likeCount: "20", commentCount: "2" } }] })],
+  ]);
+  const s = await collect({}, async (n) => (n === "youtube" ? { clientId: "c", clientSecret: "s", refreshToken: "r" } : null), { history: [{ d: "2026-11-09", ytViews: 1400 }] }, "2026-11-10");
+  assert.equal(s.youtube.account.followers, 12);
+  assert.deepEqual([s.youtube.media[0].key, s.youtube.media[0].views, s.youtube.media[0].likes], ["yt:vid123", 300, 20]);
+  const h = s.history.find((x) => x.d === "2026-11-10");
+  assert.deepEqual([h.yt, h.ytViews, h.ytViewsDay], [12, 1500, 100]);
+  assert.equal(mediaKey("https://www.youtube.com/shorts/vid123"), "yt:vid123");
+});

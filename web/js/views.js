@@ -8,6 +8,16 @@
   const A = (window.App = window.App || {});
   A.week = null; A.calMode = "week"; A.contentsMode = null; A.logFilter = "all"; A.setTab = "accounts";
   A.netOff = {}; A.pending = []; A.day = null;
+  // Réseaux proposés partout (calendrier, création, stats) : sur ton instance, ceux dont le compte est connecté,
+  // dans l'ordre des réglages puis du catalogue ; en démo (ou si rien n'est connecté), la liste des réglages.
+  A.nets = function () {
+    const base = (S.state.settings || {}).networks || ["instagram"];
+    if (S.mode !== "api") return base;
+    const acc = S.state.accounts || {}, on = (n) => acc[n] && (acc[n].status === "ok" || acc[n].status === "manual");
+    const all = base.concat(((window.CONNECTORS || {}).social || []).map((c) => c.id).filter((n) => window.BRANDS[n] && !base.includes(n)));
+    const out = all.filter(on);
+    return out.length ? out : base;
+  };
 
   const today = () => C.ymd(new Date());
   const settings = () => S.state.settings;
@@ -271,7 +281,7 @@
   // ---------------------------------------------------------------- Calendrier
   // Filtre des réseaux replié dans un menu : l'en-tête tient sur une ligne.
   function netMenu() {
-    const nets = settings().networks || [];
+    const nets = A.nets();
     const on = nets.filter((n) => !A.netOff[n]);
     return '<details class="netdd"' + (A.netOpen ? " open" : "") + '><summary class="btn">' + brands(on.length ? on : nets) + '<span class="lbl">Réseaux</span>' +
       (on.length < nets.length ? ' <span class="muted">' + on.length + "/" + nets.length + "</span>" : "") + "</summary>" +
@@ -279,7 +289,7 @@
   }
 
   function netChips() {
-    return '<div class="filters" role="group" aria-label="Réseaux affichés">' + (settings().networks || []).map((n) =>
+    return '<div class="filters" role="group" aria-label="Réseaux affichés">' + (A.nets()).map((n) =>
       '<button class="chip" data-net="' + n + '" aria-pressed="' + !A.netOff[n] + '">' + brand(n) + esc(window.BRANDS[n] ? window.BRANDS[n].title : n) + "</button>").join("") + "</div>";
   }
 
@@ -482,7 +492,7 @@
 
   // Barre d'actions de la sélection multiple (Contenus › Liste).
   function bulkBar() {
-    const n = A.sel.size, nets = settings().networks || [];
+    const n = A.sel.size, nets = A.nets();
     return '<div class="bulkbar" role="toolbar" aria-label="Actions sur la sélection"><b>' + n + (n > 1 ? " sélectionnés" : " sélectionné") + "</b>" +
       '<span class="bk-grp"><label class="sr" for="bk-days">Décaler de</label><input id="bk-days" type="number" value="7" step="1" style="width:5em" aria-label="Nombre de jours"><button class="btn" data-bulk="shift">' + icon("calendar") + "Décaler (jours)</button></span>" +
       '<span class="bk-grp"><select id="bk-net" aria-label="Réseau">' + nets.map((x) => '<option value="' + x + '">' + esc((window.BRANDS[x] || { title: x }).title) + "</option>").join("") + '</select><button class="btn" data-bulk="addnet">' + icon("plus") + 'Ajouter</button><button class="btn" data-bulk="delnet">Retirer</button></span>' +
@@ -509,14 +519,15 @@
   const statKey = (url) => {
     const u = String(url || "");
     let m = /instagram\.com\/(?:[\w.]+\/)?(?:p|reel|reels|tv)\/([\w-]+)/.exec(u); if (m) return "ig:" + m[1];
-    m = /facebook\.com\/.*?(\d{8,})/.exec(u); return m ? "fb:" + m[1] : "";
+    m = /facebook\.com\/.*?(\d{8,})/.exec(u); if (m) return "fb:" + m[1];
+    m = /(?:youtube\.com\/(?:shorts\/|watch\?v=)|youtu\.be\/)([\w-]{6,})/.exec(u); return m ? "yt:" + m[1] : "";
   };
   // Chiffres d'une publication, par réseau : par l'adresse, sinon par l'heure (la plus proche, à 1 h près).
   A.postStats = function (p) {
     const st = S.state.stats || (S.mode === "demo" ? (A._demoSt = A._demoSt || A.demoStats()) : null);
     if (!st || p.status !== "published") return null;
     const out = {};
-    for (const n of ["instagram", "facebook"]) {
+    for (const n of ["instagram", "facebook", "youtube"]) {
       const list = (st[n] && st[n].media) || [];
       if (!list.length || !(p.networks || []).includes(n)) continue;
       const r = (p.results || {})[n] || {};
@@ -636,7 +647,7 @@
         '<span class="acts">' + (bp ? '<button class="btn" data-open="' + esc(bp.id) + '">Détails</button>' : "") + '<a class="btn" href="' + safeUrl(m.url) + '" target="_blank" rel="noopener">' + icon("open") + "Voir sur Instagram</a></span></div></section>";
     }
 
-    const warn = [ig.error && "Instagram : " + ig.error, ig.insightsError && "Instagram : la portée n'est pas disponible avec ce jeton (droit « instagram_manage_insights » à ajouter). " + ig.insightsError,
+    const warn = [ig.error && "Instagram : " + ig.error, (st.youtube || {}).error && "YouTube : " + st.youtube.error, ig.insightsError && "Instagram : la portée n'est pas disponible avec ce jeton (droit « instagram_manage_insights » à ajouter). " + ig.insightsError,
       fb.error && "Facebook : " + fb.error].filter(Boolean);
     const note = fb.mediaError ? '<p class="muted small" style="margin-top:12px">Facebook : seuls les abonnés de la Page sont relevés. Les réactions et commentaires des posts demandent le droit Meta « pages_read_user_content ».</p>' : "";
     return {
@@ -745,7 +756,7 @@
   }
   // Cases à cocher des réseaux de l'espace (ensembles, flux).
   function netChecks(attr, picked) {
-    return (settings().networks || []).map((n) => '<label class="chip"><input type="checkbox" ' + attr + ' value="' + n + '"' + ((picked || []).includes(n) ? " checked" : "") + ">" + brand(n) + esc(window.BRANDS[n] ? window.BRANDS[n].title : n) + "</label>").join("");
+    return (A.nets()).map((n) => '<label class="chip"><input type="checkbox" ' + attr + ' value="' + n + '"' + ((picked || []).includes(n) ? " checked" : "") + ">" + brand(n) + esc(window.BRANDS[n] ? window.BRANDS[n].title : n) + "</label>").join("");
   }
   const SET = {
     accounts: () => connGroup("social", "Comptes connectés", "Les réseaux sur lesquels PlanneRs publie ou te rappelle de publier."),
@@ -758,7 +769,7 @@
       return '<section class="panel"><h2>Chemin des médias</h2><p>Instagram ne lit pas un lien Drive : il lui faut une adresse publique. Voici chaque maillon et son état.</p><div class="chain">' +
         lk(sto, "Là où tu ranges tes fichiers", "Stockage") + '<span class="arrow">' + icon("right") + "</span>" +
         lk(pubh, "Copie publique, le temps de publier", "Hébergement public") + '<span class="arrow">' + icon("right") + "</span>" +
-        '<div class="link"><b>' + brands((settings().networks || []).filter((n) => acc[n] && acc[n].status === "ok")) + " Réseaux</b><small class=\"muted\">Récupèrent le média à l'heure prévue</small></div></div></section>" +
+        '<div class="link"><b>' + brands((A.nets()).filter((n) => acc[n] && acc[n].status === "ok")) + " Réseaux</b><small class=\"muted\">Récupèrent le média à l'heure prévue</small></div></div></section>" +
         '<section class="panel"><h2>Dossier des dépôts</h2><p>Là où partent les photos et vidéos ajoutées depuis Aujourd\'hui ou partagées depuis le téléphone, quand elles ne sont rattachées à aucun post (chemin dans ton stockage).</p><div class="form"><label>Dossier<input value="' + esc((settings().drive || {}).inbox || "PlanneRs/depots") + '" data-drive-inbox placeholder="PlanneRs/depots"></label></div></section>' +
         connGroup("storage", "Stockages connectés", "Tes dossiers de médias et l'hébergement public utilisé au moment de publier.");
     },
