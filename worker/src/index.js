@@ -325,6 +325,7 @@ async function api(request, env, path, url, auth) {
     try { return json(await gdrivewrite.upload(cred, url.searchParams.get("path") || "", name, await request.arrayBuffer(), request.headers.get("content-type"))); }
     catch (e) { return err(e.why ? e.message + " " + e.why : e.message, 502); }
   }
+  if (path === "instagram/sync" && m === "POST") { try { return json(await syncInstagram(env, true)); } catch (e) { return err(e.why || e.message, 502); } }
   if (path === "robot/run" && m === "POST") return json(await robot(env));
   if (path === "stats" && m === "GET") return json((await db.getKV(env, "stats")) || {});
   if (path === "stats/refresh" && m === "POST") return json(await stats(env));
@@ -430,6 +431,26 @@ async function runDaily(env, force) {
   return out;
 }
 
+// Posts publiés en dehors de PlanneRs (à la main, script, assistant) : repérés sur Instagram et passés en « publié ».
+// Seulement s'il reste un post Instagram en attente dont l'heure est passée, et au plus toutes les 10 minutes.
+async function syncInstagram(env, force) {
+  const settings = Object.assign({}, DEFAULT_SETTINGS, (await db.getKV(env, "settings")) || {});
+  const now = localNow(settings.timezone);
+  const s = await db.loadState(env);
+  if (!igHistory.waiting(s.posts, now).length) return { changed: 0 };
+  const last = await db.getKV(env, "igsync");
+  if (!force && last && Date.now() - last.at < 10 * 60000) return { changed: 0 };
+  await db.putKV(env, "igsync", { at: Date.now() });
+  const info = (await db.accountsInfo(env)).instagram, cred = await db.getCred(env, "instagram");
+  if (!info || info.status !== "ok" || !cred || !cred.token || !cred.accountId) return { changed: 0 };
+  const changed = igHistory.reconcile(await igHistory.fetchRecent(env, cred), s.posts, settings.timezone, now);
+  if (changed.length) {
+    await db.savePosts(env, changed);
+    for (const p of changed) await db.addLog(env, { at: now, level: "ok", text: "Repéré sur Instagram, publié en dehors de PlanneRs : " + p.title, postId: p.id });
+  }
+  return { changed: changed.length };
+}
+
 // Relevé des statistiques : une fois par jour à partir de 7 h (heure de l'espace), ou à la demande.
 async function stats(env, onlyIfDue) {
   const settings = Object.assign({}, DEFAULT_SETTINGS, (await db.getKV(env, "settings")) || {});
@@ -478,6 +499,6 @@ export default {
     catch (e) { return err("Erreur du serveur : " + e.message, 500); }
   },
   async scheduled(event, env, ctx) {
-    ctx.waitUntil(robot(env).finally(() => stats(env, true).catch(() => null)).finally(() => runDaily(env).catch(() => null)));
+    ctx.waitUntil(robot(env).finally(() => syncInstagram(env).catch(() => null)).finally(() => stats(env, true).catch(() => null)).finally(() => runDaily(env).catch(() => null)));
   },
 };

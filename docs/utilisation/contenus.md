@@ -33,7 +33,7 @@ Chaque carte montre trois points : texte, médias, légende validée. Le filtre 
 
 Règles :
 
-- **Publié** ne bouge jamais, et se remplit tout seul (robot ou « C'est posté »).
+- **Publié** ne bouge jamais, et se remplit tout seul : robot, « C'est posté », ou post publié en dehors de PlanneRs (à la main, par un script ou un assistant) et repéré sur Instagram au même format, à moins d'une heure et demie de l'heure prévue (vérifié toutes les 10 minutes tant qu'un post Instagram attend).
 - **Programmé** est verrouillé : clique sur **Débloquer** pour pouvoir déplacer la carte.
 - Pour entrer dans **Programmé**, il faut une légende validée **et** une date.
 - Revenir en **Légende** ou avant retire la validation de la légende : elle devra être revalidée.
