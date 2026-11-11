@@ -97,7 +97,10 @@ async function state(env) {
 
 async function notifier(env, settings) {
   const s = await db.loadState(env);
+  const origin = await db.getKV(env, "origin");
   return async (n) => {
+    // Lien cliquable : un rappel « à la main » ouvre directement la marche à suivre du post.
+    if (!n.url && origin) n = Object.assign({}, n, { url: origin + (n.event === "manual" && n.post ? "/#poster-" + encodeURIComponent(n.post.id) : "/#today") });
     if (n.event === "failed" && settings.notify && settings.notify.onFailure === false) return;
     for (const id of Object.keys(channels)) {
       if (!s.accounts[id]) continue;

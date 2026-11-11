@@ -417,7 +417,15 @@
     if (m) { A.setTab = "storage"; setTimeout(() => U.toast(decodeURIComponent(m[1])), 300); history.replaceState(null, "", "#settings"); }
   }
   hashNote();
-  window.addEventListener("hashchange", () => { if (!A.ready) return; A.closeLayer(); A.render(); window.scrollTo(0, 0); if (location.hash === "#share") A.receiveShare(); });
+  // Lien d'un rappel « à poster à la main » : #poster-<id> ouvre directement la marche à suivre.
+  A.posterHash = function () {
+    const m = /^#poster-(.+)$/.exec(location.hash); if (!m) return false;
+    const id = decodeURIComponent(m[1]);
+    history.replaceState(null, "", "#today"); A.render();
+    if (S.post(id)) A.openManual(id); else U.toast("Ce post n'existe plus");
+    return true;
+  };
+  window.addEventListener("hashchange", () => { if (!A.ready) return; if (A.posterHash()) return; A.closeLayer(); A.render(); window.scrollTo(0, 0); if (location.hash === "#share") A.receiveShare(); });
 
   // Partage reçu depuis le téléphone : une photo ou une vidéo → envoi dans le Drive ; un lien ou un texte → une idée.
   A.receiveShare = async function () {
@@ -463,7 +471,7 @@
     A.ready = true;
     if (S.mode === "demo") document.getElementById("demo-note").hidden = false;
     A.render();
-    if (location.hash === "#share") A.receiveShare(); else A.maybeTour();
+    if (location.hash === "#share") A.receiveShare(); else if (!A.posterHash()) A.maybeTour();
     // App installée : le service worker reçoit les partages du téléphone (voir sw.js).
     if ("serviceWorker" in navigator && S.mode === "api") navigator.serviceWorker.register("sw.js").catch(() => null);
     // Rafraîchit la ligne de l'heure et les statuts chaque minute.

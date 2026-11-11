@@ -549,7 +549,9 @@
     const step = (n, title, body, doneFlag) => '<div class="step' + (doneFlag ? " done" : "") + '" data-step="' + n + '"><span class="n">' + (doneFlag ? icon("check") : ++k) + "</span><div><h4>" + title + "</h4>" + body + "</div></div>";
     const has2 = p.format === "story" ? !!p.note : !!C.capFor(p, net).trim();
     openLayer('<div class="sh-top">' + brands(p.networks, "lg") + '<span class="muted" style="font-size:13px">' + esc(C.FORMATS[p.format]) + " · " + (p.date ? esc(C.shortDay(p.date)) + " " + p.time : "") + ' · à la main</span><span style="flex:1"></span><button class="iconbtn" data-close aria-label="Fermer">' + icon("x") + "</button></div>" +
-      '<div class="sh-body"><h2>' + esc(p.title) + '</h2><div class="steps">' +
+      '<div class="sh-body"><h2>' + esc(p.title) + '</h2>' +
+      '<div class="onego" id="m-onego" hidden><button class="btn primary big" data-onego>' + icon("send") + "Poster en un geste</button><p class=\"muted\">" + (p.format === "story" ? (p.note ? "Copie la consigne et ouvre" : "Ouvre") : C.capFor(p, net).trim() ? "Copie le texte et ouvre" : "Ouvre") + " le menu Partager avec le fichier : choisis " + esc(appName) + ".</p></div>" +
+      '<div class="steps">' +
       step(1, "Enregistrer le média", "<p>" + (m ? esc(m.name) : "Aucun fichier rattaché.") + "</p>" + (m && /^https?:/.test(m.url || "") ? '<a class="btn big" id="m-dl" href="' + safeUrl(m.url) + '" download data-mstep="1">' + icon("download") + "Enregistrer</a>" : (m && relPath(p.folder) && driveOn() ? '<a class="btn big" id="m-dl" href="#" data-mstep="1">' + icon("download") + "Recherche du fichier…</a>" : (p.folder && !relPath(p.folder) ? '<a class="btn big" href="' + safeUrl(p.folder) + '" target="_blank" rel="noopener" data-mstep="1">' + icon("open") + "Ouvrir le dossier</a>" : '<button class="btn big" data-mstep="1">C\'est fait</button>'))) + (guideM ? '<p><a href="' + safeUrl(guideM.url) + '" target="_blank" rel="noopener">Voir les repères (où placer les autocollants)</a></p>' : "") + '<p id="m-folder">' + (p.folder && !relPath(p.folder) && m && m.url ? '<a href="' + safeUrl(p.folder) + '" target="_blank" rel="noopener">Ouvrir le dossier</a>' : "") + "</p>") +
       (!has2 ? "" : p.format === "story" ? step(2, "Préparer la story", (p.note ? '<div class="quote">' + esc(p.note) + "</div>" : "<p>Aucune consigne.</p>") + "<p class=\"muted\">Pas de légende sur une story.</p>" + (p.note ? '<button class="btn big" data-mstep="2" data-copy>' + icon("copy") + "Copier la consigne</button>" : '<button class="btn big" data-mstep="2">C\'est fait</button>'))
         : step(2, "Copier le texte", (C.capFor(p, net) ? '<div class="quote">' + esc(C.textOut(p, net, S.state.settings)) + "</div>" : "<p>Pas de texte pour ce post.</p>") + '<button class="btn big" data-mstep="2" data-copy>' + icon("copy") + "Copier</button>")) +
@@ -565,7 +567,7 @@
       fetch(url).then((r) => (r.ok ? r.blob() : null)).then((bl) => {
         if (!bl) return;
         const f = new File([bl], m.name || "media", { type: bl.type || (m.type === "video" ? "video/mp4" : "image/jpeg") });
-        if (navigator.canShare({ files: [f] })) shareFile = f;
+        if (navigator.canShare({ files: [f] })) { shareFile = f; const og = L.querySelector("#m-onego"); if (og) og.hidden = false; }
       }).catch(() => {});
     };
     if (m && /^https?:/.test(m.url || "")) prepShare(m.url);
@@ -577,6 +579,14 @@
       b.href = A.driveFileUrl(f); b.setAttribute("download", f.name); b.innerHTML = icon("download") + "Enregistrer";
       prepShare(A.driveFileUrl(f));
     }).catch(() => { const b = L.querySelector("#m-dl"); if (b) { b.textContent = "Stockage inaccessible"; } });
+    const doneStep = (n) => { const s = L.querySelector('[data-step="' + n + '"]'); if (s) { s.classList.add("done"); s.querySelector(".n").innerHTML = icon("check"); } };
+    const og = L.querySelector("[data-onego]");
+    if (og) og.addEventListener("click", () => {
+      if (!shareFile) return;
+      const txt = (p.format === "story" ? p.note : C.textOut(p, net, S.state.settings)) || "";
+      if (txt) U.copy(txt);
+      navigator.share({ files: [shareFile] }).then(() => { [1, 2, 3].forEach(doneStep); U.toast(txt ? "Texte copié : colle-le dans " + appName : "Fichier envoyé à " + appName); }).catch(() => {});
+    });
     L.querySelectorAll("[data-mstep]").forEach((b) => b.addEventListener("click", (e) => {
       if (b.getAttribute("href") === "#") { e.preventDefault(); return; }
       if (b.dataset.mstep === "1" && shareFile) { e.preventDefault(); navigator.share({ files: [shareFile] }).catch(() => {}); }

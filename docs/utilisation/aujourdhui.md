@@ -43,6 +43,8 @@ Ce qui demande ton attention, du plus urgent au moins urgent :
 
 - **Échecs** : « Réessayer », « Poster à la main » ou « Comprendre » (ce qui s'est passé, pourquoi, que faire).
 - **En retard** (moins de 24 h) : un post « à la main » dont l'heure est passée. « Poster » ouvre l'aide à la publication manuelle, « Ignorer » le retire de la liste.
+
+**Poster à la main depuis le téléphone** : dans l'aide à la publication, **Poster en un geste** copie le texte (ou la consigne d'une story) et ouvre le menu Partager avec l'image ou la vidéo : choisis Instagram (Story ou Publication), colle le texte, publie. Le bouton apparaît sur les téléphones qui savent partager un fichier depuis le navigateur ; sinon, les étapes une par une restent là. Le rappel envoyé par [ntfy, Telegram ou le webhook](../notifications/ntfy.md) ouvre directement cette aide quand tu touches la notification. Une fois en ligne, le post passe tout seul en « publié » s'il est repéré sur Instagram (sinon, « C'est posté »).
 - **Manqués** : une seule carte regroupe tout ce dont l'heure est passée depuis plus de 24 h sans publication. Elle ouvre la liste des manqués, avec pour chacun :
   - « Reprogrammer » : ouvre « Changer la date » ;
   - « Déjà posté » : tu l'as publié ailleurs, tu colles le lien et il passe en Publié ;
