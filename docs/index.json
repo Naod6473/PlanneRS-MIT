@@ -3,6 +3,7 @@
   "categories": [
     "Sommaire",
     "Démarrage",
+    "Tutoriels",
     "Utilisation",
     "Réseaux sociaux",
     "Stockage",
@@ -27,6 +28,11 @@
           "level": 2,
           "text": "Démarrage",
           "anchor": "démarrage"
+        },
+        {
+          "level": 2,
+          "text": "Tutoriels",
+          "anchor": "tutoriels"
         },
         {
           "level": 2,
@@ -255,6 +261,131 @@
           "level": 2,
           "text": "Sans assistant",
           "anchor": "sans-assistant"
+        }
+      ]
+    },
+    {
+      "path": "tutoriels/programmer-un-post.md",
+      "title": "Programmer un post",
+      "description": "Tutoriel en images pour écrire un post, choisir ses réseaux, valider le texte et le programmer à un créneau.",
+      "category": "Tutoriels",
+      "tags": [
+        "tutoriel",
+        "premier post",
+        "programmer",
+        "fenêtre de création",
+        "valider",
+        "créneau"
+      ],
+      "order": 1,
+      "updated": "2026-11-12",
+      "headings": [
+        {
+          "level": 2,
+          "text": "1. Partir du calendrier",
+          "anchor": "1-partir-du-calendrier"
+        },
+        {
+          "level": 2,
+          "text": "2. Écrire dans la fenêtre de création",
+          "anchor": "2-écrire-dans-la-fenêtre-de-création"
+        },
+        {
+          "level": 2,
+          "text": "3. Vérifier dans la fiche",
+          "anchor": "3-vérifier-dans-la-fiche"
+        }
+      ]
+    },
+    {
+      "path": "tutoriels/valider-la-semaine.md",
+      "title": "Valider la semaine",
+      "description": "Tutoriel en images pour relire et valider d'un coup les textes de la semaine, depuis Aujourd'hui.",
+      "category": "Tutoriels",
+      "tags": [
+        "tutoriel",
+        "valider",
+        "légendes",
+        "relire",
+        "tout valider",
+        "aujourd'hui"
+      ],
+      "order": 2,
+      "updated": "2026-11-12",
+      "headings": [
+        {
+          "level": 2,
+          "text": "1. Repérer ce qui attend",
+          "anchor": "1-repérer-ce-qui-attend"
+        },
+        {
+          "level": 2,
+          "text": "2. Relire un par un",
+          "anchor": "2-relire-un-par-un"
+        }
+      ]
+    },
+    {
+      "path": "tutoriels/poster-a-la-main.md",
+      "title": "Poster à la main",
+      "description": "Tutoriel en images pour les réseaux sans envoi automatique (X, LinkedIn, TikTok…) - rappel, texte pré-rempli, gestes sur téléphone.",
+      "category": "Tutoriels",
+      "tags": [
+        "tutoriel",
+        "à la main",
+        "rappel",
+        "x",
+        "linkedin",
+        "téléphone",
+        "glisser",
+        "texte pré-rempli"
+      ],
+      "order": 3,
+      "updated": "2026-11-12",
+      "headings": [
+        {
+          "level": 2,
+          "text": "1. Sur ordinateur",
+          "anchor": "1-sur-ordinateur"
+        },
+        {
+          "level": 2,
+          "text": "2. Sur téléphone",
+          "anchor": "2-sur-téléphone"
+        }
+      ]
+    },
+    {
+      "path": "tutoriels/republier-et-retrouver.md",
+      "title": "Republier, retrouver, récupérer",
+      "description": "Tutoriel en images pour republier un post qui a marché, retrouver un post par la recherche et remettre un post supprimé depuis la corbeille.",
+      "category": "Tutoriels",
+      "tags": [
+        "tutoriel",
+        "republier",
+        "recherche",
+        "série",
+        "ctrl k",
+        "corbeille",
+        "remettre"
+      ],
+      "order": 4,
+      "updated": "2026-11-12",
+      "headings": [
+        {
+          "level": 2,
+          "text": "Republier un post qui a marché",
+          "anchor": "republier-un-post-qui-a-marché"
+        },
+        {
+          "level": 2,
+          "text": "Retrouver un post",
+          "anchor": "retrouver-un-post"
+        },
+        {
+          "level": 2,
+          "text": "Remettre un post supprimé",
+          "anchor": "remettre-un-post-supprimé"
         }
       ]
     },

@@ -23,13 +23,24 @@ Chaque page commence par un en-tête (`title`, `description`, `category`, `tags`
 | [Installer avec l'aide d'une IA](demarrage/installation-avec-une-ia.md) | Le texte à coller dans Claude Code ou Codex pour être guidé |
 | [Premiers pas](demarrage/premiers-pas.md) | Créer son espace, créneaux, premier compte, premier post, passer en publication réelle |
 
+## Tutoriels
+
+Pas à pas, avec des captures d'écran (prises dans l'espace de démonstration ; `npm run docs:shots` les refait).
+
+| Page | Contenu |
+|---|---|
+| [Programmer un post](tutoriels/programmer-un-post.md) | Du calendrier à la fenêtre de création, puis la fiche |
+| [Valider la semaine](tutoriels/valider-la-semaine.md) | Relire un par un, tout valider, sur ordinateur ou au doigt |
+| [Poster à la main](tutoriels/poster-a-la-main.md) | Rappel, texte pré-rempli pour X et LinkedIn, gestes sur téléphone |
+| [Republier, retrouver, récupérer](tutoriels/republier-et-retrouver.md) | Republier un post qui a marché, chercher, corbeille |
+
 ## Utilisation
 
 | Page | Contenu |
 |---|---|
 | [Aujourd'hui](utilisation/aujourdhui.md) | Tableau de bord, « À faire », manqués, raccourcis, dépôt de fichiers |
 | [Calendrier](utilisation/calendrier.md) | Semaine par créneaux, mois, grille du profil, glisser-déposer, confirmation |
-| [Contenus](utilisation/contenus.md) | Tableau Kanban (Idée → Publié), verrous, fiche d'un post, aperçu Instagram |
+| [Contenus](utilisation/contenus.md) | Tableau en 5 étapes (Idée → Publié), alertes, verrous, fiche d'un post, aperçu Instagram |
 | [Stats](utilisation/stats.md) | Abonnés, vues, portée, meilleur Reel, tri des publications |
 | [Activité et réglages](utilisation/activite-et-reglages.md) | Journal, état des comptes et du robot, créneaux, règles, notifications, import et export |
 | [Automatisations](utilisation/automatisations.md) | Flux RSS repris en posts à relire, commentaire automatique au-delà d'un nombre de likes |

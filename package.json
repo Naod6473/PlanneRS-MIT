@@ -13,6 +13,7 @@
     "demo": "node scripts/serve-demo.mjs",
     "test": "node --test test/*.test.mjs",
     "docs:index": "node scripts/docs-index.mjs",
+    "docs:shots": "node scripts/docs-shots.mjs",
     "build:demo": "node scripts/build-demo.mjs",
     "db:init": "wrangler d1 migrations apply planners --remote",
     "deploy": "wrangler d1 migrations apply DB --remote && wrangler deploy",

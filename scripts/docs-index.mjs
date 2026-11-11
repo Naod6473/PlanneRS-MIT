@@ -7,7 +7,7 @@ import { join, dirname, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "docs");
-export const CATEGORIES = ["Sommaire", "Démarrage", "Utilisation", "Réseaux sociaux", "Stockage", "Notifications", "Référence"];
+export const CATEGORIES = ["Sommaire", "Démarrage", "Tutoriels", "Utilisation", "Réseaux sociaux", "Stockage", "Notifications", "Référence"];
 const REQUIRED = ["title", "description", "category", "tags", "order", "updated"];
 
 function walk(dir) {
