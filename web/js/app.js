@@ -38,6 +38,7 @@
     shell();
     A.renderPending();
     if (document.getElementById("bk-list")) A.loadBackups();
+    if (document.getElementById("trash-list")) A.loadTrash();
     if (document.getElementById("ical-box")) A.loadIcal();
   };
 
@@ -108,6 +109,22 @@
       const fmt = (b) => { const d = b.id.slice(0, 10); return C.longDate(d) + (/avant-restauration/.test(b.id) ? " (avant restauration)" : /manuelle/.test(b.id) ? " (manuelle)" : ""); };
       box.innerHTML = r.backups.length ? r.backups.map((b) => '<div class="bk"><span>' + esc(fmt(b)) + ' <span class="muted">· ' + b.posts + " posts</span></span><button class=\"btn quiet\" data-bk-restore=\"" + esc(b.id) + '" data-bk-label="' + esc(fmt(b)) + '">Restaurer</button></div>').join("") : '<p class="muted" style="margin:0">Pas encore de sauvegarde : la première sera faite lundi matin, ou maintenant avec le bouton.</p>';
     } catch (e) { box.innerHTML = '<p class="muted" style="margin:0">Liste indisponible : ' + esc(e.message) + "</p>"; }
+  };
+
+  // Corbeille (Réglages › Espace) : posts supprimés depuis moins de 30 jours.
+  A.loadTrash = async function () {
+    const box = document.getElementById("trash-list");
+    if (!box) return;
+    try {
+      const t = await S.trashList();
+      const when = (iso) => { const d = new Date(iso); return C.longDate(C.ymd(d)) + " à " + C.pad(d.getHours()) + ":" + C.pad(d.getMinutes()); };
+      const left = (iso) => Math.max(0, 30 - Math.floor((Date.now() - Date.parse(iso)) / 864e5));
+      box.innerHTML = t.length ? t.map((e) => '<div class="bk"><span><b>' + esc(e.title || "Sans titre") + "</b>" + (e.count > 1 ? ' <span class="muted">+ ' + (e.count - 1) + "</span>" : "") +
+        '<br><span class="muted">Supprimé le ' + esc(when(e.at)) + (e.by ? " par " + esc(e.by) : "") + " · encore " + left(e.at) + " j</span></span>" +
+        '<button class="btn quiet" data-trash-restore="' + esc(e.id) + '">' + icon("undo") + "Remettre</button></div>").join("") +
+        '<div style="margin-top:10px"><button class="btn quiet danger" data-trash-empty>' + icon("trash") + "Vider la corbeille</button></div>"
+        : '<p class="muted" style="margin:0">La corbeille est vide.</p>';
+    } catch (e) { box.innerHTML = '<p class="muted" style="margin:0">Corbeille indisponible : ' + esc(e.message) + "</p>"; }
   };
 
   try { A.calCompact = localStorage.getItem("planners-caldense") === "1"; } catch (x) { /* rien */ }
@@ -188,6 +205,8 @@
       if (b.closest("#ical-box").querySelector("input") && !confirm("Recréer le lien ? L'ancien ne marchera plus : il faudra mettre le nouveau dans ton agenda.")) return;
       return A.loadIcal(await S.call("POST", "ical"));
     }
+    if ((b = g("[data-trash-restore]"))) { b.disabled = true; try { const ps = await S.restoreTrash(b.dataset.trashRestore); await S.log({ level: "change", text: "Remis depuis la corbeille : " + (ps[0] || {}).title, postId: (ps[0] || {}).id }); U.toast("Post remis"); A.render(); } catch (err) { b.disabled = false; U.toast("Impossible : " + err.message); } return; }
+    if ((b = g("[data-trash-empty]"))) { if (!confirm("Vider la corbeille ? Ces posts seront supprimés pour de bon.")) return; await S.emptyTrash(); await S.log({ level: "change", text: "Corbeille vidée" }); U.toast("Corbeille vidée"); A.loadTrash(); return; }
     if ((b = g("[data-bk-now]"))) { b.disabled = true; try { const r = await S.call("POST", "backups"); U.toast("Sauvegarde faite : " + r.posts + " posts" + (r.drive ? ", copie dans le Drive" : "")); } catch (x) { U.toast("Sauvegarde impossible : " + x.message); } b.disabled = false; return A.loadBackups(); }
     if ((b = g("[data-bk-restore]"))) {
       if (!confirm("Remplacer tous les posts et les réglages par la sauvegarde du " + b.dataset.bkLabel + " ? L'état actuel est sauvegardé juste avant, tu pourras revenir en arrière.")) return;

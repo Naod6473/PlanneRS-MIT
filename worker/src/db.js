@@ -30,10 +30,35 @@ export async function savePosts(env, posts) {
   await env.DB.batch(posts.map((p) => st.bind(...row(p))));
 }
 
-export const deletePost = (env, id) => env.DB.batch([
-  env.DB.prepare("DELETE FROM posts WHERE id = ?").bind(id),
-  env.DB.prepare("DELETE FROM posts WHERE json_extract(data, '$.parent') = ?").bind(id),
-]);
+// Corbeille : un post supprimé (avec ce qui le suit) y reste 30 jours, récupérable.
+export const TRASH_DAYS = 30;
+const TRASH_MAX = 300;
+export function pruneTrash(list, nowMs) {
+  const lim = (nowMs || Date.now()) - TRASH_DAYS * 864e5;
+  return (list || []).filter((e) => Date.parse(e.at) >= lim).slice(0, TRASH_MAX);
+}
+export async function getTrash(env) { return pruneTrash(await getKV(env, "trash")); }
+export async function deletePost(env, id, by) {
+  const rows = (await env.DB.prepare("SELECT data FROM posts WHERE id = ? OR json_extract(data, '$.parent') = ?").bind(id, id).all()).results || [];
+  const posts = rows.map((r) => JSON.parse(r.data));
+  if (posts.length) {
+    const t = await getTrash(env);
+    t.unshift({ id: id + "@" + Date.now().toString(36), at: new Date().toISOString(), by: by || null, posts });
+    await putKV(env, "trash", pruneTrash(t));
+  }
+  await env.DB.batch([
+    env.DB.prepare("DELETE FROM posts WHERE id = ?").bind(id),
+    env.DB.prepare("DELETE FROM posts WHERE json_extract(data, '$.parent') = ?").bind(id),
+  ]);
+}
+export async function restoreTrash(env, entryId) {
+  const t = await getTrash(env);
+  const e = t.find((x) => x.id === entryId);
+  if (!e) return null;
+  await savePosts(env, e.posts);
+  await putKV(env, "trash", t.filter((x) => x !== e));
+  return e;
+}
 
 export const addLog = (env, e) => env.DB.prepare("INSERT INTO log (at, level, text, why, post_id) VALUES (?, ?, ?, ?, ?)")
   .bind(e.at, e.level || "info", String(e.text || "").slice(0, 2000), e.why ? String(e.why).slice(0, 2000) : null, e.postId || null).run();

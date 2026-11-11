@@ -93,7 +93,7 @@ Un clic sur une carte ouvre sa fiche. Elle sert à **voir et agir** (valider, ch
 - **Avant envoi** : ce qui bloque ou mérite attention ;
 - **Changer la date**, **Modifier** (fenêtre de création) ;
 - **Commentaires** : les échanges sur le post (voir [Équipe et validation client](equipe-et-client.md)) ;
-- **Plus** : dupliquer, répéter, lien de validation client, supprimer.
+- **Plus** : dupliquer, répéter, lien de validation client, supprimer (le post va dans la [corbeille](activite-et-reglages.md#espace) 30 jours).
 
 Modifier une légende validée retire sa validation.
 

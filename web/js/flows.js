@@ -315,8 +315,10 @@
         A.render(); A.openPost(p.id); const n = layer().querySelector("#cm-text"); if (n) n.scrollIntoView({ block: "center" }); return;
       }
       case "del":
-        if (!confirm("Supprimer « " + p.title + " » ?")) return;
-        await S.deletePost(p.id); await S.log({ level: "change", text: "Post supprimé : " + p.title }); A.closeLayer(); A.render(); return;
+        if (!confirm("Mettre « " + p.title + " » à la corbeille ? Il reste récupérable 30 jours (Réglages › Espace › Corbeille).")) return;
+        await S.deletePost(p.id); await S.log({ level: "change", text: "Post mis à la corbeille : " + p.title }); A.closeLayer(); A.render();
+        U.toast("Mis à la corbeille", { label: "Annuler", fn: async () => { const t = await S.trashList(); const e = t.find((x) => x.id.startsWith(p.id + "@")); if (e) { await S.restoreTrash(e.id); A.render(); U.toast("Post remis"); } } });
+        return;
     }
     A.render(); A.openPost(p.id);
   }

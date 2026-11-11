@@ -292,7 +292,14 @@ async function api(request, env, path, url, auth) {
   }
   if (path === "log" && m === "POST") { await db.addLog(env, body || {}); return json({ ok: true }); }
   let r;
-  if ((r = path.match(/^posts\/([^/]+)$/)) && m === "DELETE") { await db.deletePost(env, decodeURIComponent(r[1])); return json({ ok: true }); }
+  if ((r = path.match(/^posts\/([^/]+)$/)) && m === "DELETE") { await db.deletePost(env, decodeURIComponent(r[1]), me); return json({ ok: true }); }
+  if (path === "trash" && m === "GET") return json({ trash: (await db.getTrash(env)).map((e) => ({ id: e.id, at: e.at, by: e.by, title: (e.posts[0] || {}).title || "", date: (e.posts[0] || {}).date || null, count: e.posts.length })) });
+  if (path === "trash" && m === "DELETE") { await db.putKV(env, "trash", []); return json({ ok: true }); }
+  if ((r = path.match(/^trash\/([^/]+)\/restore$/)) && m === "POST") {
+    const e = await db.restoreTrash(env, decodeURIComponent(r[1]));
+    if (!e) return err("Introuvable dans la corbeille (plus de 30 jours ?)", 404);
+    return json({ ok: true, posts: e.posts });
+  }
   if ((r = path.match(/^posts\/([^/]+)\/retry$/)) && m === "POST") {
     const s = await state(env);
     const p = s.posts.find((x) => x.id === decodeURIComponent(r[1]));
@@ -622,7 +629,7 @@ export default {
       const s0 = await state(env);
       return mcp.handleHttp(request, {
         state: async () => state(env), save: (ps) => db.savePosts(env, ps), log: (e) => db.addLog(env, e),
-        remove: (id) => db.deletePost(env, id), saveSettings: (s) => db.putKV(env, "settings", s),
+        remove: (id) => db.deletePost(env, id, a.email), saveSettings: (s) => db.putKV(env, "settings", s),
         now: localNow(s0.settings.timezone), me: a.email, canValidate: () => canValidate(env, a.email),
       });
     }
