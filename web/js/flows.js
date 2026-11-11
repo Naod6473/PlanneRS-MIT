@@ -96,7 +96,7 @@
       : (p.thumb ? '<a href="' + safeUrl(p.thumb) + '"' + lbAttr(p.thumb, "Couverture") + ' aria-label="Agrandir la couverture"><img src="' + safeUrl(p.thumb) + '" alt="Couverture"></a>' : "");
     const folder = p.folder ? (isUrl(p.folder) ? '<p><a href="' + safeUrl(p.folder) + '" target="_blank" rel="noopener">Ouvrir le dossier</a></p>' : '<p class="muted" id="drv" data-post="' + esc(p.id) + '">Dossier : ' + esc(p.folder) + (driveOn() ? " · recherche…" : "") + "</p>") : "";
     const media = (p.media || []).length ? (preview ? '<div class="media">' + preview + "</div>" : "") +
-      '<div class="box"><h4>Fichiers</h4><p id="drv-files">' + p.media.map((m) => isUrl(m.url) ? '<a href="' + safeUrl(m.url) + '"' + (isImg(m) ? lbAttr(m.url, m.name) : ' target="_blank" rel="noopener"') + ">" + esc(m.name) + "</a>" : esc(m.name)).join("<br>") + "</p>" + folder + "</div>" : "";
+      '<div class="box"><h3 class="bh">Fichiers</h3><p id="drv-files">' + p.media.map((m) => isUrl(m.url) ? '<a href="' + safeUrl(m.url) + '"' + (isImg(m) ? lbAttr(m.url, m.name) : ' target="_blank" rel="noopener"') + ">" + esc(m.name) + "</a>" : esc(m.name)).join("<br>") + "</p>" + folder + "</div>" : "";
     const igSrc = { video: vid && vid.url, poster: p.thumb, images: imgs.map((m) => driveThumb(m.url)).concat(!imgs.length && !vid && p.thumb ? [p.thumb] : []) };
     const igModes = p.format === "reel" || p.format === "video" ? [["reel", "Reel"], ["feed", "Fil"], ["grid", "Profil"]] : p.format === "story" ? [] : [["feed", "Fil"], ["grid", "Profil"]];
     const igBox = (p.networks || []).includes("instagram") && igModes.length ? '<details class="box igbox"><summary style="cursor:pointer;font-weight:600">' + icon("eye") + " Aperçu sur Instagram</summary>" +
@@ -111,7 +111,7 @@
       const f = p.failure || {};
       fail = '<div class="box" style="border-color:var(--fail)"><h4>Ce qui s\'est passé</h4><p>' + esc(f.what || "L'envoi a échoué.") + "</p><h4>Pourquoi</h4><p>" + esc(f.why || "Voir le journal.") + "</p><h4>Ce que tu peux faire</h4><p>" + esc(f.todo || "Réessayer, poster à la main, ou reprogrammer.") + "</p></div>";
     }
-    const res = p.results ? '<div class="box"><h4>Par réseau</h4><div class="netres">' + Object.entries(p.results).map(([n, r]) =>
+    const res = p.results ? '<div class="box"><h3 class="bh">Par réseau</h3><div class="netres">' + Object.entries(p.results).map(([n, r]) =>
       "<div>" + brand(n) + "<span>" + (r.status === "ok" ? "Publié" : r.status === "failed" ? "Échec" + (r.code ? " (" + esc(r.code) + ")" : "") : r.status === "skipped" ? "Non tenté" : esc(r.status)) +
       (r.error ? ' <span class="muted">· ' + esc(r.status === "skipped" ? String(r.error).replace(/^Non tenté\s*:\s*/i, "") : r.error) + "</span>" : "") + (r.url ? ' · <a href="' + safeUrl(r.url) + '" target="_blank" rel="noopener">voir</a>' : "") + "</span></div>").join("") + "</div></div>" : "";
     const slotOpts = S.state.settings.slots.map((s) => '<option value="' + s.time + '"' + (p.time === s.time ? " selected" : "") + ">" + s.time + " · " + esc(s.label) + "</option>").join("");
@@ -157,7 +157,7 @@
       "<h2>" + esc(p.title) + "</h2>" +
       (parent ? '<p class="muted" style="margin:0">Lié à <button class="btn quiet" style="min-height:24px;padding:0 4px" data-open="' + parent.id + '">' + esc(parent.title) + "</button> : il suit ses déplacements.</p>" : "") +
       fail + res + media + igBox + netBox +
-      (p.format === "story" ? '<div class="box"><h4>Consigne</h4><p>' + (p.note ? esc(p.note) : "Aucune.") + '</p><p class="muted">Une story n\'a pas de légende : rien n\'est écrit sous l\'image.</p></div>' :
+      (p.format === "story" ? '<div class="box"><h3 class="bh">Consigne</h3><p>' + (p.note ? esc(p.note) : "Aucune.") + '</p><p class="muted">Une story n\'a pas de légende : rien n\'est écrit sous l\'image.</p></div>' :
       '<div><div class="caphead"><label for="cap" style="font-weight:600;font-size:13px">Légende</label>' + capTabs + "</div>" + '<p class="muted caphint" id="caphint" hidden></p>' + (done ? "" : '<button type="button" class="lk muted rwbtn" id="rw" data-act="rewrite" hidden>' + icon("spark") + '<span>Réécrire avec Claude</span></button>') + '<textarea id="cap" class="caption"' + (done ? " readonly" : "") + ">" + esc(p.caption || "") + "</textarea>" + tplRow + '<div class="cmeta"><span id="capn">' + (p.caption || "").length + " caractères · " + C.hashtags(p.caption) + ' hashtags</span><span><button class="btn quiet" style="min-height:26px" data-act="copy">' + icon("copy") + "Copier</button>" +
       (done ? "" : '<button class="btn sm primary" data-act="savecap" id="savecap" hidden>' + icon("check") + "Enregistrer la légende</button>" + (opts.saved ? '<span class="saved" role="status">' + icon("check") + "Enregistré</span>" : "")) + "</span></div></div>") +
       move + '<div><h3 class="sec-h"><span id="chk-h">' + (soft ? "À compléter avant de programmer" : "Avant envoi") + '</span></h3><ul class="checks">' + checks.map((c) => '<li class="' + (soft && c.level !== "ok" ? "todo" : c.level) + '" data-level="' + c.level + '">' + icon(c.level === "ok" ? "check" : soft ? "pen" : c.level === "block" ? "x" : "alert") + "<span>" + esc(c.text) + "</span></li>").join("") + "</ul>" +
@@ -165,7 +165,7 @@
       '<div class="comments"><h3 class="sec-h"><span>Commentaires' + ((p.comments || []).length ? " · " + p.comments.length : "") + "</span></h3>" +
       (p.comments || []).map((c) => '<div class="cm"><div class="cm-h"><b>' + esc(c.by || "Quelqu'un") + '</b><time class="muted">' + esc(C.shortDay(String(c.at).slice(0, 10))) + " " + esc(String(c.at).slice(11, 16)) + "</time></div><p>" + esc(c.text) + "</p></div>").join("") +
       '<div class="cm-new"><textarea id="cm-text" rows="2" placeholder="Écrire un commentaire…" aria-label="Nouveau commentaire"></textarea><button class="btn sm" data-act="comment">Envoyer</button></div></div>' +
-      (kids.length ? '<div class="box"><h4>Suit ce post</h4>' + kids.map((k) => '<p><button class="btn quiet kidlink" data-open="' + k.id + '">' + brands(k.networks) + " " + esc(C.FORMATS[k.format]) + " " + k.time + " · " + esc(k.title) + "</button></p>").join("") + "</div>" : "") +
+      (kids.length ? '<div class="box"><h3 class="bh">Suit ce post</h3>' + kids.map((k) => '<p><button class="btn quiet kidlink" data-open="' + k.id + '">' + brands(k.networks) + " " + esc(C.FORMATS[k.format]) + " " + k.time + " · " + esc(k.title) + "</button></p>").join("") + "</div>" : "") +
       "</div><div class=\"sh-foot\">" + foot + "</div>";
     openLayer(html, p.title);
     const L = layer();
@@ -877,7 +877,7 @@
   // ------------------------------------------------------------ Recherche (Ctrl+K)
   A.openSearch = function () {
     A.lastFocus = document.activeElement;
-    layer().innerHTML = '<div class="scrim" data-close></div><div class="palette" role="dialog" aria-modal="true" aria-label="Rechercher"><input id="q" placeholder="Rechercher un post, un numéro, une vue…" autocomplete="off" aria-label="Rechercher"><div class="res" id="qr" role="listbox"></div></div>';
+    layer().innerHTML = '<div class="scrim" data-close></div><div class="palette" role="dialog" aria-modal="true" aria-label="Rechercher"><input id="q" placeholder="Rechercher un post, un numéro, une vue…" autocomplete="off" aria-label="Rechercher" role="combobox" aria-expanded="true" aria-controls="qr" aria-autocomplete="list"><div class="res" id="qr" role="listbox" aria-label="Résultats"></div></div>';
     const q = layer().querySelector("#q"), r = layer().querySelector("#qr");
     const views = [["#today", "Aujourd'hui"], ["#calendar", "Calendrier"], ["#contents", "Contenus"], ["#stats", "Stats"], ["#activity", "Activité"], ["#settings", "Réglages"]];
     const acts = [["new", "Nouveau post", "plus", () => A.newPost()], ["review", "Valider les légendes", "eye", () => A.openReview()], ["valall", "Tout valider", "check", () => A.validateAll()], ["tour", "Revoir la visite guidée", "today", () => A.tour()], ["idea", "Proposer une idée", "bulb", () => A.quick("idea")], ["hole", "Remplir le prochain jour vide", "calendar", () => A.quick("hole")]];
@@ -891,7 +891,10 @@
       r.innerHTML = vs.concat(ps).join("") || '<p class="muted" style="padding:10px 14px">Aucun résultat.</p>';
       sel = 0; mark();
     };
-    const mark = () => r.querySelectorAll("button").forEach((b, k) => b.classList.toggle("sel", k === sel));
+    const mark = () => r.querySelectorAll("button").forEach((b, k) => {
+      b.setAttribute("role", "option"); b.tabIndex = -1; b.id = "qo" + k; b.setAttribute("aria-selected", String(k === sel)); b.classList.toggle("sel", k === sel);
+      if (k === sel) q.setAttribute("aria-activedescendant", b.id);
+    });
     q.addEventListener("input", draw);
     q.addEventListener("keydown", (e) => {
       const bs = r.querySelectorAll("button");

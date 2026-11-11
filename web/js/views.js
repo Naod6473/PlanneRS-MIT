@@ -329,7 +329,7 @@
       '<div class="seg" role="group" aria-label="Affichage">' + [["week", "Semaine"], ["month", "Mois"], ["grid", 'Grille<span class="lbl"> du profil</span>']].map(([k, l]) =>
         '<button data-calmode="' + k + '" aria-pressed="' + (A.calMode === k) + '">' + l + "</button>").join("") + "</div>" +
       '<span class="grow"></span>' + (mode === "week" || mode === "month" ? '<div class="seg small-seg" role="group" aria-label="Densité"><button data-caldense="1" aria-pressed="' + !!A.calCompact + '">Compact</button><button data-caldense="0" aria-pressed="' + !A.calCompact + '">Détaillé</button></div>' : "") + netMenu() +
-      (mode === "agenda" && top().some((p) => !p.date && p.status === "ready") ? '<button class="btn" data-fillweek>' + icon("spark") + '<span class="lbl">Remplir la semaine</span></button>' : "") +
+      (mode === "agenda" && top().some((p) => !p.date && p.status === "ready") ? '<button class="btn" data-fillweek aria-label="Remplir la semaine">' + icon("spark") + '<span class="lbl">Remplir la semaine</span></button>' : "") +
       '<button class="btn primary desk" data-new>' + icon("plus") + "Nouveau post</button>";
     let html;
     if (mode === "agenda") html = agenda();
@@ -359,7 +359,7 @@
     const list = top().filter((p) => p.date && p.date >= days[0] && p.date <= days[6] && calVis(p));
     const rows = slots().map((s) => ({ time: s.time, label: s.label }));
     const off = list.filter((p) => !C.slotOf(p.time, slots()));
-    let h = '<div class="slotgrid" role="grid" aria-label="Semaine par créneaux" style="--rows:' + (rows.length + (off.length ? 1 : 0)) + '"><div class="h"></div>' +
+    let h = '<div class="slotgrid" role="group" aria-label="Semaine par créneaux" style="--rows:' + (rows.length + (off.length ? 1 : 0)) + '"><div class="h"></div>' +
       days.map((d) => '<div class="h' + (d === t ? " is-today" : "") + '">' + esc(C.shortDay(d)) + (d === t ? '<span class="sr"> (aujourd\'hui)</span>' : "") + "</div>").join("");
     rows.forEach((r) => {
       h += '<div class="s"><b>' + r.time + "</b><small>" + esc(r.label) + "</small></div>";
@@ -441,7 +441,7 @@
     const strip = '<div class="daystrip" role="group" aria-label="Jour">' + days.map((d) => { const x = C.parseYmd(d);
       return '<button data-day-pick="' + d + '" data-day="' + d + '" aria-pressed="' + (d === A.day) + '">' + C.DAYS[x.getDay()].slice(0, 3) + "<b>" + x.getDate() + "</b></button>"; }).join("") + "</div>";
     const items = top().filter((p) => p.date === A.day && calVis(p)).sort((a, b) => a.time.localeCompare(b.time));
-    return strip + '<div class="agenda"><div class="day"><h3>' + esc(C.longDate(A.day)) + "</h3>" +
+    return strip + '<div class="agenda"><div class="day"><h2 class="day-h">' + esc(C.longDate(A.day)) + "</h2>" +
       '<div class="todo">' + (items.map((p) => '<div class="arow"><span class="atime">' + p.time + "</span>" + card(p, { kids: kidsOf(p.id), draggable: p.status !== "published" }) + "</div>").join("") || '<div class="empty">Rien ce jour-là.</div>') + "</div></div></div>";
   }
 
@@ -453,10 +453,10 @@
     const locked = k === "published" || k === "scheduled";
     const dots = [["Texte", !!(p.caption || p.note)], ["Média", (p.media || []).length > 0], ["Validé", !!p.captionValidated]];
     const opts = C.STEPS.filter(([s]) => s !== "published" && s !== k).map(([s, l]) => '<option value="' + s + '">' + esc(l) + "</option>").join("");
-    return '<div class="kc pc ' + L.cls + (locked ? " locked" : "") + '" data-open="' + esc(p.id) + '"' + (locked ? "" : ' data-kdrag="' + esc(p.id) + '"') + ' role="button" tabindex="0">' + U.abar(p) +
+    return '<div class="kc pc ' + L.cls + (locked ? " locked" : "") + '" data-open="' + esc(p.id) + '"' + (locked ? "" : ' data-kdrag="' + esc(p.id) + '"') + '>' + U.abar(p) +
       '<span class="row1">' + (p.thumb ? '<img class="thumb" src="' + safeUrl(p.thumb) + '" alt="" draggable="false">' : "") + brands(p.networks) +
       '<span class="fmt muted">' + esc(C.FORMATS[p.format] || "") + (p.date ? " · " + esc(C.shortDay(p.date)) + " " + (p.time || "") : "") + "</span>" + (L.hand ? '<span class="hand" title="À poster à la main">' + icon("hand") + "</span>" : "") + (locked ? '<span class="lk2" title="Verrouillé">' + icon("lock") + "</span>" : "") + "</span>" +
-      '<span class="ttl">' + esc(p.title) + "</span>" +
+      '<button type="button" class="ttl kopen" data-open="' + esc(p.id) + '">' + esc(p.title) + "</button>" +
       '<span class="krow"><span class="kreq">' + dots.map(([l, ok]) => '<span class="' + (ok ? "ok" : "") + '" title="' + (ok ? l + " : fait" : l + " : pas encore") + '">' + icon(ok ? "check" : "dot") + l + "</span>").join("") + "</span>" +
       (!locked ? '<label class="kmove" title="Changer d\'étape">' + icon("swap") + '<select data-kmove="' + esc(p.id) + '" aria-label="Déplacer vers"><option value="">Déplacer vers…</option>' + opts + "</select></label>" : "") + "</span></div>";
   }
@@ -481,8 +481,8 @@
         // Publié : seulement les 7 derniers jours (le reste dans la Liste, période « Passés »).
         const max = k === "published" ? Math.max(1, items.filter((p) => !p.date || p.date >= C.addDays(t, -7)).length) : 40;
         const lock = k === "scheduled" || k === "published";
-        return '<section class="col' + (items.length || A.kAdd === k ? "" : " empty") + (lock ? " locked" : "") + '" data-stage="' + k + '"><h3><span>' + (lock ? icon("lock") : "") + l + '</span><span class="muted">' + items.length + "</span>" +
-          (k !== "published" && k !== "scheduled" ? '<button class="iconbtn kadd" data-kadd="' + k + '" aria-label="Ajouter une carte dans ' + esc(l) + '">' + icon("plus") + "</button>" : "") + "</h3>" +
+        return '<section class="col' + (items.length || A.kAdd === k ? "" : " empty") + (lock ? " locked" : "") + '" data-stage="' + k + '"><h2 class="colh"><span>' + (lock ? icon("lock") : "") + l + '</span><span class="muted">' + items.length + "</span>" +
+          (k !== "published" && k !== "scheduled" ? '<button class="iconbtn kadd" data-kadd="' + k + '" aria-label="Ajouter une carte dans ' + esc(l) + '">' + icon("plus") + "</button>" : "") + "</h2>" +
           (A.kAdd === k ? '<form class="knew" data-knew="' + k + '"><input name="t" placeholder="Titre de l\'idée ou du contenu" autocomplete="off" required><div class="acts"><button class="btn primary">Ajouter</button><button class="btn" type="button" data-kadd="">Annuler</button></div></form>' : "") +
           items.slice(0, max).map((p) => kcard(p, k)).join("") +
           (items.length > max ? (k === "published" ? '<button class="btn quiet" data-cmode="list" data-listper="past">Plus ancien (' + (items.length - max) + ")</button>" : '<p class="muted">+ ' + (items.length - max) + "</p>") : "") + "</section>";
@@ -655,7 +655,7 @@
     const st = S.state.stats || (S.mode === "demo" ? A.demoStats() : {}) || {};
     const ig = st.instagram || {}, fb = st.facebook || {};
     const t = today();
-    const tools = '<span class="muted">Relevé ' + esc(agoText(st.updated)) + '</span><a class="btn" href="#report">' + icon("chart") + '<span class="lbl">Bilan du mois</span></a><button class="btn" data-export-csv title="Exporter les publications et leurs chiffres (CSV)">' + icon("download") + '<span class="lbl">CSV</span></button><button class="btn" data-stats-refresh title="Actualiser" aria-label="Actualiser les statistiques">' + icon("undo") + '<span class="lbl">Actualiser</span></button>';
+    const tools = '<span class="muted">Relevé ' + esc(agoText(st.updated)) + '</span><a class="btn" href="#report" aria-label="Bilan du mois">' + icon("chart") + '<span class="lbl">Bilan du mois</span></a><button class="btn" data-export-csv title="Exporter les publications et leurs chiffres (CSV)">' + icon("download") + '<span class="lbl">CSV</span></button><button class="btn" data-stats-refresh title="Actualiser" aria-label="Actualiser les statistiques">' + icon("undo") + '<span class="lbl">Actualiser</span></button>';
     if (!st.updated) return { title: "Stats", tools, html: '<div class="empty">Pas encore de statistiques. Elles sont relevées chaque matin à partir de 7 h pour Instagram et Facebook (comptes connectés dans Réglages › Comptes). Tu peux aussi cliquer sur « Actualiser ».</div>' };
 
     // Publications de l'app avec leurs chiffres, triées au choix.
@@ -834,7 +834,7 @@
     const top = b.hours[0], day = b.days[0];
     return '<section class="panel"><h2 class="sec-h"><span>Quand publier</span><span class="muted" style="font-weight:400;font-size:13px">' + b.n + " posts analysés</span></h2>" +
       "<p>" + (top ? "Meilleure heure : <b>" + top.k + " h</b> (" + (top.gain >= 0 ? "+" : "") + top.gain + " % par rapport à ta moyenne)" : "") + (day ? ". Meilleur jour : <b>" + C.DAYS[(day.k + 1) % 7] + "</b> (" + (day.gain >= 0 ? "+" : "") + day.gain + " %)" : "") + ".</p>" +
-      '<div class="heat-wrap"><table class="heat"><thead><tr><th></th>' + hs.map((h) => "<th>" + h + " h</th>").join("") + "</tr></thead><tbody>" +
+      '<div class="heat-wrap"><table class="heat"><thead><tr><th><span class="sr">Jour</span></th>' + hs.map((h) => "<th>" + h + " h</th>").join("") + "</tr></thead><tbody>" +
       D.map((d, w) => "<tr><th>" + d + "</th>" + hs.map((h) => cell(w, h)).join("") + "</tr>").join("") + "</tbody></table></div>" +
       '<p class="muted" style="font-size:12px;margin:8px 0 0">Écart par rapport à ta moyenne (vues, sinon portée ou interactions). Une case vide : pas encore de post à ce moment-là.</p></section>';
   };

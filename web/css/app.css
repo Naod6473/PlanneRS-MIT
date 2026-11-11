@@ -279,7 +279,7 @@ main{min-width:0;display:flex;flex-direction:column}
 .pgrid .future{outline:2px dashed var(--rev);outline-offset:-3px}
 .pgrid .ph{display:grid;place-items:center;height:100%;padding:6px;font-size:12px;color:var(--ink3)}
 .agenda{display:flex;flex-direction:column;gap:14px}
-.agenda .day h3{margin:0 0 6px;font-size:14px}
+.agenda .day .day-h{margin:0 0 6px;font-size:14px}
 .daystrip{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}
 .daystrip button{flex:none;width:46px;padding:6px 0;border:1px solid var(--line);border-radius:10px;background:var(--panel);cursor:pointer;font-size:12px;color:var(--ink3)}
 .daystrip button b{display:block;font-size:16px;color:var(--ink)}
@@ -296,11 +296,11 @@ main{min-width:0;display:flex;flex-direction:column}
 /* ---------- Contenus ---------- */
 .board{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(220px,1fr);gap:12px;overflow-x:auto;padding-bottom:8px}
 .col{border:1px solid var(--line);border-radius:12px;background:var(--panel2);padding:8px;display:flex;flex-direction:column;gap:8px;min-height:200px}
-.col h3{margin:2px 4px;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:6px}
-.col h3 > span:first-child{display:inline-flex;align-items:center;gap:5px}
-.col h3 svg.i{width:13px;height:13px;color:var(--ink3)}
-.col h3 .kadd{margin-left:auto;width:26px;height:26px}
-.col h3 .muted{margin-left:auto}.col h3 .kadd{margin-left:2px}
+.col .colh{margin:2px 4px;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:6px}
+.col .colh > span:first-child{display:inline-flex;align-items:center;gap:5px}
+.col .colh svg.i{width:13px;height:13px;color:var(--ink3)}
+.col .colh .kadd{margin-left:auto;width:26px;height:26px}
+.col .colh .muted{margin-left:auto}.col .colh .kadd{margin-left:2px}
 .col.locked{background:color-mix(in srgb,var(--panel2) 70%,var(--bg))}
 .col.over{outline:2px dashed var(--action);outline-offset:-2px;background:color-mix(in srgb,var(--action) 6%,var(--panel2))}
 .col.locked.over{outline-color:var(--fail)}
@@ -441,7 +441,7 @@ table.list tr.clk:hover td{background:var(--panel2)}
 .checks li{display:flex;gap:8px;align-items:flex-start;font-size:13px}
 .checks .block{color:var(--fail)}.checks .warn{color:var(--main)}.checks .ok{color:var(--pub)}.checks .todo{color:var(--ink2)}.checks .todo svg.i{color:var(--ink3)}
 .box{border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--panel2)}
-.box h4{margin:0 0 4px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3)}
+.box h4,.box h3.bh{margin:0 0 4px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3)}
 .box p{margin:0 0 10px;font-size:13px}
 .box p:last-child{margin:0}
 .netres{display:flex;flex-direction:column;gap:6px}
@@ -561,7 +561,7 @@ table.list tr.clk:hover td{background:var(--panel2)}
   .daystrip button{flex:1;width:auto;min-width:0;font-size:12px}
   .daystrip button b{font-size:18px}
   .agenda{margin-top:12px}
-  .agenda .day h3{font-size:16px;margin-bottom:10px}
+  .agenda .day .day-h{font-size:16px;margin-bottom:10px}
   .agenda .todo{display:flex;flex-direction:column;gap:10px}
   .arow{display:grid;grid-template-columns:50px minmax(0,1fr);gap:8px;align-items:start}
   .atime{font:700 15px var(--m);padding-top:10px;color:var(--ink)}
@@ -647,7 +647,7 @@ a.tcard.link .go{display:inline-flex;align-items:center;gap:4px;font-weight:600;
 .igav i{display:grid;place-items:center;border-radius:50%;background:#fff;border:2px solid #fff;font:700 12px/1 system-ui;color:#262626;font-style:normal;background-clip:padding-box;box-shadow:inset 0 0 0 20px #efefef}
 .igframe{position:relative;aspect-ratio:4/5;background:#efefef}
 .igm{width:100%;height:100%;object-fit:cover;display:block}
-.igph{display:grid;place-items:center;align-content:center;gap:6px;color:#8e8e8e;height:100%}
+.igph{display:grid;place-items:center;align-content:center;gap:6px;color:#5f5f5f;height:100%}
 .igcount{position:absolute;top:10px;right:10px;background:rgb(0 0 0/.65);color:#fff;font-size:12px;padding:2px 8px;border-radius:999px}
 .igacts{display:flex;align-items:center;gap:14px;padding:8px 10px 4px}
 .igacts svg{width:22px;height:22px}
@@ -754,7 +754,7 @@ table.list td.ld .mono{font-size:12px;color:var(--ink3)}
 /* Mobile : cibles tactiles d'au moins 44 px */
 @media (max-width:760px){
   .seg button{min-height:44px}
-  .col h3 .kadd,.iconbtn,.iconbtn.sm{min-width:44px;min-height:44px}
+  .col .colh .kadd,.iconbtn,.iconbtn.sm{min-width:44px;min-height:44px}
   .kmove{width:44px;height:44px}
   .btn,.btn.sm{min-height:44px}
   .callegend .lg{min-height:40px}
@@ -1053,9 +1053,7 @@ table.list tr.sel td{background:var(--rev-bg)}
 .heat th{font-weight:500;color:var(--ink3);padding:2px 4px;white-space:nowrap}
 .heat td{min-width:44px;height:30px;border-radius:6px;background:var(--panel2);text-align:center;position:relative}
 .heat td[title]{background:color-mix(in srgb,var(--focus) calc(var(--a) * 100%),var(--panel2))}
-.heat td span{font-variant-numeric:tabular-nums;color:var(--ink);mix-blend-mode:normal}
-.heat td[style*="--a:0.9"],.heat td[style*="--a:1"],.heat td[style*="--a:0.8"],.heat td[style*="--a:0.7"]{color:#fff}
-.heat td[style*="--a:0.9"] span,.heat td[style*="--a:1"] span,.heat td[style*="--a:0.8"] span,.heat td[style*="--a:0.7"] span{color:#fff}
+.heat td span{font-variant-numeric:tabular-nums;color:var(--ink);background:color-mix(in srgb,var(--panel) 88%,transparent);padding:0 4px;border-radius:4px}
 .cp-best{font-size:12px;border:1px dashed var(--line2);border-radius:999px;padding:3px 10px;background:none;color:var(--ink2);cursor:pointer;white-space:nowrap}
 .cp-best b{color:var(--ink)}
 
@@ -1146,5 +1144,9 @@ table.list tr.sel td{background:var(--rev-bg)}
 .hand svg.i{width:14px;height:14px}
 .bdg{display:inline-flex;align-items:center;gap:6px}
 .mline.is-failed,.mline.is-late{box-shadow:inset 2px 0 0 var(--fail)}
-.kanban .col[data-stage] h3>span:first-child{color:color-mix(in srgb,var(--tint,var(--ink)),var(--ink) 25%)}
+.kanban .col[data-stage] .colh>span:first-child{color:color-mix(in srgb,var(--tint,var(--ink)),var(--ink) 25%)}
 .kanban .col[data-stage="idea"]{--tint:var(--grey)}.kanban .col[data-stage="prep"]{--tint:var(--todo)}.kanban .col[data-stage="review"]{--tint:var(--rev)}.kanban .col[data-stage="scheduled"]{--tint:var(--sched)}.kanban .col[data-stage="published"]{--tint:var(--pub)}
+.kc .kopen{all:unset;font-weight:600;font-size:13.5px;line-height:1.3;cursor:inherit;overflow-wrap:anywhere}
+.kc .kopen:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:4px}
+.sc-side button[aria-pressed="false"]{opacity:1;color:var(--ink3)}
+.sc-side button[aria-pressed="false"] .brand{opacity:.55}
