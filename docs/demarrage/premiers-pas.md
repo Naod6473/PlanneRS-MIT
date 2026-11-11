@@ -58,7 +58,7 @@ Voir [Stockage : vue d'ensemble](../stockage/README.md).
 ## 6. Créer et programmer un post
 
 1. **Contenus** › « + » dans la colonne Idée, ou **Aujourd'hui** › « Nouveau contenu ».
-2. Ouvre la carte : titre, format, réseaux (le premier est le **principal**, les suivants sont des **relais**), médias, légende.
+2. Ouvre la carte, puis **Modifier** : réseaux (le premier est le **principal**, les suivants sont des **relais**), texte, médias, et l'aperçu à côté (voir [Créer ou modifier un post](../utilisation/contenus.md#créer-ou-modifier-un-post)).
 3. Vérifie le bloc **Avant envoi** : il liste ce qui bloque (légende non validée, média manquant, texte trop long…).
 4. **Valider la légende**.
 5. **Changer la date** › choisis le jour et le créneau, ou glisse la carte dans le calendrier.

@@ -27,6 +27,7 @@ import * as x from "./adapters/x.js";
 import * as linkedin from "./adapters/linkedin.js";
 import * as pinterest from "./adapters/pinterest.js";
 import * as youtube from "./adapters/youtube.js";
+import * as tiktok from "./adapters/tiktok.js";
 import * as daily from "./daily.js";
 import Core from "../../web/js/core.js";
 import * as ical from "./ical.js";
@@ -39,7 +40,7 @@ import { graph } from "./adapters/meta.js";
 import * as rss from "./rss.js";
 import * as plugs from "./plugs.js";
 
-const ADAPTERS = { instagram, facebook, threads, linkedin, x, bluesky, mastodon, pinterest, youtube };
+const ADAPTERS = { instagram, facebook, threads, linkedin, x, bluesky, mastodon, pinterest, youtube, tiktok };
 const STORAGE = { gdrive, gdrivewrite, onedrive, dropbox, webdav, ghpages, r2: s3 };
 const SOURCES = ["gdrive", "onedrive", "dropbox", "webdav"], HOSTS = ["ghpages", "r2"];
 
@@ -168,7 +169,7 @@ async function api(request, env, path, url, auth) {
     const p = await db.getPost(env, decodeURIComponent(r0[1]));
     if (!p) return err("Post introuvable", 404);
     const net = String((body && body.net) || "");
-    if (!ADAPTERS[net] && net !== "tiktok") return err("Réseau inconnu");
+    if (!ADAPTERS[net]) return err("Réseau inconnu");
     const st = (await db.getKV(env, "settings")) || {};
     const draft = Object.assign({}, p, typeof (body && body.caption) === "string" ? { caption: body.caption } : {});
     try { return json(await rewriter.rewrite(aiClient(env), draft, net, st)); }
@@ -307,7 +308,7 @@ async function api(request, env, path, url, auth) {
     try {
       const detail = ad.test ? await ad.test(env, cred, null) : "Enregistré";
       info = { status: "ok", account: detail, detail: "Connecté le " + localNow().replace("T", " à ") };
-    } catch (e) { info = { status: e.pending ? "pending" : "error", account: e.pending ? "En attente de l'autorisation Google" : "", detail: e.why || e.message }; }
+    } catch (e) { info = { status: e.pending ? "pending" : "error", account: e.pending ? "En attente de l'autorisation " + (id === "tiktok" ? "TikTok" : "Google") : "", detail: e.why || e.message }; }
     if (channels[id] && info.status === "ok") {
       try { await channels[id].send(env, cred, { event: "test", title: "PlanneRs", text: "Notifications activées." }); info.account = "Message de test envoyé"; }
       catch (e) { info = { status: "error", account: "", detail: e.message }; }
@@ -372,6 +373,29 @@ async function api(request, env, path, url, auth) {
     await db.setAccount(env, target, info, cred);
     await db.putKV(env, "oauth-state", null);
     return back(info.status === "ok" ? (target === "youtube" ? "YouTube autorisé" : "Drive autorisé") : "Échec : " + info.detail);
+  }
+  // TikTok : même principe que Google (client de l'app, puis autorisation du compte).
+  if (path === "oauth/tiktok/start" && m === "GET") {
+    const cred = await db.getCred(env, "tiktok");
+    if (!cred || !cred.clientKey) return err("Enregistre d'abord la Client key et le Client secret dans Réglages › Comptes › TikTok.", 400);
+    const state = crypto.randomUUID();
+    await db.putKV(env, "oauth-state", { state, at: Date.now(), target: "tiktok" });
+    return Response.redirect(tiktok.authUrl(cred, url.origin, state), 302);
+  }
+  if (path === "oauth/tiktok/callback" && m === "GET") {
+    const st = await db.getKV(env, "oauth-state");
+    const back = (msg) => Response.redirect(url.origin + "/#settings/" + encodeURIComponent(msg), 302);
+    if (url.searchParams.get("error")) return back("Autorisation TikTok refusée");
+    if (!st || st.target !== "tiktok" || st.state !== url.searchParams.get("state") || Date.now() - st.at > 15 * 60000) return back("Lien d'autorisation expiré, recommence");
+    const cred = await db.getCred(env, "tiktok");
+    let info;
+    try {
+      await tiktok.exchange(cred, url.origin, url.searchParams.get("code"));
+      info = { status: "ok", account: await tiktok.test(env, cred, null), detail: "Autorisé le " + localNow().replace("T", " à ") };
+    } catch (e) { info = { status: "error", account: "", detail: e.why || e.message }; }
+    await db.setAccount(env, "tiktok", info, cred);
+    await db.putKV(env, "oauth-state", null);
+    return back(info.status === "ok" ? "TikTok autorisé" : "Échec : " + info.detail);
   }
   if (path === "drive/upload" && m === "POST") {
     const info = (await db.accountsInfo(env)).gdrivewrite;

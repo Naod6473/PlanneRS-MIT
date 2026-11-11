@@ -5,7 +5,7 @@
   const { esc, safeUrl, icon, brand, brands, status } = U;
 
   const layer = () => document.getElementById("layer");
-  A.closeLayer = function () { layer().innerHTML = ""; document.body.style.overflow = ""; if (A.lastFocus) { try { A.lastFocus.focus(); } catch (e) { /* rien */ } } };
+  A.closeLayer = function () { if (A.beforeClose && A.beforeClose() === false) return; A.beforeClose = null; layer().innerHTML = ""; document.body.style.overflow = ""; if (A.lastFocus) { try { A.lastFocus.focus(); } catch (e) { /* rien */ } } };
   function openLayer(html, label) {
     A.lastFocus = document.activeElement;
     layer().innerHTML = '<div class="scrim" data-close></div><div class="sheet" role="dialog" aria-modal="true" aria-label="' + esc(label) + '">' + html + "</div>";
@@ -146,6 +146,7 @@
     else if (st === "scheduled") foot = '<button class="btn" data-act="showmove">Changer la date</button><button class="btn" data-act="unvalidate">Retirer la validation</button>' + (A.stageOf && A.stageOf(p) === "scheduled" ? '<button class="btn" data-unlock="' + esc(p.id) + '">' + icon("unlock") + "Débloquer</button>" : "");
     else if (st === "ready" || st === "draft") foot = '<button class="btn primary" data-act="showmove">Programmer</button>' + (st === "draft" ? '<button class="btn" data-act="toready">Marquer prêt</button>' : "");
     else if (done) foot = (p.url ? '<a class="btn primary" href="' + safeUrl(p.url) + '" target="_blank" rel="noopener">' + icon("open") + "Voir le post</a>" : "") + (p.parent ? "" : '<button class="btn" data-act="recycle">' + icon("undo") + "Reprendre plus tard</button>");
+    if (!done) foot += '<button class="btn" data-act="compose">' + icon("pen") + "Modifier</button>";
     foot += '<span style="flex:1"></span><details class="moremenu"><summary class="btn quiet" aria-label="Plus d\'actions">' + icon("more") + '<span class="lbl2">Plus</span></summary><div class="mm-list" role="menu">' +
       '<button class="btn quiet" role="menuitem" data-act="dup">' + icon("dup") + "Dupliquer</button>" +
       (done ? "" : '<button class="btn quiet" role="menuitem" data-act="share">' + icon("send") + "Lien de validation client</button>") +
@@ -256,6 +257,7 @@
     const capChanged = cap && capsDirty(L, p);
     switch (act) {
       case "copy": U.copy(cap ? cap.value : p.caption || ""); return;
+      case "compose": A.closeLayer(); A.compose(p.id); return;
       case "savecap":
         applyCaps(L, p); p.captionValidated = false;
         await S.savePosts([p]); await S.log({ level: "change", text: "Légende modifiée : " + p.title + " (à valider)", postId: p.id });
@@ -537,12 +539,7 @@
   };
 
   // ------------------------------------------------------------ Nouveau post
-  A.newPost = async function () {
-    const p = { id: "n" + Date.now().toString(36), ref: "", title: "Nouveau post", format: "reel", networks: [(S.state.settings.networks || ["instagram"])[0]],
-      date: null, time: null, caption: "", captionValidated: false, manual: false, media: [], stage: "idea", status: "draft" };
-    await S.savePosts([p]); A.render(); A.openPost(p.id);
-    const t = layer().querySelector("#ed-title"); if (t) { t.focus(); t.select(); }
-  };
+  A.newPost = function () { A.compose(); };
 
   // ------------------------------------------------------------ Poster à la main
   A.openManual = function (id, onlyNet) {
@@ -904,7 +901,8 @@
       (c.docs.length ? '<div class="box"><h4>Documentation officielle</h4>' + c.docs.map(([l, u]) => '<p><a href="' + safeUrl(u) + '" target="_blank" rel="noopener">' + esc(l) + " " + icon("open") + "</a></p>").join("") + "</div>" : "") +
       (window.CONNECTOR_GUIDES && window.CONNECTOR_GUIDES[id] ? '<div class="box"><h4>Guide pas à pas</h4><p><a href="' + safeUrl(window.CONNECTOR_GUIDES.base + window.CONNECTOR_GUIDES[id]) + '" target="_blank" rel="noopener">Configurer ' + esc(c.name) + " " + icon("open") + "</a></p></div>" : "") +
       ((id === "gdrivewrite" || id === "youtube") && S.mode === "api" ? '<div class="box"><h4>URI de redirection à déclarer dans Google Cloud</h4><p class="mono" style="word-break:break-all">' + esc(location.origin + "/api/oauth/google/callback") + "</p></div>" : "") +
-      form + '</div><div class="sh-foot">' + (pending ? '<a class="btn primary big" href="api/oauth/google/start' + (id === "youtube" ? "?for=youtube" : "") + '">' + icon("open") + 'Autoriser avec Google</a><button class="btn danger" data-cact="off">Recommencer</button>' : a && a.status !== "error" ? '<button class="btn" data-cact="test">Tester la connexion</button><button class="btn danger" data-cact="off">Déconnecter</button>' :
+      (id === "tiktok" && S.mode === "api" ? '<div class="box"><h4>URI de redirection à déclarer dans l\'app TikTok</h4><p class="mono" style="word-break:break-all">' + esc(location.origin + "/api/oauth/tiktok/callback") + "</p></div>" : "") +
+      form + '</div><div class="sh-foot">' + (pending ? id === "tiktok" ? '<a class="btn primary big" href="api/oauth/tiktok/start">' + icon("open") + 'Autoriser avec TikTok</a><button class="btn danger" data-cact="off">Recommencer</button>' : '<a class="btn primary big" href="api/oauth/google/start' + (id === "youtube" ? "?for=youtube" : "") + '">' + icon("open") + 'Autoriser avec Google</a><button class="btn danger" data-cact="off">Recommencer</button>' : a && a.status !== "error" ? '<button class="btn" data-cact="test">Tester la connexion</button><button class="btn danger" data-cact="off">Déconnecter</button>' :
         (S.mode === "api" && !fields ? '<p class="muted" style="margin:0">Ce connecteur n\'est pas encore disponible dans cette version.</p>' : '<button class="btn primary big" data-cact="on">Se connecter à ' + esc(c.name) + "</button>")) + "</div>", c.name);
     layer().querySelectorAll("input[data-fill]").forEach((inp) => inp.addEventListener("change", async () => {
       const file = inp.files && inp.files[0]; if (!file) return;

@@ -48,7 +48,8 @@ Chaque page commence par un en-tête (`title`, `description`, `category`, `tags`
 | [Mastodon](reseaux/mastodon.md) | Automatique | Jeton d'application de l'instance |
 | [YouTube (Shorts)](reseaux/youtube.md) | Automatique | Client OAuth Google |
 | [Pinterest](reseaux/pinterest.md) | Automatique | Jeton d'accès + tableau |
-| [TikTok, Buffer](reseaux/a-venir.md) | À la main (rappel) | Rien pour l'instant |
+| [TikTok](reseaux/tiktok.md) | Automatique (vidéos, brouillon ou direct) | App développeur TikTok |
+| [Buffer, à la main](reseaux/a-venir.md) | À la main (rappel) | Rien pour l'instant |
 
 ## Stockage des médias
 

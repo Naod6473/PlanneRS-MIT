@@ -351,6 +351,8 @@
       "category": "Utilisation",
       "tags": [
         "contenus",
+        "créer un post",
+        "fenêtre de création",
         "kanban",
         "idée",
         "légende",
@@ -362,7 +364,7 @@
         "carrousel"
       ],
       "order": 3,
-      "updated": "2026-11-10",
+      "updated": "2026-11-11",
       "headings": [
         {
           "level": 2,
@@ -388,6 +390,11 @@
           "level": 2,
           "text": "Les médias",
           "anchor": "les-médias"
+        },
+        {
+          "level": 2,
+          "text": "Créer ou modifier un post",
+          "anchor": "créer-ou-modifier-un-post"
         },
         {
           "level": 2,
@@ -1017,6 +1024,44 @@
       ]
     },
     {
+      "path": "reseaux/tiktok.md",
+      "title": "TikTok",
+      "description": "Connecter un compte TikTok avec une app développeur pour envoyer des vidéos, en brouillon (à publier depuis l'appli) ou en publication directe.",
+      "category": "Réseaux sociaux",
+      "tags": [
+        "tiktok",
+        "vidéo",
+        "oauth",
+        "brouillon",
+        "audit",
+        "content posting api"
+      ],
+      "order": 8,
+      "updated": "2026-11-11",
+      "headings": [
+        {
+          "level": 2,
+          "text": "1. Créer l'app TikTok",
+          "anchor": "1-créer-lapp-tiktok"
+        },
+        {
+          "level": 2,
+          "text": "2. Connecter dans PlanneRs",
+          "anchor": "2-connecter-dans-planners"
+        },
+        {
+          "level": 2,
+          "text": "Comment se passe un envoi",
+          "anchor": "comment-se-passe-un-envoi"
+        },
+        {
+          "level": 2,
+          "text": "Erreurs fréquentes",
+          "anchor": "erreurs-fréquentes"
+        }
+      ]
+    },
+    {
       "path": "reseaux/youtube.md",
       "title": "YouTube (Shorts)",
       "description": "Connecter une chaîne YouTube avec un client OAuth Google pour publier des Shorts et des vidéos à l'heure prévue.",
@@ -1051,18 +1096,18 @@
     },
     {
       "path": "reseaux/a-venir.md",
-      "title": "TikTok et Buffer",
-      "description": "TikTok et Buffer, sans module de publication pour l'instant, à gérer en « publier à la main » avec rappel, et ce que demandera leur future connexion.",
+      "title": "Buffer et publication à la main",
+      "description": "Buffer, sans module de publication pour l'instant, et les contenus à publier à la main avec rappel (photos TikTok, etc.).",
       "category": "Réseaux sociaux",
       "tags": [
-        "tiktok",
         "buffer",
+        "tiktok photos",
         "à la main",
         "rappel",
         "feuille de route"
       ],
       "order": 9,
-      "updated": "2026-11-10",
+      "updated": "2026-11-11",
       "headings": [
         {
           "level": 2,

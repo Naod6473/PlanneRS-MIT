@@ -63,7 +63,7 @@ Principes :
 | Instagram (Reels, carrousels, images, stories) | Oui, API Graph | |
 | Page Facebook | Oui, API Pages | |
 | Threads, LinkedIn, X, Bluesky, Mastodon, Pinterest, YouTube (Shorts) | Oui | |
-| TikTok | Pas encore | Rappel « à poster à la main » avec copie du texte |
+| TikTok (vidéos) | Oui, en brouillon ou en direct | Photos : rappel « à poster à la main » avec copie du texte |
 
 Stockage des médias : Google Drive, OneDrive, Dropbox, WebDAV (source) ; Cloudflare R2 / S3, GitHub Pages (hébergement public).
 Notifications : ntfy, Telegram, webhook signé (pour brancher un autre outil ou un assistant IA).

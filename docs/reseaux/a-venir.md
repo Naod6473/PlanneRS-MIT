@@ -1,15 +1,15 @@
 ---
-title: TikTok et Buffer
-description: TikTok et Buffer, sans module de publication pour l'instant, à gérer en « publier à la main » avec rappel, et ce que demandera leur future connexion.
+title: Buffer et publication à la main
+description: Buffer, sans module de publication pour l'instant, et les contenus à publier à la main avec rappel (photos TikTok, etc.).
 category: Réseaux sociaux
-tags: [tiktok, buffer, à la main, rappel, feuille de route]
+tags: [buffer, tiktok photos, à la main, rappel, feuille de route]
 order: 9
-updated: 2026-11-10
+updated: 2026-11-11
 ---
 
-# TikTok et Buffer
+# Buffer et publication à la main
 
-TikTok et Buffer ont leur fiche dans **Réglages › Comptes**, mais pas encore de module de publication.
+Buffer a sa fiche dans **Réglages › Comptes**, mais pas encore de module de publication. Les photos et carrousels TikTok passent aussi par la publication à la main.
 
 ## En attendant : publier à la main
 
@@ -21,9 +21,8 @@ TikTok et Buffer ont leur fiche dans **Réglages › Comptes**, mais pas encore 
 
 | Réseau | Accès | Point d'attention | Documentation |
 |---|---|---|---|
-| TikTok | OAuth TikTok, `video.publish` ou `video.upload` | Application à faire valider par TikTok ; sans validation, les vidéos sont privées | [Content Posting API](https://developers.tiktok.com/doc/content-posting-api-get-started) |
 | Buffer (relais) | Clé API Buffer | Pour passer par Buffer quand un réseau n'a pas d'accès direct | [API Buffer](https://buffer.com/developer-api) |
 
-YouTube (Shorts) et Pinterest sont désormais publiés automatiquement : voir [YouTube](youtube.md) et [Pinterest](pinterest.md).
+Les vidéos TikTok, YouTube (Shorts) et Pinterest sont désormais publiés automatiquement : voir [TikTok](tiktok.md), [YouTube](youtube.md) et [Pinterest](pinterest.md).
 
 Une contribution est bienvenue : voir [Architecture › Écrire un connecteur](../reference/architecture.md#écrire-un-connecteur).

@@ -2,9 +2,9 @@
 title: Contenus
 description: Le tableau Kanban de production (Idée, Écriture, Médias, Légende, Prêt, Programmé, Publié), ses verrous, la fiche d'un post et l'aperçu Instagram.
 category: Utilisation
-tags: [contenus, kanban, idée, légende, validation, verrou, fiche, aperçu instagram, reel, carrousel]
+tags: [contenus, créer un post, fenêtre de création, kanban, idée, légende, validation, verrou, fiche, aperçu instagram, reel, carrousel]
 order: 3
-updated: 2026-11-10
+updated: 2026-11-11
 ---
 
 # Contenus
@@ -62,6 +62,19 @@ Toutes les images et vidéos des posts, des plus récentes aux plus anciennes, s
 - Filtre **Images** ou **Vidéos**, et recherche par nom de fichier, titre du post ou description.
 - Un clic sur la vignette ouvre le post qui l'utilise.
 - **Réutiliser** crée un brouillon avec ce média, prêt à être écrit et daté.
+
+## Créer ou modifier un post
+
+**Nouveau post** (et **Modifier** dans la fiche d'un post) ouvre la fenêtre de création :
+
+- **En haut, les réseaux** : clique sur un logo pour l'ajouter ou le retirer. Le premier coché est le réseau **principal**, les autres sont des **relais**. Tes ensembles de réseaux (Réglages › Modèles) sont à côté.
+- **Le texte** : l'onglet **Tous les réseaux** est le texte commun ; un onglet par réseau permet une version propre (un point orange la signale). Le compteur indique la limite la plus courte des réseaux choisis et passe en rouge au-delà.
+- **Insérer un média** : depuis l'appareil (envoyé dans ton Drive si « Google Drive (envoi) » est connecté), en glissant un fichier sur la fenêtre, ou en collant un lien `https://`. Le format (Reel, carrousel, image, texte) se déduit des médias.
+- **Paramètres** : titre (pris dans la première ligne si tu le laisses vide), format, publication à la main, premier commentaire, texte alternatif.
+- **À droite, l'aperçu** par réseau se met à jour pendant que tu écris. Sur téléphone, passe de **Écrire** à **Aperçu** en haut.
+- **En bas** : le jour et le créneau, puis **Programmer** (avec une date), **Ajouter à « Prêts à programmer »** (sans date) ou **Enregistrer en brouillon**. Si tu as le droit de valider, coche **Texte validé** pour qu'il parte à l'heure prévue ; toute modification du texte décoche la case.
+
+Rien n'est enregistré avant ces boutons : fermer la fenêtre demande confirmation s'il y a des changements.
 
 ## La fiche d'un post
 

@@ -73,7 +73,7 @@
   // Légende envoyée sur un réseau : sa version propre si elle existe, sinon la légende commune.
   function capFor(p, net) { const c = p && p.captions && p.captions[net]; return (c && c.trim()) ? c : (p && p.caption) || ""; }
   // Limite de texte connue par réseau (pour l'affichage du compteur).
-  const TEXT_MAX = { instagram: 2200, facebook: 63206, x: 280, bluesky: 300, threads: 500, mastodon: 500, linkedin: 3000, pinterest: 500, youtube: 5000 };
+  const TEXT_MAX = { instagram: 2200, facebook: 63206, x: 280, bluesky: 300, threads: 500, mastodon: 500, linkedin: 3000, pinterest: 500, youtube: 5000, tiktok: 2200 };
 
   // Liens suivis : paramètres UTM ajoutés aux liens vers tes sites (settings.utm.domains), au moment d'envoyer.
   function slug(s) { return String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60); }

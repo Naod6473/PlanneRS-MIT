@@ -142,3 +142,31 @@ test("téléphone : navigation et fiche d'un post", { skip }, async () => {
   assert.deepEqual(errors, []);
   await page.close();
 });
+
+test("fenêtre de création : écrire, choisir les réseaux, voir l'aperçu, programmer", { skip }, async () => {
+  for (const mobile of [false, true]) {
+    const { page, errors } = await open({ mobile });
+    const n0 = await page.evaluate(() => Store.state.posts.length);
+    await page.evaluate(() => App.newPost());
+    await page.fill("#cp-text", "Le DNS en 30 secondes\n\n#dns");
+    await page.click('[data-cpnet="x"]');
+    await page.click('[data-cptab="x"]');
+    await page.fill("#cp-text", "Version courte pour X");
+    if (mobile) await page.click('[data-cpview="pv"]');
+    await page.click('[data-cppv="x"]');
+    assert.match(await page.locator("#cp-pv").innerText(), /Version courte pour X/);
+    if (mobile) await page.click('[data-cpview="edit"]');
+    await page.fill("#cp-date", "2026-12-01"); await page.dispatchEvent("#cp-date", "change");
+    await page.click("#cp-go");
+    await page.waitForTimeout(300);
+    const p = await page.evaluate(() => Store.state.posts[Store.state.posts.length - 1]);
+    assert.equal(await page.evaluate(() => Store.state.posts.length), n0 + 1);
+    assert.equal(p.title, "Le DNS en 30 secondes"); assert.equal(p.date, "2026-12-01"); assert.ok(p.time);
+    assert.ok(p.networks.includes("x")); assert.equal(p.captions.x, "Version courte pour X"); assert.equal(p.captionValidated, false);
+    // Modifier rouvre la même fenêtre avec le texte.
+    await page.evaluate((i) => App.compose(i), p.id);
+    assert.equal(await page.inputValue("#cp-text"), "Le DNS en 30 secondes\n\n#dns");
+    assert.deepEqual(errors, [], mobile ? "mobile" : "ordinateur");
+    await page.close();
+  }
+});

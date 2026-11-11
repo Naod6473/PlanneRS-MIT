@@ -109,9 +109,10 @@ export async function sendPost(p, deps, rules, summary, onlyNets) {
         return; // on reprend au prochain passage, sans envoyer les relais avant
       }
       p.results[n] = { status: "ok", url: r.url || "", id: r.id || "" };
+      if (r.draft) p.results[n].draft = true;
       if (p.job) delete p.job[n];
       if (primary && r.url) p.url = r.url;
-      await deps.log({ at: now, level: "ok", text: "Publié sur " + netName(n) + " : " + p.title, postId: p.id });
+      await deps.log({ at: now, level: "ok", text: (r.draft ? "Envoyé dans les brouillons " + netName(n) + " (à publier depuis l'appli) : " : "Publié sur " + netName(n) + " : ") + p.title, postId: p.id });
       // Premier commentaire (option du post) : un refus ne remet pas la publication en cause.
       const fc = Core.utm((p.firstComment || "").trim(), n, p, deps.settings);
       if (fc && r.id && ad.comment && p.format !== "story") {
