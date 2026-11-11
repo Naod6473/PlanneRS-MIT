@@ -21,10 +21,15 @@
   // Titre déduit de la première ligne utile du texte.
   A.guessTitle = (cap) => { const l = String(cap || "").split("\n").map((x) => x.trim()).find((x) => x && !/^[#@]/.test(x)); return l ? [...l].slice(0, 80).join("") : ""; };
 
+  // Adresse affichable d'un média : fichier tout juste choisi, lien public, ou fichier du Drive relayé par l'instance.
+  const srcOf = (m) => m._pv || (/^(https?:\/\/|blob:)/.test(m.url || "") ? m.url : "") || (m.drive && A.driveFileUrl ? A.driveFileUrl({ id: m.drive, name: m.name }) : "");
   function srcsOf(d) {
-    const v = (d.media || []).find((m) => m.url && isVid(m));
-    const imgs = (d.media || []).filter((m) => m.url && isImg(m) && m.role !== "cover").map((m) => driveThumb(m.url));
-    return { video: v && v.url, poster: d.thumb, images: imgs.length ? imgs : !v && d.thumb ? [d.thumb] : [] };
+    const ms = d.media || [];
+    const v = ms.find((m) => srcOf(m) && isVid(m));
+    const cover = ms.find((m) => m.role === "cover" && srcOf(m));
+    const imgs = ms.filter((m) => srcOf(m) && isImg(m) && m.role !== "cover").map((m) => driveThumb(srcOf(m)));
+    const poster = d.thumb || (cover && srcOf(cover));
+    return { video: v && srcOf(v), poster, images: imgs.length ? imgs : !v && poster ? [poster] : [] };
   }
   // Vidéo verticale (TikTok, YouTube Shorts) : cadre 9:16 et texte en bas.
   function vertPreview(d, net, srcs) {
@@ -147,12 +152,16 @@
       sync();
       if (!d.networks.includes(pv)) pv = d.networks[0];
       $(".cp-pvnets").innerHTML = d.networks.length > 1 ? d.networks.map((n) => '<button type="button" data-cppv="' + n + '" aria-pressed="' + (n === pv) + '">' + brand(n) + '<span class="lbl">' + esc(T(n)) + "</span></button>").join("") : "";
+      // La vidéo déjà en lecture est gardée telle quelle : pas de clignotement à chaque lettre tapée.
+      const old = $("#cp-pv video");
       $("#cp-pv").innerHTML = pv ? preview(d, pv) : '<p class="muted">Choisis au moins un réseau.</p>';
-      const v = $("#cp-pv video"); if (v) v.play().catch(() => {});
+      const v = $("#cp-pv video");
+      if (v && old && old.getAttribute("src") === v.getAttribute("src")) { old.className = v.className; v.replaceWith(old); }
+      else if (v) { v.loop = true; v.play().catch(() => {}); }
       $("#cp-fcl").hidden = story() || !d.networks.some((n) => n === "instagram" || n === "facebook");
     }
     function media() {
-      $("#cp-media").innerHTML = (d.media || []).map((m, i) => '<span class="cp-thumb">' + (isVid(m) ? '<span class="cp-vid">' + icon("film") + "</span>" : m.url ? '<img src="' + esc(driveThumb(m.url)) + '" alt="">' : '<span class="cp-vid">' + icon("image") + "</span>") +
+      $("#cp-media").innerHTML = (d.media || []).map((m, i) => '<span class="cp-thumb">' + (isVid(m) ? (srcOf(m) ? '<video class="cp-vid" muted playsinline preload="metadata" src="' + esc(srcOf(m)) + '#t=1"></video>' : '<span class="cp-vid">' + icon("film") + "</span>") : srcOf(m) ? '<img src="' + esc(driveThumb(srcOf(m))) + '" alt="">' : '<span class="cp-vid">' + icon("image") + "</span>") +
         '<small title="' + esc(m.name || "") + '">' + esc(m.name || "média") + '</small><button type="button" class="iconbtn" data-cpdel="' + i + '" aria-label="Retirer ' + esc(m.name || "le média") + '">' + icon("x") + "</button></span>").join("");
       if (autoFormat) { $("#cp-format").value = A.guessFormat(d.media); }
       draw();
@@ -233,7 +242,7 @@
             x.onerror = () => ko(new Error("Réseau indisponible"));
             x.send(f);
           });
-          d.media.push({ name: f.name, type: /^video/.test(f.type) ? "video" : "image", drive: r.id, url: r.url || "" });
+          d.media.push({ name: f.name, type: /^video/.test(f.type) ? "video" : "image", drive: r.id, url: r.url || "", _pv: URL.createObjectURL(f) });
           if (!d.folder) d.folder = dest;
           touch(); media();
         } catch (er) { U.toast("Envoi impossible : " + er.message); }
@@ -270,6 +279,7 @@
       if (act === "go" && !moveLater) { d.date = w.date; d.time = w.date ? w.time : null; }
       if (orig && orig.title !== d.title && !$("#cp-title").value.trim() && !autoTitle) d.title = orig.title;
       delete d.linkCheck;
+      d.media.forEach((m) => { delete m._pv; });
       await S.savePosts([d]);
       await S.log({ level: "change", text: (orig ? "Post modifié : " : "Nouveau post : ") + d.title + (changedText && !d.captionValidated ? " (texte à valider)" : ""), postId: d.id });
       dirty = false; A.beforeClose = null; A.closeLayer();

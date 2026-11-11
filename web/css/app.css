@@ -986,3 +986,4 @@ table.list tr.sel td{background:var(--rev-bg)}
 }
 .cp-thumb .iconbtn{min-width:24px;max-width:24px;max-height:24px}
 @media (max-width:860px){.cp-add input[type=url]{flex:1 1 100%;order:-1}.cp-tools .btn,.cp-add .btn{min-height:36px}}
+.cp-pvnets:empty{display:none}
