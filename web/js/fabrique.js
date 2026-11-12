@@ -29,6 +29,46 @@
       bar(pr) + who(pr) + "</button>";
   }
 
+  // Équipe d'agents : un rôle par métier, ses consignes, qui le tient et ce qu'il a fait.
+  const ROLE_IC = { script: "contents", voice: "mic", edit: "film", subs: "bubble", caption: "spark", check: "eye" };
+  const stepLabel = (k) => (C.PROD_STEPS.find((x) => x[0] === k) || [k, k])[1];
+  function team() {
+    const roles = C.crewOf(S.state.settings), posts = S.state.posts;
+    const cards = roles.map((r) => {
+      const work = C.crewWork(posts, r), done = work.filter((x) => x.state === "done").length, doing = work.filter((x) => x.state === "doing");
+      const opts = Object.entries(C.CREW_WHO).filter(([k]) => k !== "api" || r.api).map(([k, l]) => '<option value="' + k + '"' + (r.who === k ? " selected" : "") + ">" + esc(l) + "</option>").join("");
+      const last = work.slice(0, 3).map((x) => '<li><button class="lk" data-fab="' + esc(x.id) + '" data-noi18n>' + esc(x.title) + '</button><span class="muted"> · ' + esc(stepLabel(x.step)) + " " + (x.state === "done" ? "fait" : x.state === "doing" ? "en cours" : "à faire") + (x.at ? " · " + esc(C.shortDay(x.at.slice(0, 10))) : "") + "</span></li>").join("");
+      return '<article class="crew-card' + (doing.length ? " busy" : "") + '" aria-labelledby="cr-' + r.key + '"><header><span class="ic">' + icon(ROLE_IC[r.key] || "dot") + '</span><div><h3 id="cr-' + r.key + '">' + esc(r.name) + "</h3>" +
+        '<span class="muted small">' + (r.steps.length ? "Étape : " + r.steps.map(stepLabel).join(", ") : "Légende du post") + "</span></div>" +
+        (doing.length ? '<span class="fwho doing"><span class="pulse" aria-hidden="true"></span>' + doing.length + " en cours</span>" : "") + "</header>" +
+        '<label class="crew-who">Qui tient ce rôle<select data-crew-who="' + r.key + '">' + opts + "</select></label>" +
+        '<label>Consignes<textarea rows="4" data-crew-brief="' + r.key + '" data-noi18n>' + esc(r.brief) + "</textarea></label>" +
+        (r.custom ? '<button class="lk small" data-crew-reset="' + r.key + '">Revenir aux consignes d\'origine</button>' : "") +
+        '<div class="crew-act"><b>' + done + "</b> étape" + (done > 1 ? "s faites" : " faite") + (last ? '<ul>' + last + "</ul>" : '<p class="muted small">Rien pour l\'instant.</p>') + "</div></article>";
+    }).join("");
+    return '<p class="muted crew-help">Chaque rôle a ses consignes. <b>Claude (lien MCP)</b> : dans Claude, demande par exemple « fais le Scénariste sur la vidéo du jour » ; il lit ses consignes et signe son travail. <b>Claude (clé API)</b> : PlanneRs écrit lui-même le script ou la légende, depuis la fiche de la vidéo. Rien n\'est jamais validé tout seul.</p>' +
+      '<div class="crew-grid">' + cards + "</div>";
+  }
+  async function saveCrew(key, patch) {
+    const st = Object.assign({}, S.state.settings), crew = Object.assign({}, st.crew);
+    crew[key] = Object.assign({}, crew[key], patch); st.crew = crew;
+    await S.saveSettings(st);
+  }
+  document.addEventListener("change", (e) => {
+    const w = e.target.closest("[data-crew-who]"), b = e.target.closest("[data-crew-brief]");
+    if (w) saveCrew(w.dataset.crewWho, { who: w.value }).then(() => U.toast("Rôle enregistré"));
+    if (b) {
+      const def = (C.CREW.find((r) => r.key === b.dataset.crewBrief) || {}).brief, v = b.value.trim();
+      saveCrew(b.dataset.crewBrief, { brief: v && v !== def ? v.slice(0, 2000) : "" }).then(() => { U.toast("Consignes enregistrées"); A.render(); });
+    }
+  });
+  document.addEventListener("click", (e) => {
+    const t = e.target.closest("[data-fabtab],[data-crew-reset]"); if (!t) return;
+    if (t.dataset.crewReset) { saveCrew(t.dataset.crewReset, { brief: "" }).then(() => A.render()); return; }
+    A.fabTab = t.dataset.fabtab === "team" ? "team" : ""; A.render();
+  });
+  const tabs = () => '<div class="seg" role="group" aria-label="Affichage"><button data-fabtab="" aria-pressed="' + (A.fabTab !== "team") + '">Vidéos</button><button data-fabtab="team" aria-pressed="' + (A.fabTab === "team") + '">Équipe</button></div>';
+
   A.views.fabrique = function () {
     const all = list().map((p) => ({ p, pr: C.prodOf(p) }));
     const by = {}; COLS.forEach(([k]) => (by[k] = []));
@@ -39,10 +79,11 @@
     const cols = COLS.filter(([k]) => !f || f === k).map(([k, l]) => '<section class="wcol fcol" aria-labelledby="fc-' + k + '"><h3 class="wcol-h" id="fc-' + k + '"><span>' + esc(l) + '</span><span class="n">' + (by[k].length || "") + "</span></h3>" +
       (by[k].map((x) => card(x.p)).join("") || '<p class="wnone">Rien</p>') + "</section>").join("");
     const phrase = all.length ? (en() ? all.length + " video" + (all.length > 1 ? "s" : "") + " in production" + (working ? ", " + working + " being worked on right now" : "") : all.length + " vidéo" + (all.length > 1 ? "s" : "") + " en fabrication" + (working ? ", dont " + working + " en cours de travail en ce moment" : "")) : "";
+    if (A.fabTab === "team") return { title: "La Fabrique", sub: "L'équipe qui fabrique tes vidéos", tools: tabs(), html: team() };
     return {
       title: "La Fabrique",
       sub: "Tes vidéos, de l'idée à la vidéo finie",
-      tools: '<span class="grow"></span>' + ('<label class="btn" title="Une vidéo finie à relire : elle part dans ton stockage et devient un Reel dans La Fabrique">' + icon("cloud") + '<span class="lbl">Déposer des vidéos</span><input type="file" accept="video/*" multiple hidden data-fabdrop aria-label="Déposer des vidéos"></label>') + (A.hasStudio ? '<button class="btn" data-cutvideo aria-label="Couper une vidéo (blancs et euh)">' + icon("film") + '<span class="lbl">Couper une vidéo</span></button>' : "") + '<button class="btn primary" data-new aria-label="Nouveau post">' + icon("plus") + '<span class="lbl">Nouveau post</span></button>',
+      tools: tabs() + '<span class="grow"></span>' + ('<label class="btn" title="Une vidéo finie à relire : elle part dans ton stockage et devient un Reel dans La Fabrique">' + icon("cloud") + '<span class="lbl">Déposer des vidéos</span><input type="file" accept="video/*" multiple hidden data-fabdrop aria-label="Déposer des vidéos"></label>') + (A.hasStudio ? '<button class="btn" data-cutvideo aria-label="Couper une vidéo (blancs et euh)">' + icon("film") + '<span class="lbl">Couper une vidéo</span></button>' : "") + '<button class="btn primary" data-new aria-label="Nouveau post">' + icon("plus") + '<span class="lbl">Nouveau post</span></button>',
       html: all.length ? '<section class="pband" aria-labelledby="h-fab"><div class="pband-h"><h2 id="h-fab" data-noi18n>' + esc(phrase) + "</h2>" + (f ? '<span class="muted"><button class="lk" data-fabst="">' + icon("x") + "Tout afficher</button></span>" : "") + "</div>" +
         '<div class="pkpis" role="group" aria-label="Filtrer par étape">' + kpis + "</div></section>" +
         '<div class="wcols fcols' + (f ? " one" : "") + '" role="group" aria-label="Vidéos par étape">' + cols + "</div>" +
@@ -70,12 +111,14 @@
       '<div class="fab-right"><h3 class="bh">Avancement · ' + pr.done + "/" + pr.total + "</h3>" + steps + "</div></div>" +
       '<h3 class="bh">Storyboard</h3>' + sb + "</div>" +
       '<div class="sh-foot">' + (pr.ready ? "" : '<button class="btn primary" data-fabok>' + icon("check") + "Vidéo finie et relue</button>") +
+      C.crewOf(S.state.settings).filter((r) => r.who === "api").map((r) => '<button class="btn" data-fabagent="' + r.key + '">' + icon("spark") + (r.key === "script" ? "Écrire le script" : "Proposer la légende") + " (Claude)</button>").join("") +
       '<button class="btn" data-fabpost>' + icon("contents") + "Fiche du post</button><button class=\"btn quiet\" data-close>Fermer</button></div>", "Fabrication : " + p.title);
     const L = document.getElementById("layer");
     L.querySelector(".sheet").classList.add("wide");
     L.querySelectorAll("[data-fabstep]").forEach((b) => b.addEventListener("click", () => setStep(p.id, b.dataset.fabstep)));
     const ok = L.querySelector("[data-fabok]"); if (ok) ok.addEventListener("click", () => finish(p.id));
     L.querySelector("[data-fabpost]").addEventListener("click", () => { A.closeLayer(); A.openPost(p.id); });
+    L.querySelectorAll("[data-fabagent]").forEach((b) => b.addEventListener("click", () => runAgent(p.id, b.dataset.fabagent, b)));
   };
 
   const me = () => (typeof S.state.me === "string" && S.state.me) || "Toi";
@@ -90,6 +133,18 @@
     await S.savePosts([p]);
     await S.log({ level: "change", text: "Fabrique : " + cur.label + " " + (next === "done" ? "fait" : next === "doing" ? "en cours" : "à refaire") + " sur « " + p.title + " »", postId: p.id });
     A.openFab(id); A.render();
+  }
+  // Rôle tenu par la clé API : PlanneRs demande à Claude, le résultat arrive dans la fiche (jamais validé).
+  async function runAgent(id, role, btn) {
+    if (S.mode !== "api") { U.toast("Mode démo : l'équipe avec clé API demande une clé Claude sur ton instance"); return; }
+    if (!S.state.rewrite) { U.toast("Ajoute le secret ANTHROPIC_API_KEY au Worker pour faire travailler l'équipe (voir « Assistants IA »)"); return; }
+    btn.disabled = true; U.toast(role === "script" ? "Le Scénariste écrit le storyboard…" : "Claude écrit une légende…");
+    try {
+      const r = await S.call("POST", "posts/" + encodeURIComponent(id) + "/agent", { role });
+      const i = S.state.posts.findIndex((x) => x.id === id); if (i >= 0) S.state.posts[i] = r.post;
+      S.persist(); A.openFab(id); A.render();
+      U.toast((role === "script" ? "Storyboard écrit : " : "Légende : ") + r.summary, role === "caption" ? { label: "Relire", fn: () => { A.closeLayer(); A.openPost(id); } } : null);
+    } catch (x) { U.toast("Impossible : " + x.message); btn.disabled = false; }
   }
   async function finish(id) {
     const p = S.post(id); if (!p) return;

@@ -20,6 +20,7 @@ PlanneRs contient un serveur [MCP](https://modelcontextprotocol.io/) (Model Cont
 | `planners_add_media`, `planners_remove_media` | Ajouter une image ou une vidéo (adresse https publique), en retirer une |
 | `planners_delete_post` | Supprimer un post pas encore publié (le journal garde une trace) |
 | `planners_comment` | Commenter un post |
+| `planners_team` | Lire les rôles de l'équipe (Scénariste, Voix, Monteur, Sous-titres, Légendes, Contrôle qualité), leurs consignes et qui les tient ; `planners_production` accepte ensuite `role` pour signer « Claude · <rôle> » |
 | `planners_fabrique`, `planners_production` | Voir les vidéos en fabrication ; faire avancer une étape (script, voix, montage, sous-titres, relu), remplir le storyboard, ajouter la vidéo finie ([La Fabrique](../utilisation/la-fabrique.md)) |
 | `planners_settings`, `planners_update_settings` | Lire les réglages ; changer les créneaux et les modèles (signature, hashtags) |
 | `planners_stats`, `planners_activity` | Derniers chiffres ; journal des envois et des échecs |

@@ -33,6 +33,7 @@ import Core from "../../web/js/core.js";
 import * as ical from "./ical.js";
 import * as links from "./links.js";
 import * as rewriter from "./rewrite.js";
+import * as agent from "./agent.js";
 import { aiClient } from "./ai.js";
 import * as igHistory from "./history.js";
 import * as igComments from "./comments.js";
@@ -184,6 +185,19 @@ async function api(request, env, path, url, auth) {
     const draft = Object.assign({}, p, typeof (body && body.caption) === "string" ? { caption: body.caption } : {});
     try { return json(await rewriter.rewrite(aiClient(env), draft, net, st)); }
     catch (e) { return err(e.status === 401 ? "Clé ANTHROPIC_API_KEY refusée : vérifie-la dans les secrets du Worker." : e.status === 429 ? "Trop de demandes à Claude : réessaie dans une minute." : e.status === 529 || e.status >= 500 ? "Claude est surchargé ou indisponible : réessaie dans un instant." : e.message, 502); }
+  }
+  // Équipe d'agents (clé API) : le Scénariste écrit le storyboard, Légendes propose une légende. Jamais validé tout seul.
+  if ((r0 = path.match(/^posts\/([^/]+)\/agent$/)) && m === "POST") {
+    if (!env.ANTHROPIC_API_KEY) return err("Pour faire travailler l'équipe avec la clé API, ajoute le secret ANTHROPIC_API_KEY au Worker (voir la documentation « Assistants IA »).", 409);
+    const p = await db.getPost(env, decodeURIComponent(r0[1]));
+    if (!p) return err("Post introuvable", 404);
+    const st = (await db.getKV(env, "settings")) || {}, role = String((body && body.role) || "");
+    try {
+      const r = await agent.work(aiClient(env), role, p, st, localNow(st.timezone));
+      await db.savePosts(env, [r.post]);
+      await db.addLog(env, { at: localNow(st.timezone), level: "change", text: "Équipe : " + (Core.CREW.find((x) => x.key === role) || {}).name + " (clé API) sur « " + p.title + " » : " + r.summary + (me ? " (lancé par " + me + ")" : ""), postId: p.id });
+      return json({ post: r.post, summary: r.summary });
+    } catch (e) { return err(e.status === 401 ? "Clé ANTHROPIC_API_KEY refusée : vérifie-la dans les secrets du Worker." : e.status === 429 ? "Trop de demandes à Claude : réessaie dans une minute." : e.status >= 500 ? "Claude est surchargé ou indisponible : réessaie dans un instant." : e.message, e.status ? 502 : 400); }
   }
   // Une vidéo, tous les réseaux : un texte adapté par réseau à partir du texte commun (jamais validé tout seul).
   if (path === "adapt" && m === "POST") {

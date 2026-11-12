@@ -277,9 +277,37 @@
     return { steps, done, total: steps.length, current, ready: done === steps.length, shots, duration, tooLong: isVideoFmt(p.format) && duration > ((p.prod && p.prod.maxSec) || 30), video: (p.media || []).find((m) => m.type === "video" || /\.(mp4|mov|webm)(\?|$)/i.test(m.url || m.name || "")) || null };
   }
 
+  // Équipe d'agents : un rôle par métier, avec ses consignes et qui le tient (Claude par MCP, clé API, ou toi).
+  // Seuls les rôles d'écriture (script, légende) peuvent tourner tout seuls avec la clé API.
+  const CREW = [
+    { key: "script", name: "Scénariste", steps: ["script"], api: true, brief: "Écris un script court et clair : une accroche dans les 2 premières secondes, une idée par plan, une fin qui invite à commenter. Remplis le storyboard plan par plan (texte à l'écran, voix, image, son) sans dépasser la durée maximale." },
+    { key: "voice", name: "Voix", steps: ["voice"], brief: "Enregistre ou génère la voix off à partir des répliques du storyboard, une réplique par fichier, sans changer le texte." },
+    { key: "edit", name: "Monteur", steps: ["edit"], brief: "Monte la vidéo d'après le storyboard : rythme rapide, coupe les blancs et les hésitations, musique sous la voix." },
+    { key: "subs", name: "Sous-titres", steps: ["subs"], brief: "Sous-titres incrustés, lisibles sur téléphone, mots-clés mis en valeur, pas plus de deux lignes." },
+    { key: "caption", name: "Légendes", steps: [], api: true, brief: "Écris la légende : accroche dans la première ligne, deux ou trois phrases utiles, une question pour faire réagir, quelques hashtags." },
+    { key: "check", name: "Contrôle qualité", steps: ["check"], brief: "Relis la vidéo finie : durée, orthographe des sous-titres, son, chiffres et sources. Note ce qui ne va pas, ne valide jamais la légende." },
+  ];
+  const CREW_WHO = { mcp: "Claude (lien MCP)", api: "Claude (clé API)", me: "Toi" };
+  function crewOf(settings) {
+    const own = (settings && settings.crew) || {};
+    return CREW.map((r) => {
+      const o = own[r.key] || {};
+      const who = CREW_WHO[o.who] && (o.who !== "api" || r.api) ? o.who : r.key === "check" || r.key === "voice" ? "me" : "mcp";
+      return Object.assign({}, r, { brief: typeof o.brief === "string" && o.brief.trim() ? o.brief : r.brief, who, custom: !!(o.brief && o.brief.trim()) });
+    });
+  }
+  // Ce qu'un rôle a fait : les étapes des vidéos signées de son nom (ex. « Claude · Scénariste »).
+  function crewWork(posts, role) {
+    const out = [], needle = role.name.toLowerCase();
+    (posts || []).forEach((p) => Object.entries((p.prod && p.prod.steps) || {}).forEach(([k, o]) => {
+      if (o && o.by && String(o.by).toLowerCase().includes(needle)) out.push({ id: p.id, title: p.title, step: k, state: o.state, at: o.at || "", note: o.note || "" });
+    }));
+    return out.sort((a, b) => b.at.localeCompare(a.at));
+  }
+
   function nowStamp(d) { d = d || new Date(); return ymd(d) + "T" + pad(d.getHours()) + ":" + pad(d.getMinutes()); }
 
   const api = { STATUS, FORMATS, STAGES, STEPS, step, alertOf, pad, ymd, parseYmd, addDays, mondayOf, toMin, at, longDate, shortDay, MONTHS, DAYS, setLang,
-    displayStatus, missed, willSend, hashtags, checks, mediaChecks, slotOf, nowStamp, fold, seriesOf, matchQuery, parseCsv, toCsv, manualNets, autoNets, pendingManual, prefillUrl, titleFor, capFor, TEXT_MAX, utm, textOut, PROD_STEPS, inFabrique, prodOf };
+    displayStatus, missed, willSend, hashtags, checks, mediaChecks, slotOf, nowStamp, fold, seriesOf, matchQuery, parseCsv, toCsv, manualNets, autoNets, pendingManual, prefillUrl, titleFor, capFor, TEXT_MAX, utm, textOut, PROD_STEPS, inFabrique, prodOf, CREW, CREW_WHO, crewOf, crewWork };
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.Core = api;
 })(typeof self !== "undefined" ? self : this);
