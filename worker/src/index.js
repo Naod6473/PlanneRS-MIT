@@ -669,6 +669,9 @@ export default {
       if (url.pathname === "/" || url.pathname === "/accueil.html" || url.pathname === "/accueil") {
         return env.ASSETS.fetch(new Request(new URL("/accueil", url), { method: "GET" }));
       }
+      // Page de présentation et ses images.
+      if (url.pathname === "/presentation" || url.pathname === "/presentation.html") return env.ASSETS.fetch(new Request(new URL("/presentation", url), { method: "GET" }));
+      if (/^\/img\/(presentation\/[\w-]+\.jpg|logo\.png)$/.test(url.pathname) || url.pathname === "/favicon.svg") return env.ASSETS.fetch(new Request(url, { method: "GET" }));
       return Response.redirect(url.origin + "/", 302);
     }
     // Lien de validation client : public, limité aux posts partagés (voir share.js).

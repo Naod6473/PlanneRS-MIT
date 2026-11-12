@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PlanneRs · de l'idée à la vidéo publiée</title>
+<meta name="description" content="PlanneRs planifie tes publications, suit la fabrication de tes vidéos avec une équipe d'agents IA, repère ce qui marche chez les comptes que tu suis et publie à l'heure, seulement après ta validation.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<style>
+:root{--bg:#F6F5FB;--paper:#FFFFFF;--ink:#16141F;--ink2:#4A4759;--ink3:#77748A;--line:#E2DFEE;--a:#6D28D9;--b:#0891B2;--chip:#EEEAFB;--ok:#0E7A55;--sh:0 1px 2px rgba(22,20,31,.05),0 18px 40px -18px rgba(60,40,140,.28)}
+@media (prefers-color-scheme:dark){:root{--bg:#0F0E15;--paper:#191723;--ink:#EEEDF5;--ink2:#B9B6CB;--ink3:#8D8AA3;--line:#2C2939;--a:#B79CFF;--b:#22D3EE;--chip:#262238;--ok:#4ADE9B;--sh:0 1px 2px rgba(0,0,0,.4),0 18px 40px -18px rgba(0,0,0,.7)}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--a)}
+img{max-width:100%;height:auto;display:block}
+.wrap{max-width:1120px;margin:0 auto;padding-inline:max(16px,env(safe-area-inset-left,0px)) max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{line-height:1.15;text-wrap:balance;margin:0}
+h1{font-size:clamp(34px,6vw,60px);letter-spacing:-.025em}
+h2{font-size:clamp(26px,3.6vw,38px);letter-spacing:-.02em}
+h3{font-size:18px}
+p{margin:0;color:var(--ink2)}
+.grad{background:linear-gradient(100deg,var(--a),var(--b));-webkit-background-clip:text;background-clip:text;color:transparent}
+.top{display:flex;align-items:center;gap:12px;padding-block:18px}
+.top img{width:40px;height:40px;border-radius:11px}
+.top b{font-size:20px;letter-spacing:-.01em}
+.top nav{margin-left:auto;display:flex;gap:18px;font-size:15px}
+.top nav a{color:var(--ink2);text-decoration:none}
+.hero{display:grid;gap:28px;padding-block:40px 24px;text-align:center;justify-items:center}
+.hero p.lead{font-size:clamp(18px,2.2vw,21px);max-width:62ch}
+.kicker{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);font-weight:600}
+.ctas{display:flex;flex-wrap:wrap;gap:12px;justify-content:center}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 20px;border-radius:12px;font-weight:600;text-decoration:none;border:1px solid var(--line);color:var(--ink);background:var(--paper)}
+.btn.main{background:linear-gradient(100deg,var(--a),var(--b));color:#fff;border:0}
+.shot{position:relative;width:100%;max-width:1040px;margin-top:8px}
+.frame{border-radius:16px;overflow:hidden;border:1px solid var(--line);background:var(--paper);box-shadow:var(--sh)}
+.frame .bar{display:flex;gap:6px;padding:10px 12px;border-bottom:1px solid var(--line)}
+.frame .bar i{width:10px;height:10px;border-radius:50%;background:var(--line)}
+.phone{position:absolute;right:-12px;bottom:-28px;width:min(22%,200px);border-radius:24px;overflow:hidden;border:6px solid var(--ink);box-shadow:var(--sh);background:var(--paper)}
+.phone{height:auto}
+.proof{display:flex;flex-wrap:wrap;gap:10px 28px;justify-content:center;padding-block:56px 8px;font-size:15px;color:var(--ink2)}
+.proof span::before{content:"✓";color:var(--ok);font-weight:700;margin-right:8px}
+section.feat{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:48px;align-items:center;padding-block:64px}
+section.feat.flip{grid-template-columns:minmax(0,7fr) minmax(0,5fr)}
+section.feat.flip .txt{order:2}
+.txt{display:grid;gap:14px;align-content:start}
+.num{font:600 13px/1 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--a);letter-spacing:.06em}
+.txt ul{margin:4px 0 0;padding:0;list-style:none;display:grid;gap:8px}
+.txt li{color:var(--ink2);padding-left:22px;position:relative}
+.txt li::before{content:"";position:absolute;left:4px;top:.62em;width:8px;height:8px;border-radius:2px;background:linear-gradient(135deg,var(--a),var(--b))}
+.tag{display:inline-block;font-size:12px;font-weight:600;padding:2px 10px;border-radius:999px;background:var(--chip);color:var(--a);margin-left:6px;vertical-align:middle;letter-spacing:0}
+.band{background:var(--paper);border-block:1px solid var(--line)}
+.band .wrap{padding-block:56px;display:grid;gap:22px}
+.chips{display:flex;flex-wrap:wrap;gap:10px}
+.chips span{padding:8px 14px;border-radius:10px;background:var(--chip);font-size:15px;font-weight:500}
+.cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;padding-block:64px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:22px;display:grid;gap:8px;align-content:start}
+.card .ic{font-size:24px}
+.end{text-align:center;padding-block:40px 72px;display:grid;gap:18px;justify-items:center}
+footer{border-top:1px solid var(--line);font-size:14px;color:var(--ink3)}
+footer .wrap{padding-block:22px;display:flex;flex-wrap:wrap;gap:8px 20px}
+footer a{color:var(--ink2)}
+@media (max-width:860px){
+  section.feat,section.feat.flip{grid-template-columns:1fr;gap:24px;padding-block:44px}
+  section.feat.flip .txt{order:0}
+  .cols{grid-template-columns:1fr}
+  .phone{display:none}
+  .top nav{display:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top"><img src="img/logo.png" alt=""><b>PlanneRs</b>
+    <nav aria-label="Sections"><a href="#fabrique">La Fabrique</a><a href="#equipe">L'équipe</a><a href="#pepites">Pépites</a><a href="#principes">Principes</a></nav></header>
+
+  <section class="hero">
+    <span class="kicker">Réseaux sociaux · vidéos courtes · IA</span>
+    <h1>De l'idée à la vidéo publiée,<br><span class="grad">sans rien laisser filer.</span></h1>
+    <p class="lead">PlanneRs planifie tes publications, suit la fabrication de chaque vidéo avec une équipe d'agents IA, repère ce qui marche chez les comptes que tu suis, puis publie à l'heure. Seulement quand tu as validé.</p>
+    <div class="ctas"><a class="btn main" href="https://github.com/Naod6473/PlanneRS-MIT">Voir le code (MIT)</a><a class="btn" href="#fabrique">Découvrir</a></div>
+    <div class="shot"><div class="frame"><div class="bar" aria-hidden="true"><i></i><i></i><i></i></div><img src="img/presentation/calendrier.jpg" alt="Le calendrier de PlanneRs : une semaine de publications par créneau, avec ce qui reste à valider." width="1280" height="800"></div>
+      <img class="phone" src="img/presentation/mobile-fabrique.jpg" alt="La Fabrique sur téléphone." width="390" height="780"></div>
+  </section>
+
+  <div class="proof" aria-label="En bref"><span>Rien ne part sans ta validation</span><span>10 réseaux</span><span>Ton stockage, au choix</span><span>Tes données chez toi</span></div>
+
+  <section class="feat" aria-labelledby="f1">
+    <div class="txt"><span class="num">01 · PLANIFIER</span><h2 id="f1">Une semaine claire, créneau par créneau</h2>
+      <p>Tes habitudes de publication deviennent des créneaux. Tu glisses une idée prête dessus, tu relis, tu valides : elle part toute seule à l'heure.</p>
+      <ul><li>Semaine, mois, vignettes ou grille du profil Instagram</li><li>Un texte par réseau, adapté par Claude si tu veux</li><li>Contrôles avant envoi : média manquant, trop de hashtags, texte trop long</li></ul></div>
+    <div class="frame"><img src="img/presentation/aujourdhui.jpg" alt="L'écran Aujourd'hui : ce qui demande ton attention et le programme des prochains jours." width="1280" height="800" ></div>
+  </section>
+
+  <section class="feat flip" id="fabrique" aria-labelledby="f2">
+    <div class="txt"><span class="num">02 · LA FABRIQUE</span><h2 id="f2">Chaque vidéo, de l'idée à la vidéo finie</h2>
+      <p>Script, voix, montage, sous-titres, relecture : tu vois où en est chaque Reel et qui y travaille, en direct. Le storyboard plan par plan alerte si la vidéo dépasse la durée voulue.</p>
+      <ul><li>Dépose tes vidéos finies d'un glisser-déposer</li><li>Couper une vidéo : blancs et « euh » retirés, shorts et sous-titres, calculés sur ton ordinateur<span class="tag">Studio</span></li><li>La vidéo finie se regarde ici avant de valider</li></ul></div>
+    <div class="frame"><img src="img/presentation/fabrique.jpg" alt="La Fabrique : les vidéos rangées par étape, avec qui travaille dessus." width="1280" height="800" ></div>
+  </section>
+
+  <section class="feat" id="equipe" aria-labelledby="f3">
+    <div class="txt"><span class="num">03 · L'ÉQUIPE</span><h2 id="f3">Une équipe d'agents IA, avec tes consignes</h2>
+      <p>Scénariste, voix, monteur, sous-titres, légendes, contrôle qualité : chaque rôle a ses consignes, écrites à ta façon. Tu choisis qui le tient.</p>
+      <ul><li>Claude par le lien MCP : il lit ses consignes et signe son travail</li><li>Ou la clé API : PlanneRs écrit lui-même le script et la légende</li><li>Ou toi : les rôles qui comptent restent entre tes mains</li></ul></div>
+    <div class="frame"><img src="img/presentation/equipe.jpg" alt="L'écran Équipe : six rôles, leurs consignes et ce qu'ils ont fait." width="1280" height="800" ></div>
+  </section>
+
+  <section class="feat flip" id="pepites" aria-labelledby="f4">
+    <div class="txt"><span class="num">04 · PÉPITES</span><h2 id="f4">Ce qui marche chez les autres, chaque matin</h2>
+      <p>Suis jusqu'à 5 comptes Instagram ou YouTube. PlanneRs repère leurs publications au moins deux fois au-dessus de leur moyenne.</p>
+      <ul><li>« Faire ma version » : une idée inspirée de la recette, dans ton ton</li><li>Pourquoi ça marche, ta version, et ce qui ferait copie</li><li>On reprend une recette, jamais le contenu d'un autre</li></ul></div>
+    <div class="frame"><img src="img/presentation/pepites.jpg" alt="Les Pépites : publications des comptes suivis avec leur score par rapport à leur moyenne." width="1280" height="800" ></div>
+  </section>
+
+  <section class="feat" aria-labelledby="f5">
+    <div class="txt"><span class="num">05 · TES CHIFFRES</span><h2 id="f5">Ce qui marche chez toi</h2>
+      <p>Abonnés, vues, portée, likes, partages : relevés chaque matin, comparés à la période d'avant. Les posts à republier et les hashtags qui portent remontent tout seuls.</p></div>
+    <div class="frame"><img src="img/presentation/stats.jpg" alt="Les statistiques : cartes de chiffres avec leur évolution." width="1280" height="800" ></div>
+  </section>
+</div>
+
+<div class="band"><div class="wrap">
+  <h2>Publie partout, range où tu veux</h2>
+  <p>Instagram, Facebook, LinkedIn, X, Threads, Bluesky, Mastodon, Pinterest, YouTube Shorts et TikTok. Tes vidéos vont dans le stockage que tu choisis, y compris un NAS chez toi.</p>
+  <div class="chips" aria-label="Stockages"><span>Google Drive</span><span>OneDrive</span><span>Dropbox</span><span>NAS WebDAV (Nextcloud, Synology)</span><span>Cloudflare R2 · S3 · MinIO</span><span>GitHub Pages</span></div>
+</div></div>
+
+<div class="wrap">
+  <div class="cols" id="principes">
+    <div class="card"><span class="ic" aria-hidden="true">✋</span><h3>Rien ne part sans toi</h3><p>Une légende non validée ne part jamais. Les IA préparent, tu contrôles.</p></div>
+    <div class="card"><span class="ic" aria-hidden="true">🏠</span><h3>Tes données chez toi</h3><p>PlanneRs s'installe sur ton propre compte Cloudflare. Les identifiants sont chiffrés, rien n'est envoyé aux auteurs.</p></div>
+    <div class="card"><span class="ic" aria-hidden="true">🔓</span><h3>Libre</h3><p>Code source ouvert sous licence MIT : tu peux le lire, l'installer et l'adapter.</p></div>
+  </div>
+  <section class="end"><h2>Prêt à planifier ta semaine ?</h2><div class="ctas"><a class="btn main" href="https://github.com/Naod6473/PlanneRS-MIT">Installer PlanneRs</a></div></section>
+</div>
+
+<footer><div class="wrap"><span>PlanneRs · logiciel libre (MIT)</span><a href="accueil#confidentialite">Confidentialité</a><a href="accueil#conditions">Conditions</a><a href="https://github.com/Naod6473/PlanneRS-MIT">Code source</a></div></footer>
+</body>
+</html>
