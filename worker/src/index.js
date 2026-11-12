@@ -633,16 +633,6 @@ export default {
         now: localNow(s0.settings.timezone), me: a.email, canValidate: () => canValidate(env, a.email),
       });
     }
-    // Studio vidéo (version privée seulement) : isolé des autres origines pour que la reconnaissance
-    // de la parole puisse utiliser plusieurs cœurs (WebAssembly multithread).
-    if (url.pathname === "/studio" || url.pathname.startsWith("/studio/")) {
-      const target = url.pathname === "/studio" || url.pathname === "/studio/" ? new Request(new URL("/studio/app.html", url), request) : request;
-      const r = await env.ASSETS.fetch(target);
-      const h = new Headers(r.headers);
-      h.set("Cross-Origin-Opener-Policy", "same-origin"); h.set("Cross-Origin-Embedder-Policy", "credentialless"); h.set("X-Content-Type-Options", "nosniff");
-      if (/\.(py|wasm)$/.test(url.pathname) && !h.get("content-type")) h.set("content-type", url.pathname.endsWith(".wasm") ? "application/wasm" : "text/plain; charset=utf-8");
-      return new Response(r.body, { status: r.status, statusText: r.statusText, headers: h });
-    }
     if (!url.pathname.startsWith("/api/")) return env.ASSETS.fetch(request);
     // Une page d'un autre site ne peut pas agir au nom de la personne connectée.
     const origin = request.headers.get("origin");

@@ -42,7 +42,7 @@
     return {
       title: "La Fabrique",
       sub: "Tes vidéos, de l'idée à la vidéo finie",
-      tools: '<span class="grow"></span>' + (A.hasStudio ? '<a class="btn" href="studio/" aria-label="Faire des shorts dans le studio">' + icon("film") + '<span class="lbl">Faire des shorts</span></a>' : "") + '<button class="btn primary" data-new aria-label="Nouveau post">' + icon("plus") + '<span class="lbl">Nouveau post</span></button>',
+      tools: '<span class="grow"></span>' + (A.hasStudio ? '<button class="btn" data-cutvideo aria-label="Couper une vidéo (blancs et euh)">' + icon("film") + '<span class="lbl">Couper une vidéo</span></button>' : "") + '<button class="btn primary" data-new aria-label="Nouveau post">' + icon("plus") + '<span class="lbl">Nouveau post</span></button>',
       html: all.length ? '<section class="pband" aria-labelledby="h-fab"><div class="pband-h"><h2 id="h-fab" data-noi18n>' + esc(phrase) + "</h2>" + (f ? '<span class="muted"><button class="lk" data-fabst="">' + icon("x") + "Tout afficher</button></span>" : "") + "</div>" +
         '<div class="pkpis" role="group" aria-label="Filtrer par étape">' + kpis + "</div></section>" +
         '<div class="wcols fcols' + (f ? " one" : "") + '" role="group" aria-label="Vidéos par étape">' + cols + "</div>" +
@@ -70,7 +70,7 @@
       '<div class="fab-right"><h3 class="bh">Avancement · ' + pr.done + "/" + pr.total + "</h3>" + steps + "</div></div>" +
       '<h3 class="bh">Storyboard</h3>' + sb + "</div>" +
       '<div class="sh-foot">' + (pr.ready ? "" : '<button class="btn primary" data-fabok>' + icon("check") + "Vidéo finie et relue</button>") +
-      (A.hasStudio ? '<a class="btn" href="studio/">' + icon("film") + "Studio</a>" : "") + '<button class="btn" data-fabpost>' + icon("contents") + "Fiche du post</button><button class=\"btn quiet\" data-close>Fermer</button></div>", "Fabrication : " + p.title);
+      '<button class="btn" data-fabpost>' + icon("contents") + "Fiche du post</button><button class=\"btn quiet\" data-close>Fermer</button></div>", "Fabrication : " + p.title);
     const L = document.getElementById("layer");
     L.querySelector(".sheet").classList.add("wide");
     L.querySelectorAll("[data-fabstep]").forEach((b) => b.addEventListener("click", () => setStep(p.id, b.dataset.fabstep)));
@@ -110,6 +110,12 @@
     else if (ok) { const was = A.hasStudio; A.hasStudio = true; try { localStorage.setItem("planners-studio", "1"); } catch (e) { /* rien */ } if (!was && A.ready && /fabrique/.test(location.hash)) A.render(); }
   }).catch(() => { /* hors ligne : on garde le dernier état connu */ });
 
+  // Couper une vidéo (blancs et « euh ») : écran et moteur dans web/studio/, chargés à la demande.
+  A.openCut = function () {
+    import(new URL("studio/ui.js", document.baseURI).href).then((m) => m.open())
+      .catch((e) => U.toast("Le module de découpe ne s'est pas chargé : " + e.message));
+  };
+
   // Vidéos reçues du studio : une par post, dans La Fabrique, montage et sous-titres faits, à relire.
   // La transcription sert de script : une IA peut en tirer les descriptions par réseau.
   A.receiveStudio = async function (meta) {
@@ -131,24 +137,25 @@
           media = Object.assign(media, { drive: j.id, url: j.url || "" });
         } catch (e) { U.toast("Envoi de " + fl.name + " impossible : " + e.message + ". La vidéo est gardée sans fichier : ajoute-la à la main."); }
       }
-      const by = "Studio";
+      const by = "Studio", steps = meta.steps || { script: { state: "done", by }, voice: { state: "done", by }, edit: { state: "done", by }, subs: { state: "done", by }, check: { state: "todo" } };
       const p = {
         id: "s" + Date.now().toString(36) + i, title: fl.name.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim(), format: "reel",
         networks: nets.length ? nets : ["instagram"], date: null, time: null, caption: "", captionValidated: false, manual: false,
         media: [media], stage: "caption", status: "draft", folder: dest,
-        note: it.text ? "Transcription (studio) :\n" + it.text.replace(/^\d+\s*$/gm, "").replace(/^[\d:,.\s]+-->[\d:,.\s]+$/gm, "").replace(/\n{2,}/g, "\n").trim().slice(0, 4000) : "",
-        prod: { steps: { script: { state: "done", by }, voice: { state: "done", by }, edit: { state: "done", by, at: C.nowStamp() }, subs: { state: "done", by }, check: { state: "todo" } } },
+        note: it.note ? it.note : it.text ? "Transcription (studio) :\n" + it.text.replace(/^\d+\s*$/gm, "").replace(/^[\d:,.\s]+-->[\d:,.\s]+$/gm, "").replace(/\n{2,}/g, "\n").trim().slice(0, 4000) : "",
+        prod: { steps: Object.assign({}, steps, { edit: Object.assign({}, steps.edit, { at: C.nowStamp() }) }) },
       };
       made.push(p);
     }
     await S.savePosts(made);
     await S.log({ level: "change", text: made.length + " vidéo" + (made.length > 1 ? "s reçues" : " reçue") + " du studio : " + made.map((p) => p.title).join(", ") });
     A.render();
-    U.toast(made.length + " vidéo" + (made.length > 1 ? "s" : "") + " dans La Fabrique, à relire. Une IA peut écrire les descriptions à partir de la transcription.");
+    U.toast(made.length + " vidéo" + (made.length > 1 ? "s" : "") + " dans La Fabrique, à relire." + (items.some((it) => it.text) ? " Une IA peut écrire les descriptions à partir de la transcription." : ""));
     if (made.length === 1) A.openFab(made[0].id);
   };
 
   document.addEventListener("click", (e) => {
+    if (e.target.closest("[data-cutvideo]")) { A.lastFocus = e.target.closest("[data-cutvideo]"); A.openCut(); return; }
     const t = e.target.closest("[data-fab],[data-fabst]");
     if (!t) return;
     if (t.dataset.fab) { A.lastFocus = t; A.openFab(t.dataset.fab); return; }
