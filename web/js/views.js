@@ -40,7 +40,7 @@
   // Calendrier : filtre facultatif par statut (légende cliquable).
   // Recherche (titre, texte, n°…) et série : appliquées au calendrier et aux contenus.
   const shown = (p) => visible(p) && (!A.q || C.matchQuery(p, A.q)) && (!A.serie || C.seriesOf(p) === A.serie);
-  const calVis = (p) => { if (!shown(p)) return false; if (!A.calSt) return true; const L = U.look(p); return L.st === A.calSt || L.al === A.calSt || (A.calSt === "manual" && L.hand); };
+  const calVis = (p) => { if (!shown(p)) return false; if (!A.calSt) return true; const L = U.look(p); return L.st === A.calSt || L.al === A.calSt || (A.calSt === "alert" && !!L.al) || (A.calSt === "manual" && L.hand); };
   function fbar(opts) {
     const series = [...new Set(top().map(C.seriesOf).filter(Boolean))].sort((a, b) => a.localeCompare(b, "fr"));
     if (A.serie && !series.includes(A.serie)) A.serie = "";
@@ -153,13 +153,36 @@
     return {
       title: "Aujourd'hui", sub: C.longDate(t),
       tools: '<span class="grow"></span><button class="btn primary" data-new aria-label="Nouveau post">' + icon("plus") + '<span class="lbl">Nouveau post</span></button>',
-      html: '<div class="today dash"><section aria-labelledby="h-todo" class="dash-main">' + setupCard() + '<h2 class="sec-h" id="h-todo"><span>' + (mob ? "À faire maintenant" : "À faire") + "</span><span>" + td.count + "</span></h2>" +
+      html: nextStepCard(td, k) + '<div class="today dash"><section aria-labelledby="h-todo" class="dash-main">' + setupCard() + '<h2 class="sec-h" id="h-todo"><span>' + (mob ? "À faire maintenant" : "À faire") + "</span><span>" + td.count + "</span></h2>" +
         '<div class="todo">' + todo + "</div>" + (mob && todo.includes("data-swipe") ? '<p class="muted swipe-hint">Glisse une carte à droite pour valider (ou poster), à gauche pour reporter à demain.</p>' : "") + quickBar() + "</section>" +
         '<aside class="dash-side" aria-labelledby="h-prog"><div class="kpis two">' + kpi("today", pub + " / " + day.length, "publiés aujourd'hui", pub === day.length && day.length ? "ok" : "") +
         kpi("ahead", k.ahead + " j", "de planning d'avance" + (k.holes ? " · " + k.holes + " trou" + (k.holes > 1 ? "s" : "") : ""), k.holes ? "warn" : "") + "</div>" +
         '<div class="sec-row"><h2 class="sec-h" id="h-prog"><span>Au programme</span></h2>' + seg + "</div>" + gal + "</aside></div>",
     };
   };
+  // « Prochaine étape » : une seule phrase, la chose la plus utile à faire maintenant, et son bouton.
+  A.nextStep = function (td, k) {
+    td = td || A.todoList(); k = k || A.kpiData();
+    const en = (window.I18N || {}).lang === "en", t = today();
+    const when = (p) => (p.date === t ? (en ? "today" : "aujourd'hui") : p.date === C.addDays(t, 1) ? (en ? "tomorrow" : "demain") : C.longDate(p.date)) + (en ? " at " : " à ") + p.time;
+    const q = (p) => (en ? "“" + p.title + "”" : "« " + p.title + " »");
+    if (td.failed.length) { const p = td.failed[0]; return { tone: "bad", text: en ? "Fix the failed post " + q(p) + "." : "Régler l'envoi raté de " + q(p) + ".", btn: "Comprendre", attr: 'data-open="' + esc(p.id) + '"' }; }
+    if (td.late.length) { const p = td.late[0]; return { tone: "warn", text: en ? "Post " + q(p) + ", due " + when(p) + "." : "Poster " + q(p) + ", prévu " + when(p) + ".", btn: "Poster", attr: 'data-manual="' + esc(p.id) + '"' }; }
+    if (td.manual.length) { const p = td.manual[0], pm = C.pendingManual(p, S.state.settings); return { tone: "warn", text: en ? "Post " + q(p) + " by hand " + when(p) + "." : "Poster " + q(p) + " à la main " + when(p) + ".", btn: "Poster", attr: 'data-manual="' + esc(p.id) + '" data-onet="' + esc(pm[0] || "") + '"' }; }
+    if (td.review.length) { const n = td.review.length, f = td.review[0]; return { tone: "info", text: en ? "Review " + (n > 1 ? "your " + n + " captions" : "your caption") + ": the first one goes out " + when(f) + "." : "Relire " + (n > 1 ? "tes " + n + " légendes" : "ta légende") + " : la première part " + when(f) + ".", btn: "Relire", attr: "data-review", href: A.canValidate() ? "" : "#list/review" }; }
+    if (td.missed.length) { const n = td.missed.length; return { tone: "warn", text: en ? "Reschedule or ignore " + n + " missed post" + (n > 1 ? "s" : "") + "." : "Reprogrammer ou ignorer " + n + " publication" + (n > 1 ? "s manquées" : " manquée") + ".", btn: "Voir", href: "#list/missed" }; }
+    if (td.expiring.length) { const p = td.expiring[0]; return { tone: "warn", text: en ? "Schedule " + q(p) + " before " + C.shortDay(p.expires) + "." : "Programmer " + q(p) + " avant le " + C.shortDay(p.expires) + ".", btn: "Programmer", attr: 'data-open="' + esc(p.id) + '"' }; }
+    if (k.holes) return { tone: "info", text: en ? "Fill the " + (k.holes > 1 ? k.holes + " empty days" : "empty day") + " in your plan." : "Remplir " + (k.holes > 1 ? "les " + k.holes + " jours vides" : "le jour vide") + " de ton planning.", btn: "Voir", href: "#list/ahead" };
+    const nx = k.futur.filter((p) => p.time && C.at(p) > C.nowStamp()).sort((a, b) => C.at(a).localeCompare(C.at(b)))[0];
+    if (nx) return { tone: "ok", text: en ? "Nothing to do: " + q(nx) + " goes out on its own " + when(nx) + "." : "Rien à faire : " + q(nx) + " part tout seul " + when(nx) + ".", btn: "Voir", attr: 'data-open="' + esc(nx.id) + '"' };
+    return { tone: "ok", text: en ? "Your plan is empty: create your first post." : "Ton planning est vide : crée ton premier post.", btn: "Nouveau post", attr: "data-new" };
+  };
+  function nextStepCard(td, k) {
+    const n = A.nextStep(td, k);
+    return '<section class="nextstep t-' + n.tone + '" aria-labelledby="h-next"><span class="ns-ic">' + icon(n.tone === "ok" ? "check" : n.tone === "info" ? "spark" : "alert") + '</span>' +
+      '<div class="ns-txt"><h2 id="h-next">Prochaine étape</h2><p data-noi18n>' + esc(n.text) + '</p></div>' + (n.href ? '<a class="btn primary" href="' + n.href + '">' + esc(n.btn) + icon("right") + "</a>" : '<button class="btn primary" ' + n.attr + ">" + esc(n.btn) + icon("right") + "</button>") + "</section>";
+  }
+
   // « Bien démarrer » : les étapes d'installation, cochées toutes seules, puis la carte disparaît.
   A.setupSteps = function () {
     const st = S.state.settings || {}, acc = S.state.accounts || {}, CN = window.CONNECTORS || {};
@@ -323,10 +346,10 @@
     const mob = A.isMobile();
     const mode = mob && A.calMode === "week" ? "agenda" : A.calMode;
     const range = mode === "month" ? monthTitle() : weekTitle();
-    const tools = '<button class="iconbtn" data-nav="-1" aria-label="Période précédente">' + icon("left") + '</button><b style="min-width:150px">' + range + '</b>' +
+    const tools = '<button class="iconbtn" data-nav="-1" aria-label="Période précédente">' + icon("left") + "</button>" + (mode === "grid" ? '<b style="min-width:150px">' + range + "</b>" : '<span class="sr">' + range + "</span>") +
       '<button class="iconbtn" data-nav="1" aria-label="Période suivante">' + icon("right") + "</button>" +
       '<button class="btn" data-nav="0" title="Aujourd\'hui">' + icon("calendar") + '<span class="lbl">Aujourd\'hui</span></button>' +
-      '<div class="seg" role="group" aria-label="Affichage">' + [["week", "Semaine"], ["month", "Mois"], ["grid", 'Grille<span class="lbl"> du profil</span>']].map(([k, l]) =>
+      '<div class="seg" role="group" aria-label="Affichage">' + [["week", "Semaine"], ["cols", "Vignettes"], ["month", "Mois"], ["grid", 'Grille<span class="lbl"> du profil</span>']].map(([k, l]) =>
         '<button data-calmode="' + k + '" aria-pressed="' + (A.calMode === k) + '">' + l + "</button>").join("") + "</div>" +
       '<span class="grow"></span>' + (mode === "week" || mode === "month" ? '<div class="seg small-seg" role="group" aria-label="Densité"><button data-caldense="1" aria-pressed="' + !!A.calCompact + '">Compact</button><button data-caldense="0" aria-pressed="' + !A.calCompact + '">Détaillé</button></div>' : "") + netMenu() +
       (mode === "agenda" && top().some((p) => !p.date && p.status === "ready") ? '<button class="btn" data-fillweek aria-label="Remplir la semaine">' + icon("spark") + '<span class="lbl">Remplir la semaine</span></button>' : "") +
@@ -335,12 +358,9 @@
     if (mode === "agenda") html = agenda();
     else if (mode === "month") html = month();
     else if (mode === "grid") html = profileGrid();
+    else if (mode === "cols") html = weekCols();
     else html = weekGrid();
-    if (mode !== "grid") {
-      const sts = ["prep", "review", "scheduled", "published", "manual", "late", "failed"];
-      html = fbar({ results: true }) + '<div class="callegend" role="group" aria-label="Statuts (cliquer pour filtrer)">' + sts.map((k) => '<button class="lg c-' + k + '" data-calst="' + k + '" aria-pressed="' + (A.calSt === k) + '">' + icon(C.STATUS[k].icon) + "<span>" + C.STATUS[k].label + "</span></button>").join("") +
-        (A.calSt ? '<button class="lg clear" data-calst="">' + icon("x") + "<span>Tout afficher</span></button>" : "") + "</div>" + html;
-    }
+    if (mode !== "grid") html = fbar({ results: true }) + periodBand(mode) + html;
     return { title: "Calendrier", tools, html };
   };
 
@@ -348,6 +368,56 @@
     const a = C.parseYmd(A.week), b = C.parseYmd(C.addDays(A.week, 6));
     return a.getDate() + (a.getMonth() !== b.getMonth() ? " " + C.MONTHS[a.getMonth()].slice(0, 4) + "." : "") + " – " + b.getDate() + " " + C.MONTHS[b.getMonth()];
   }
+  // Bandeau de la période : la semaine (ou le mois) en toutes lettres, puis les chiffres par étape.
+  // Chaque carte filtre le calendrier (un second clic enlève le filtre).
+  function periodBand(mode) {
+    const en = (window.I18N || {}).lang === "en";
+    let a, b, phrase;
+    if (mode === "month") {
+      const mid = C.parseYmd(C.addDays(A.week, 3));
+      a = C.ymd(new Date(mid.getFullYear(), mid.getMonth(), 1)); b = C.ymd(new Date(mid.getFullYear(), mid.getMonth() + 1, 0));
+      phrase = (en ? "Your " + C.MONTHS[mid.getMonth()] + " " : "Ton mois de " + C.MONTHS[mid.getMonth()] + " ") + mid.getFullYear();
+    } else {
+      a = A.week; b = C.addDays(A.week, 6);
+      const da = C.parseYmd(a), db = C.parseYmd(b);
+      phrase = (en ? "" : "Du ") + C.DAYS[da.getDay()] + " " + da.getDate() + (da.getMonth() !== db.getMonth() ? " " + C.MONTHS[da.getMonth()] : "") + (en ? " to " : " au ") + C.DAYS[db.getDay()] + " " + db.getDate() + " " + C.MONTHS[db.getMonth()];
+    }
+    const now = C.nowStamp();
+    const list = top().filter((p) => p.date && p.date >= a && p.date <= b && shown(p)).map((p) => U.look(p, now));
+    const n = (f) => list.filter(f).length;
+    const cards = [["prep", "à préparer", n((l) => l.st === "prep" || l.st === "idea")], ["review", "à valider", n((l) => l.st === "review")],
+      ["scheduled", "programmés", n((l) => l.st === "scheduled")], ["published", "publiés", n((l) => l.st === "published")]];
+    const hand = n((l) => l.hand), al = n((l) => !!l.al);
+    if (hand) cards.push(["manual", "à la main", hand]);
+    if (al) cards.push(["alert", "à régler", al]);
+    const total = list.length;
+    return '<section class="pband" aria-labelledby="h-period"><div class="pband-h"><h2 id="h-period" data-noi18n>' + esc(phrase) + '</h2><span class="muted">' + total + " contenu" + (total > 1 ? "s" : "") +
+      (A.calSt ? ' · <button class="lk" data-calst="">' + icon("x") + "Tout afficher</button>" : "") + "</span></div>" +
+      '<div class="pkpis" role="group" aria-label="Filtrer par étape">' + cards.map(([k, l, v]) => '<button class="pkpi c-' + k + (k === "alert" ? " is-alert" : "") + '" data-calst="' + k + '" aria-pressed="' + (A.calSt === k) + '">' +
+        '<span class="ic">' + icon(k === "alert" ? "alert" : C.STATUS[k].icon) + "</span><b>" + v + (k === "published" && total ? '<small> / ' + total + "</small>" : "") + "</b><span>" + l + "</span></button>").join("") + "</div></section>";
+  }
+
+  // Vue « Vignettes » : 7 colonnes, une carte avec image par contenu (façon planche).
+  function weekCols() {
+    const t = today(), now = C.nowStamp();
+    const days = [...Array(7)].map((_, i) => C.addDays(A.week, i));
+    const list = top().filter((p) => p.date && p.date >= days[0] && p.date <= days[6] && calVis(p));
+    return '<div class="wcols" role="group" aria-label="Semaine en vignettes">' + days.map((d) => {
+      const here = list.filter((p) => p.date === d).sort((x, y) => (x.time || "").localeCompare(y.time || ""));
+      const dd = C.parseYmd(d);
+      return '<section class="wcol' + (d === t ? " is-today" : "") + (d < t ? " past" : "") + '" data-day="' + d + '" aria-labelledby="wc-' + d + '"><h3 class="wcol-h" id="wc-' + d + '"><span>' + esc(C.DAYS[dd.getDay()]) + "</span><b>" + dd.getDate() + "</b>" +
+        (d === t ? '<span class="sr"> (aujourd\'hui)</span>' : "") + '<span class="n">' + (here.length || "") + "</span></h3>" +
+        here.map((p) => {
+          const L = U.look(p, now), cov = coverOf(p), kids = kidsOf(p.id).length;
+          return '<button class="wcard ' + L.cls + (p.ignored ? " is-off" : "") + '" data-open="' + esc(p.id) + '">' + U.abar(p, now, true) +
+            '<span class="pic' + (cov ? "" : " noimg") + '">' + (cov ? '<img src="' + esc(cov) + '" alt="" loading="lazy" draggable="false">' : '<span class="ph">' + icon(p.format === "reel" || p.format === "video" ? "film" : "contents") + "</span>") +
+            '<span class="tm">' + (p.time || "") + "</span></span>" +
+            '<span class="ttl">' + esc(p.title) + '</span><span class="meta">' + brands(p.networks) + '<span class="fmt">' + esc(C.FORMATS[p.format] || "") + (kids ? " +" + kids : "") + "</span></span>" + U.badge(p, now) + "</button>";
+        }).join("") +
+        (!here.length ? (d >= t ? '<button class="wfree" data-free="' + d + "|" + ((slots()[0] || {}).time || "12:00") + '" aria-label="Ajouter un post le ' + esc(C.longDate(d)) + '">' + icon("plus") + "</button>" : '<p class="wnone">Rien</p>') : "") + "</section>";
+    }).join("") + "</div>";
+  }
+
   function monthTitle() {
     const d = C.parseYmd(C.addDays(A.week, 3));
     return C.MONTHS[d.getMonth()][0].toUpperCase() + C.MONTHS[d.getMonth()].slice(1) + " " + d.getFullYear();

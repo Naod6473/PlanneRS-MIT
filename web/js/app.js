@@ -12,7 +12,7 @@
     const r = route();
     const n = A.todoList().count;
     const h = A.health();
-    document.getElementById("nav").innerHTML = NAV.map(([k, l, ic]) => '<a href="#' + k + '"' + (navOf(r) === k ? ' aria-current="page"' : "") + ">" + icon(ic) + l +
+    document.getElementById("nav").innerHTML = NAV.map(([k, l, ic]) => '<a class="n-' + k + '" href="#' + k + '"' + (navOf(r) === k ? ' aria-current="page"' : "") + '><span class="nico">' + icon(ic) + "</span>" + l +
       (k === "today" && n ? '<span class="count" aria-label="' + n + ' à faire">' + n + "</span>" : "") + "</a>").join("");
     document.getElementById("ws-name").textContent = S.state.settings.workspace.name;
     const hl = document.getElementById("health");

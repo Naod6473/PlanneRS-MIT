@@ -392,10 +392,11 @@
     {
       "path": "utilisation/aujourdhui.md",
       "title": "Aujourd'hui",
-      "description": "L'écran d'accueil de PlanneRs, avec les indicateurs, ce qui est au programme, la liste « À faire », les publications manquées et les raccourcis.",
+      "description": "L'écran d'accueil de PlanneRs, avec la prochaine étape, les indicateurs, ce qui est au programme, la liste « À faire », les publications manquées et les raccourcis.",
       "category": "Utilisation",
       "tags": [
         "aujourd'hui",
+        "prochaine étape",
         "tableau de bord",
         "à faire",
         "manqués",
@@ -405,8 +406,13 @@
         "kpi"
       ],
       "order": 1,
-      "updated": "2026-11-10",
+      "updated": "2026-11-12",
       "headings": [
+        {
+          "level": 2,
+          "text": "Prochaine étape",
+          "anchor": "prochaine-étape"
+        },
         {
           "level": 2,
           "text": "Les quatre indicateurs",
@@ -452,11 +458,13 @@
     {
       "path": "utilisation/calendrier.md",
       "title": "Calendrier",
-      "description": "Voir et déplacer ses publications en vue Semaine par créneaux, Mois ou grille du profil Instagram, à la souris ou au doigt, avec confirmation.",
+      "description": "Voir et déplacer ses publications en vue Semaine par créneaux, Vignettes, Mois ou grille du profil Instagram, à la souris ou au doigt, avec confirmation.",
       "category": "Utilisation",
       "tags": [
         "calendrier",
         "semaine",
+        "vignettes",
+        "chiffres de la semaine",
         "mois",
         "grille du profil",
         "glisser-déposer",
@@ -466,12 +474,17 @@
         "téléphone"
       ],
       "order": 2,
-      "updated": "2026-11-11",
+      "updated": "2026-11-12",
       "headings": [
         {
           "level": 2,
           "text": "Les vues",
           "anchor": "les-vues"
+        },
+        {
+          "level": 3,
+          "text": "La période et ses chiffres",
+          "anchor": "la-période-et-ses-chiffres"
         },
         {
           "level": 3,

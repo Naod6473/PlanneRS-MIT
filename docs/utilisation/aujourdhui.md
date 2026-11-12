@@ -1,15 +1,19 @@
 ---
 title: Aujourd'hui
-description: L'écran d'accueil de PlanneRs, avec les indicateurs, ce qui est au programme, la liste « À faire », les publications manquées et les raccourcis.
+description: L'écran d'accueil de PlanneRs, avec la prochaine étape, les indicateurs, ce qui est au programme, la liste « À faire », les publications manquées et les raccourcis.
 category: Utilisation
-tags: [aujourd'hui, tableau de bord, à faire, manqués, raccourcis, idée, dépôt de fichiers, kpi]
+tags: [aujourd'hui, prochaine étape, tableau de bord, à faire, manqués, raccourcis, idée, dépôt de fichiers, kpi]
 order: 1
-updated: 2026-11-10
+updated: 2026-11-12
 ---
 
 # Aujourd'hui
 
 C'est l'écran d'accueil. Un clic sur le logo PlanneRs y ramène depuis n'importe où.
+
+## Prochaine étape
+
+En haut, une seule phrase dit la chose la plus utile à faire maintenant, avec son bouton. Dans l'ordre : régler un envoi raté, poster ce qui est en retard ou à poster à la main, relire les légendes à valider, rattraper les publications manquées, programmer un contenu d'actualité qui va se périmer, remplir les jours vides. Si tout est en ordre, elle annonce la prochaine publication qui partira toute seule.
 
 ## Les quatre indicateurs
 

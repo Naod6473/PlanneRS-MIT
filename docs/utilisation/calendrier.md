@@ -1,10 +1,10 @@
 ---
 title: Calendrier
-description: Voir et déplacer ses publications en vue Semaine par créneaux, Mois ou grille du profil Instagram, à la souris ou au doigt, avec confirmation.
+description: Voir et déplacer ses publications en vue Semaine par créneaux, Vignettes, Mois ou grille du profil Instagram, à la souris ou au doigt, avec confirmation.
 category: Utilisation
-tags: [calendrier, semaine, mois, grille du profil, glisser-déposer, déplacer, créneaux, confirmation, téléphone]
+tags: [calendrier, semaine, vignettes, chiffres de la semaine, mois, grille du profil, glisser-déposer, déplacer, créneaux, confirmation, téléphone]
 order: 2
-updated: 2026-11-11
+updated: 2026-11-12
 ---
 
 # Calendrier
@@ -14,11 +14,16 @@ updated: 2026-11-11
 | Vue | Ce qu'elle montre |
 |---|---|
 | **Semaine** | Une grille : tes [créneaux](activite-et-reglages.md#créneaux) en lignes, les jours en colonnes. Une ligne « Autres » regroupe les posts à une heure hors créneau. À droite, le bac **Prêts à programmer** (posts prêts sans date). |
+| **Vignettes** | Les 7 jours en colonnes, une carte par post avec son image, l'heure, le titre, les réseaux et l'étape. La vue la plus visuelle pour relire sa semaine d'un coup d'œil. Au téléphone, les colonnes défilent de côté. |
 | **Mois** | Les posts de chaque jour du mois, cinq au plus par case (« + n autres » ouvre la semaine). |
 | **Grille du profil** | L'aperçu du profil Instagram : en-tête (publications, abonnés, posts à venir), publiés en plein, à venir en pointillés, icône Reel ou carrousel. Sur ordinateur, glisse une case à venir sur une autre pour **échanger leurs dates**. |
 | Téléphone | La vue Semaine devient une liste par jour, avec une barre des 7 jours en haut. |
 
 Le menu des réseaux (en haut à droite) affiche ou masque chaque réseau.
+
+### La période et ses chiffres
+
+Au-dessus du calendrier, la période s'écrit en toutes lettres (« Du lundi 9 au dimanche 15 novembre », ou « Ton mois de novembre 2026 »), suivie de cartes chiffres : **à préparer**, **à valider**, **programmés**, **publiés** (sur le total), et quand il y en a, **à la main** et **à régler** (échecs et retards). Un clic sur une carte ne montre plus que ces posts ; un second clic, ou « Tout afficher », enlève le filtre.
 
 ### Compact ou Détaillé
 
