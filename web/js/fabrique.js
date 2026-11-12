@@ -102,8 +102,13 @@
   }
 
   // Studio vidéo : présent seulement dans la version privée (dossier web/studio/).
-  A.hasStudio = null;
-  fetch("studio/VERSION", { method: "HEAD" }).then((r) => { A.hasStudio = r.ok; if (r.ok && /fabrique/.test(location.hash)) A.render(); }).catch(() => { A.hasStudio = false; });
+  // Le résultat est retenu : le bouton reste là même si la vérification échoue un jour (hors ligne, session expirée).
+  try { A.hasStudio = localStorage.getItem("planners-studio") === "1"; } catch (e) { A.hasStudio = false; }
+  fetch("studio/VERSION", { cache: "no-store", credentials: "same-origin" }).then((r) => {
+    const ok = r.ok && !r.redirected && !/html/i.test(r.headers.get("content-type") || ""); // une page de connexion n'est pas le studio
+    if (r.status === 404) { A.hasStudio = false; try { localStorage.removeItem("planners-studio"); } catch (e) { /* rien */ } }
+    else if (ok) { const was = A.hasStudio; A.hasStudio = true; try { localStorage.setItem("planners-studio", "1"); } catch (e) { /* rien */ } if (!was && A.ready && /fabrique/.test(location.hash)) A.render(); }
+  }).catch(() => { /* hors ligne : on garde le dernier état connu */ });
 
   // Vidéos reçues du studio : une par post, dans La Fabrique, montage et sous-titres faits, à relire.
   // La transcription sert de script : une IA peut en tirer les descriptions par réseau.
