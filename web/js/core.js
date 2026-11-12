@@ -111,6 +111,17 @@
     });
   }
   // Texte réellement envoyé sur un réseau : sa légende, avec les liens suivis.
+  // Titre à coller sur un réseau qui en demande un (YouTube : 100 caractères max, #Shorts pour une vidéo verticale).
+  function titleFor(p, net) {
+    let t = String((p.titles && p.titles[net]) || p.title || "").trim();
+    if (net === "youtube") {
+      const short = (p.format === "reel" || p.format === "video") && !/#shorts\b/i.test(t);
+      const tag = short ? " #Shorts" : "";
+      if (t.length + tag.length > 100) t = t.slice(0, 100 - tag.length - 1).trimEnd() + "…";
+      t += tag;
+    }
+    return t;
+  }
   function textOut(p, net, settings) { return utm(capFor(p, net), net, p, settings); }
 
   function checks(p, settings) {
@@ -247,6 +258,6 @@
   function nowStamp(d) { d = d || new Date(); return ymd(d) + "T" + pad(d.getHours()) + ":" + pad(d.getMinutes()); }
 
   const api = { STATUS, FORMATS, STAGES, STEPS, step, alertOf, pad, ymd, parseYmd, addDays, mondayOf, toMin, at, longDate, shortDay, MONTHS, DAYS, setLang,
-    displayStatus, missed, willSend, hashtags, checks, mediaChecks, slotOf, nowStamp, fold, seriesOf, matchQuery, parseCsv, toCsv, manualNets, autoNets, pendingManual, prefillUrl, capFor, TEXT_MAX, utm, textOut };
+    displayStatus, missed, willSend, hashtags, checks, mediaChecks, slotOf, nowStamp, fold, seriesOf, matchQuery, parseCsv, toCsv, manualNets, autoNets, pendingManual, prefillUrl, titleFor, capFor, TEXT_MAX, utm, textOut };
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.Core = api;
 })(typeof self !== "undefined" ? self : this);

@@ -27,3 +27,12 @@ test("échec et retard sont des alertes, pas des étapes", () => {
   assert.equal(Core.alertOf(late, now), "late");
   assert.equal(Core.step(late), "scheduled");
 });
+
+test("titre par réseau : #Shorts et 100 caractères max sur YouTube", () => {
+  assert.equal(Core.titleFor({ title: "Le levain", format: "reel" }, "youtube"), "Le levain #Shorts");
+  assert.equal(Core.titleFor({ title: "Le levain #shorts", format: "reel" }, "youtube"), "Le levain #shorts");
+  assert.equal(Core.titleFor({ title: "Le levain", format: "carousel" }, "youtube"), "Le levain");
+  assert.equal(Core.titleFor({ title: "Le levain", format: "reel" }, "tiktok"), "Le levain");
+  const long = Core.titleFor({ title: "x".repeat(140), format: "video" }, "youtube");
+  assert.ok(long.length <= 100 && long.endsWith("#Shorts"));
+});

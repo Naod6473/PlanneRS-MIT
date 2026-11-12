@@ -425,7 +425,7 @@
     if (k === "?") { e.preventDefault(); A.openShortcuts(); return true; }
     if (open) {
       if (!L.querySelector(".sheet") || L.querySelector(".composer,.review,.palette")) return false;
-      const m = { v: '[data-act="validate"]', e: '[data-act="compose"]', d: '[data-act="showmove"]', m: '[data-act="manual"],[data-manual]' }[k.toLowerCase()];
+      const m = { v: '[data-act="validate"]', e: '[data-act="compose"]', d: '[data-act="showmove"]', m: '[data-act="manual"],[data-manual]', p: '[data-act="postto"]' }[k.toLowerCase()];
       return m ? click(m) : false;
     }
     const lk = k.toLowerCase();
@@ -444,7 +444,7 @@
     return false;
   };
   A.openShortcuts = function () {
-    const keys = [["N", "Nouveau post"], ["/", "Chercher"], ["← →", "Semaine précédente / suivante"], ["T", "Revenir à aujourd'hui"], ["V", "Valider le post ouvert"], ["E", "Modifier le post ouvert"], ["D", "Changer la date"], ["M", "Poster à la main"],
+    const keys = [["N", "Nouveau post"], ["/", "Chercher"], ["← →", "Semaine précédente / suivante"], ["T", "Revenir à aujourd'hui"], ["V", "Valider le post ouvert"], ["E", "Modifier le post ouvert"], ["D", "Changer la date"], ["M", "Poster à la main"], ["P", "Poster sur… (choisir le réseau)"],
       ["G puis C", "Aller au calendrier"], ["G puis O", "Aller aux contenus"], ["G puis S", "Aller aux stats"], ["G puis A", "Aller à Aujourd'hui"], ["Ctrl K", "Tout chercher"], ["Échap", "Fermer"]];
     A.openLayer('<div class="sh-top"><b>Raccourcis clavier</b><span style="flex:1"></span><button class="iconbtn" data-close aria-label="Fermer">' + U.icon("x") + "</button></div>" +
       '<div class="sh-body"><div class="kbd-list">' + keys.map(([a, b]) => '<div class="kbd-row"><kbd>' + U.esc(a) + "</kbd><span>" + U.esc(b) + "</span></div>").join("") + '</div><p class="muted" style="margin:0;font-size:13px">Touche « ? » pour revoir cette liste.</p></div>', "Raccourcis clavier");

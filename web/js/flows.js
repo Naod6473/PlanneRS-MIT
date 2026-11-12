@@ -136,6 +136,7 @@
     else if (done) foot = (p.url ? '<a class="btn primary" href="' + safeUrl(p.url) + '" target="_blank" rel="noopener">' + icon("open") + "Voir le post</a>" : "") + (p.parent ? "" : '<button class="btn' + (p.url ? "" : " primary") + '" data-act="recycle">' + icon("undo") + "Republier</button>");
     { const pmn = p.manual || p.parent ? [] : C.pendingManual(p, S.state.settings);
       if (pmn.length && p.date && ["scheduled", "published", "failed"].includes(p.status)) foot = '<button class="btn" data-manual="' + esc(p.id) + '" data-onet="' + pmn[0] + '">' + icon("hand") + "À la main : " + esc(pmn.map((n) => (window.BRANDS[n] ? window.BRANDS[n].title : n)).join(", ")) + "</button>" + foot; }
+    foot += '<button class="btn" data-act="postto">' + icon("send") + "Poster sur…</button>";
     if (!done) foot += '<button class="btn" data-act="compose">' + icon("pen") + "Modifier</button>";
     foot += '<span style="flex:1"></span><details class="moremenu"><summary class="btn quiet" aria-label="Plus d\'actions">' + icon("more") + '<span class="lbl2">Plus</span></summary><div class="mm-list" role="menu">' +
       '<button class="btn quiet" role="menuitem" data-act="dup">' + icon("dup") + "Dupliquer</button>" +
@@ -275,6 +276,7 @@
         break;
       }
       case "manual": A.closeLayer(); A.openManual(p.id); return;
+      case "postto": A.closeLayer(); A.openPostTo(p.id); return;
       case "ignore": p.ignored = true; await S.savePosts([p]); await S.log({ level: "change", text: "Rappel ignoré : " + p.title, postId: p.id }); break;
       case "toready": p.status = "ready"; p.stage = "ready"; await S.savePosts([p]); break;
       case "dup": {
@@ -604,6 +606,89 @@
   };
 
   // ------------------------------------------------------------ Validation en lot
+  // « Poster sur… » : pour n'importe quel contenu, choisir un réseau, puis récupérer titre, description et médias
+  // et ouvrir le réseau (texte déjà écrit quand le réseau le permet). Rien n'est envoyé automatiquement.
+  const POST_TO = ["instagram", "facebook", "youtube", "tiktok", "x", "linkedin", "threads", "bluesky"];
+  const NET_TIPS = {
+    youtube: "Choisis « Non, ce n'est pas conçu pour les enfants », et indique « contenu modifié ou synthétique » seulement si la vidéo montre une vraie personne ou un faux réaliste.",
+    tiktok: "Sur ordinateur, l'envoi se fait sur tiktok.com/upload ; sur téléphone, partage la vidéo vers l'appli.",
+    instagram: "Instagram ne publie pas depuis un navigateur d'ordinateur pour tous les formats : le téléphone est plus sûr.",
+    x: "280 caractères max : le texte est coupé au-delà.",
+  };
+  const fileName = (s) => String(s || "post").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\w-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60).toLowerCase() || "post";
+  function saveText(name, text) {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([text], { type: "text/plain;charset=utf-8" }));
+    a.download = name; document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  }
+  A.openPostTo = function (id, net) {
+    const p = S.post(id); if (!p) return;
+    const set = S.state.settings;
+    const name = (n) => (window.BRANDS[n] ? window.BRANDS[n].title : n);
+    const order = [...new Set(p.networks.concat(POST_TO))].filter((n) => window.BRANDS[n]);
+    const done = (n) => !!(p.results && p.results[n] && p.results[n].status === "ok");
+    const top = '<div class="sh-top">' + brands(p.networks, "lg") + '<span class="muted" style="font-size:13px">' + esc(C.FORMATS[p.format] || "") + (p.date ? " · " + esc(C.shortDay(p.date)) + " " + (p.time || "") : "") + '</span><span style="flex:1"></span><button class="iconbtn" data-close aria-label="Fermer">' + icon("x") + "</button></div>";
+    if (!net) {
+      openLayer(top + '<div class="sh-body"><h2>Poster sur…</h2><p class="muted" style="margin:0">« ' + esc(p.title) + " » : choisis le réseau. Tu récupères le titre, la description et les médias, et le réseau s'ouvre.</p>" +
+        '<div class="pt-grid" role="group" aria-label="Réseaux">' + order.map((n) => '<button class="pt-net" data-ptnet="' + n + '">' + brand(n, "lg") + "<span>" + esc(name(n)) + "</span>" +
+          (done(n) ? '<span class="pt-ok">' + icon("check") + "Posté</span>" : p.networks.includes(n) ? '<span class="pt-in">Prévu</span>' : "") + "</button>").join("") + "</div></div>", "Poster sur");
+      layer().querySelectorAll("[data-ptnet]").forEach((b) => b.addEventListener("click", () => { A.closeLayer(); A.openPostTo(p.id, b.dataset.ptnet); }));
+      return;
+    }
+    const title = C.titleFor(p, net);
+    const cap = C.textOut(p, net, set);
+    const story = !cap.trim() && p.format === "story" && !!p.note; // story sans texte : on donne la consigne
+    const desc = story ? p.note : cap;
+    const pre = story ? null : C.prefillUrl(net, desc);
+    const media = (p.media || []).filter((m) => m.role !== "guide");
+    const mrow = (m, i) => '<div class="pt-file" data-mi="' + i + '"><span class="nm">' + icon(m.type === "video" || /\.(mp4|mov|webm)$/i.test(m.name || m.url || "") ? "film" : "image") + esc(m.name || "Média " + (i + 1)) + (m.role === "cover" ? ' <span class="muted">(couverture)</span>' : "") + "</span>" +
+      (/^https?:/.test(m.url || "") ? '<a class="btn sm" href="' + safeUrl(m.url) + '" download="' + esc(m.name || "") + '" target="_blank" rel="noopener">' + icon("download") + "Télécharger</a>" : relPath(p.folder) && driveOn() ? '<span class="btn sm" data-mwait>Recherche…</span>' : '<span class="muted">pas de lien</span>') + "</div>";
+    const txtFile = (title ? "=== TITRE ===\n" + title + "\n\n" : "") + "=== " + (story ? "CONSIGNE" : "DESCRIPTION") + " ===\n" + desc + "\n" + (NET_TIPS[net] ? "\n=== À SAVOIR ===\n" + NET_TIPS[net] + "\n" : "");
+    openLayer(top + '<div class="sh-body"><p class="pt-back"><button class="lk muted" data-ptback>' + icon("left") + "Autre réseau</button></p>" +
+      '<h2 class="pt-h">' + brand(net, "lg") + "Poster sur " + esc(name(net)) + "</h2>" +
+      '<div class="pt-blk"><div class="pt-lbl"><b>Titre</b>' + (net === "youtube" ? '<span class="muted">' + title.length + " / 100</span>" : "") + '</div><div class="quote">' + esc(title) + '</div><button class="btn sm" data-ptcopy="t">' + icon("copy") + "Copier le titre</button></div>" +
+      '<div class="pt-blk"><div class="pt-lbl"><b>' + (story ? "Consigne" : "Description") + '</b><span class="muted">' + desc.length + (C.TEXT_MAX[net] && !story ? " / " + C.TEXT_MAX[net] : "") + "</span></div>" + (desc ? '<div class="quote">' + esc(desc) + "</div>" : '<p class="muted">Pas de texte.</p>') +
+        (desc ? '<button class="btn sm" data-ptcopy="d">' + icon("copy") + "Copier la description</button>" : "") + "</div>" +
+      '<div class="pt-blk"><div class="pt-lbl"><b>Médias</b><span class="muted">' + media.length + "</span></div>" + (media.length ? media.map(mrow).join("") : '<p class="muted">Aucun fichier rattaché.</p>') + "</div>" +
+      '<div class="pt-acts"><button class="btn" data-pttxt>' + icon("download") + "Télécharger titre + description (.txt)</button>" +
+        '<button class="btn" data-ptshare hidden>' + icon("send") + "Partager la vidéo vers l'appli</button></div>" +
+      (NET_TIPS[net] ? '<p class="muted pt-tip">' + esc(NET_TIPS[net]) + "</p>" : "") +
+      '<label class="form"><span class="muted" style="font-size:13px">Une fois en ligne : lien du post (facultatif)</span><input id="pt-url" type="url" placeholder="https://…"></label>' +
+      '</div><div class="sh-foot">' + (pre ? '<a class="btn primary" href="' + safeUrl(pre) + '" target="_blank" rel="noopener" data-ptopen>' + icon("open") + "Ouvrir " + esc(name(net)) + " avec le texte</a>" : '<a class="btn primary" href="' + safeUrl(APP_URL[net] || "#") + '" target="_blank" rel="noopener" data-ptopen>' + icon("open") + "Copier la description et ouvrir " + esc(name(net)) + "</a>") +
+      '<button class="btn" data-ptdone>' + icon("check") + "C'est posté</button></div>", "Poster sur " + name(net));
+    const L = layer();
+    L.querySelector("[data-ptback]").addEventListener("click", () => { A.closeLayer(); A.openPostTo(p.id); });
+    L.querySelectorAll("[data-ptcopy]").forEach((b) => b.addEventListener("click", () => U.copy(b.dataset.ptcopy === "t" ? title : desc)));
+    L.querySelector("[data-pttxt]").addEventListener("click", () => saveText(fileName((p.ref ? p.ref + "-" : "") + p.title) + "-" + net + ".txt", txtFile));
+    L.querySelector("[data-ptopen]").addEventListener("click", () => { if (!pre && desc) U.copy(desc); });
+    // Médias rangés dans le stockage : lien de téléchargement par fichier.
+    if (media.some((m) => !/^https?:/.test(m.url || "")) && relPath(p.folder) && driveOn()) A.driveFolder(p.folder).then((d) => {
+      media.forEach((m, i) => {
+        const w = L.querySelector('[data-mi="' + i + '"] [data-mwait]'); if (!w) return;
+        const f = d.files.find((x) => x.name === m.name);
+        w.outerHTML = f ? '<a class="btn sm" href="' + safeUrl(A.driveFileUrl(f)) + '" download="' + esc(f.name) + '">' + icon("download") + "Télécharger</a>" : '<a class="btn sm" href="' + safeUrl(d.url) + '" target="_blank" rel="noopener">Ouvrir le dossier</a>';
+      });
+    }).catch(() => L.querySelectorAll("[data-mwait]").forEach((w) => { w.textContent = "Stockage inaccessible"; }));
+    // Téléphone : envoyer la vidéo (ou l'image) directement dans l'appli par le menu Partager.
+    const m0 = media.find((m) => m.role !== "cover" && /^https?:/.test(m.url || ""));
+    if (m0 && navigator.canShare) fetch(m0.url).then((r) => (r.ok ? r.blob() : null)).then((bl) => {
+      if (!bl) return;
+      const f = new File([bl], m0.name || "media", { type: bl.type || (m0.type === "video" ? "video/mp4" : "image/jpeg") });
+      if (!navigator.canShare({ files: [f] })) return;
+      const b = L.querySelector("[data-ptshare]"); if (!b) return;
+      b.hidden = false;
+      b.addEventListener("click", () => { if (desc) U.copy(desc); navigator.share({ files: [f] }).catch(() => {}); });
+    }).catch(() => {});
+    L.querySelector("[data-ptdone]").addEventListener("click", async () => {
+      const u = L.querySelector("#pt-url").value.trim();
+      p.results = Object.assign({}, p.results || {}, { [net]: { status: "ok", url: u || undefined, manual: true } });
+      if (p.networks.includes(net) && !C.pendingManual(p, set).length && p.status !== "published" && !C.autoNets(p, set).some((n) => !(p.results[n] && p.results[n].status === "ok"))) { p.status = "published"; p.stage = "published"; if (u && !p.url) p.url = u; }
+      await S.savePosts([p]); await S.log({ level: "ok", text: "Posté à la main sur " + name(net) + " : " + p.title, postId: p.id });
+      A.closeLayer(); A.render(); U.toast("Noté : posté sur " + name(net));
+    });
+  };
+
   A.openReview = function () {
     if (A.denyValidate()) return;
     const list = A.todoList().review.map((p) => p.id);

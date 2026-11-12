@@ -433,6 +433,11 @@
           "anchor": "poster-à-la-main"
         },
         {
+          "level": 3,
+          "text": "Poster sur… n'importe quel réseau",
+          "anchor": "poster-sur-nimporte-quel-réseau"
+        },
+        {
           "level": 2,
           "text": "Raccourcis",
           "anchor": "raccourcis"

@@ -76,6 +76,19 @@ Pour les réseaux sans connexion automatique ou à l'API payante, coche-les dans
 
 Sur ordinateur, aucun réseau ne permet de joindre la vidéo automatiquement par un lien : glisse-la dans la fenêtre du réseau.
 
+### Poster sur… n'importe quel réseau
+
+Pour publier un contenu sur un réseau qui n'est pas prévu (un Reel en Short YouTube, un post sur LinkedIn…), ouvre sa fiche depuis le calendrier ou les contenus, puis **Poster sur…** (touche **P**). Choisis le réseau :
+
+- **Titre** prêt à copier. Pour YouTube, il fait 100 caractères au plus et finit par `#Shorts` pour une vidéo verticale ;
+- **Description** (la version propre à ce réseau s'il y en a une), avec le compteur de la limite du réseau ;
+- **Médias** : un bouton **Télécharger** par fichier (lien direct ou stockage connecté) ;
+- **Télécharger titre + description (.txt)** : un fichier texte avec les deux, et les réglages à ne pas oublier (pour YouTube : « pas conçu pour les enfants ») ;
+- **Ouvrir le réseau** : avec le texte déjà écrit pour X, LinkedIn, Threads et Bluesky ; sinon la description est copiée et la page d'envoi s'ouvre (studio YouTube, tiktok.com/upload…). Sur téléphone, **Partager la vidéo vers l'appli** l'envoie directement dans l'appli choisie ;
+- **C'est posté** (avec le lien, facultatif) le note dans le post et dans l'Activité.
+
+Rien n'est envoyé automatiquement : c'est toi qui publies.
+
 ## Raccourcis
 
 | Raccourci | Effet |
@@ -104,6 +117,7 @@ Sur ordinateur, la touche **?** affiche la liste :
 | E | Modifier le post ouvert |
 | D | Changer la date du post ouvert |
 | M | Poster à la main |
+| P | Poster sur… (choisir le réseau) |
 | G puis A, C, O, S, Y ou R | Aller à Aujourd'hui, Calendrier, Contenus, Stats, Activité ou Réglages |
 | Échap | Fermer |
 
