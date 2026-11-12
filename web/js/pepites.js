@@ -59,7 +59,7 @@
     await S.saveSettings(st);
   }
   function parse(net, raw) {
-    const h = String(raw || "").trim().replace(/^https?:\/\/(www\.)?(instagram\.com|youtube\.com)\//i, "").replace(/^@/, "").replace(/[/?#].*$/, "");
+    const h = String(raw || "").trim().replace(/^https?:\/\/((www|m)\.)?(instagram\.com|youtube\.com)\//i, "").replace(/^(channel|c|user)\//i, "").replace(/^@/, "").replace(/[/?#].*$/, "");
     return /^[\w.-]{1,60}$/.test(h) ? { net: net === "youtube" ? "youtube" : "instagram", handle: h } : null;
   }
 

@@ -31,7 +31,7 @@ export async function test(env, cred) {
 
 // Envoie (ou remplace) un fichier et renvoie son adresse publique.
 export async function put(cred, path, bytes, type) {
-  if (bytes.length > 95 * 1024 * 1024) throw err("Fichier trop lourd pour GitHub (100 Mo max).", "Compresse la vidéo ou utilise R2.");
+  if (bytes.length > 40 * 1024 * 1024) throw err("Fichier trop lourd pour GitHub Pages (40 Mo max).", "Compresse la vidéo ou dépose-la dans R2, Drive ou un NAS.");
   const file = joinPath(cred.folder || "media", path);
   const enc = file.split("/").map(encodeURIComponent).join("/");
   const branch = cred.branch || "main";

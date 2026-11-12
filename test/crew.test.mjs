@@ -33,12 +33,14 @@ test("MCP : planners_team donne les consignes, role signe l'étape", async () =>
   await call("planners_production", { id: "v1", step: "script", state: "doing", role: "script" });
   assert.equal(st.posts[0].prod.steps.script.by, "Claude · Scénariste");
   assert.equal((await call("planners_team", {})).roles[0].done, 0);
+  const bad = await handleRpc({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "planners_production", arguments: { id: "v1", step: "caption", state: "done" } } }, d);
+  assert.equal(bad.result.isError, true);
 });
 
 test("clé API : le Scénariste remplit le storyboard avec ses consignes", async () => {
   const seen = [], post = { id: "v1", title: "Levain", format: "reel", note: "Transcription : le levain vit.", prod: { maxSec: 20 } };
   const reply = '```json\n{"note":"Le levain expliqué","shots":[{"dur":3,"screen":"Le levain ?","voice":"Tu sais ce que c\'est ?"},{"dur":"5","visual":"Bocal"}]}\n```';
-  const r = await work(fake(reply, seen), "script", post, { crew: { script: { brief: "Tutoie." } } }, "2026-11-12T21:00");
+  const r = await work(fake(reply, seen), "script", post, { crew: { script: { who: "api", brief: "Tutoie." } } }, "2026-11-12T21:00");
   assert.match(seen[0].messages[0].content, /Tutoie\./);
   assert.match(seen[0].messages[0].content, /20 secondes/);
   assert.match(seen[0].messages[0].content, /le levain vit/);
@@ -48,14 +50,19 @@ test("clé API : le Scénariste remplit le storyboard avec ses consignes", async
   assert.equal(r.post.prod.maxSec, 20);
   assert.equal(post.prod.shots, undefined); // l'original n'est pas modifié
   assert.throws(() => jsonOf("pas de json"), /storyboard/);
+  await assert.rejects(work(fake(reply), "script", r.post, { crew: { script: { who: "api" } } }, ""), (e) => e.code === "exists");
+  const again = await work(fake(reply), "script", r.post, { crew: { script: { who: "api" } } }, "", { force: true });
+  assert.equal(again.post.prod.shots.length, 2);
+  await assert.rejects(work(fake(reply), "script", post, { crew: { script: { who: "mcp" } } }, ""), /pas confié à la clé API/);
 });
 
+const CAP = { crew: { caption: { who: "api" } } };
 test("clé API : la légende ne remplace jamais un texte existant ni ne se valide", async () => {
-  const vide = await work(fake("Le levain, c'est vivant. Et toi ?"), "caption", { id: "a", title: "Levain", caption: "" }, {}, "2026-11-12T21:00");
+  const vide = await work(fake("Le levain, c'est vivant. Et toi ?"), "caption", { id: "a", title: "Levain", caption: "" }, CAP, "2026-11-12T21:00");
   assert.equal(vide.post.caption, "Le levain, c'est vivant. Et toi ?"); assert.equal(vide.post.captionValidated, false);
-  const plein = await work(fake("Autre"), "caption", { id: "b", title: "Levain", caption: "Mon texte", captionValidated: true }, {}, "2026-11-12T21:00");
+  const plein = await work(fake("Autre"), "caption", { id: "b", title: "Levain", caption: "Mon texte", captionValidated: true }, CAP, "2026-11-12T21:00");
   assert.equal(plein.post.caption, "Mon texte"); assert.match(plein.post.comments[0].text, /Proposition de légende :\nAutre/);
   await assert.rejects(work(fake("x"), "edit", { id: "c" }, {}, ""), /clé API/);
-  await assert.rejects(work(fake("x"), "script", { id: "c", status: "published" }, {}, ""), /publié/);
+  await assert.rejects(work(fake("x"), "script", { id: "c", status: "published" }, { crew: { script: { who: "api" } } }, ""), /publié/);
   assert.match(prompt(Core.CREW[4], { title: "T" }, {}), /uniquement avec la légende/);
 });

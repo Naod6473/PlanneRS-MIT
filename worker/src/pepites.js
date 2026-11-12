@@ -9,6 +9,7 @@ import { MODEL, textOf } from "./rewrite.js";
 
 export const MAX_RIVALS = 5;
 export const MIN_SCORE = 2;
+export const MIN_ITEMS = 5; // moins de publications récentes : pas assez pour parler de moyenne
 const DAYS = 60;
 
 export function median(v) {
@@ -23,7 +24,7 @@ export function cleanRivals(list) {
   const seen = new Set(), out = [];
   for (const r of Array.isArray(list) ? list : []) {
     const net = r && r.net === "youtube" ? "youtube" : "instagram";
-    let h = String((r && r.handle) || "").trim().replace(/^https?:\/\/(www\.)?(instagram\.com|youtube\.com)\//i, "").replace(/^@/, "").replace(/[/?#].*$/, "");
+    let h = String((r && r.handle) || "").trim().replace(/^https?:\/\/((www|m)\.)?(instagram\.com|youtube\.com)\//i, "").replace(/^(channel|c|user)\//i, "").replace(/^@/, "").replace(/[/?#].*$/, "");
     if (!/^[\w.-]{1,60}$/.test(h)) continue;
     const k = net + ":" + h.toLowerCase();
     if (seen.has(k)) continue;
@@ -37,6 +38,7 @@ export function cleanRivals(list) {
 export function score(items, today) {
   const since = today ? new Date(new Date(today).getTime() - DAYS * 864e5).toISOString().slice(0, 10) : "";
   const recent = items.filter((x) => !since || (x.at || "").slice(0, 10) >= since);
+  if (recent.length < MIN_ITEMS) return recent.map((x) => Object.assign({}, x, { median: 0, score: 0 }));
   const med = median(recent.map((x) => x.metric));
   return recent.map((x) => Object.assign({}, x, { median: med, score: med ? Math.round((x.metric / med) * 10) / 10 : 0 })).sort((a, b) => b.score - a.score);
 }

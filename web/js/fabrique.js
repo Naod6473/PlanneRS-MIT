@@ -24,7 +24,7 @@
   function card(p) {
     const pr = C.prodOf(p), cov = A.coverOf ? A.coverOf(p) : "";
     return '<button class="fcard" data-fab="' + esc(p.id) + '"><span class="pic' + (cov ? "" : " noimg") + '">' + (cov ? '<img src="' + safeUrl(cov) + '" alt="" loading="lazy">' : '<span class="ph">' + icon("film") + "</span>") +
-      (p.date ? '<span class="tm">' + esc(C.shortDay(p.date)) + " " + (p.time || "") + "</span>" : '<span class="tm">' + "Sans date" + "</span>") + "</span>" +
+      (p.date ? '<span class="tm">' + esc(C.shortDay(p.date)) + " " + esc(p.time || "") + "</span>" : '<span class="tm">' + "Sans date" + "</span>") + "</span>" +
       '<span class="ttl" data-noi18n>' + esc(p.title) + '</span><span class="meta">' + brands(p.networks) + '<span class="fmt">' + esc(C.FORMATS[p.format] || "") + (pr.duration ? " · " + fmtDur(pr.duration) : "") + "</span></span>" +
       bar(pr) + who(pr) + "</button>";
   }
@@ -106,7 +106,7 @@
       pr.shots.map((x) => '<tr><td class="mono">' + x.n + '</td><td class="mono">' + (x.dur ? x.dur + " s" : "") + '</td><td data-noi18n>' + esc(x.screen) + '</td><td data-noi18n>' + esc(x.voice) + '</td><td data-noi18n>' + esc(x.visual) + '</td><td data-noi18n>' + esc(x.music) + "</td></tr>").join("") +
       "</tbody></table></div>" + '<p class="sbtot' + (pr.tooLong ? " warn" : "") + '">' + icon(pr.tooLong ? "alert" : "clock") + "Durée totale : " + fmtDur(pr.duration) + (pr.tooLong ? " (plus de " + ((p.prod && p.prod.maxSec) || 30) + " s)" : "") + "</p>"
       : '<p class="muted">Pas encore de storyboard. Une IA peut le remplir plan par plan (texte à l\'écran, voix, image, son).</p>';
-    A.openLayer('<div class="sh-top"><b data-noi18n>' + esc(p.title) + '</b><span class="muted">' + (p.date ? esc(C.longDate(p.date)) + " " + (p.time || "") : "Sans date") + '</span><span style="flex:1"></span><button class="iconbtn" data-close aria-label="Fermer">' + icon("x") + "</button></div>" +
+    A.openLayer('<div class="sh-top"><b data-noi18n>' + esc(p.title) + '</b><span class="muted">' + (p.date ? esc(C.longDate(p.date)) + " " + esc(p.time || "") : "Sans date") + '</span><span style="flex:1"></span><button class="iconbtn" data-close aria-label="Fermer">' + icon("x") + "</button></div>" +
       '<div class="sh-body fab"><div class="fab-grid"><div class="fab-left">' + player + "</div>" +
       '<div class="fab-right"><h3 class="bh">Avancement · ' + pr.done + "/" + pr.total + "</h3>" + steps + "</div></div>" +
       '<h3 class="bh">Storyboard</h3>' + sb + "</div>" +
@@ -135,16 +135,20 @@
     A.openFab(id); A.render();
   }
   // Rôle tenu par la clé API : PlanneRs demande à Claude, le résultat arrive dans la fiche (jamais validé).
-  async function runAgent(id, role, btn) {
+  async function runAgent(id, role, btn, force) {
     if (S.mode !== "api") { U.toast("Mode démo : l'équipe avec clé API demande une clé Claude sur ton instance"); return; }
     if (!S.state.rewrite) { U.toast("Ajoute le secret ANTHROPIC_API_KEY au Worker pour faire travailler l'équipe (voir « Assistants IA »)"); return; }
     btn.disabled = true; U.toast(role === "script" ? "Le Scénariste écrit le storyboard…" : "Claude écrit une légende…");
     try {
-      const r = await S.call("POST", "posts/" + encodeURIComponent(id) + "/agent", { role });
+      const r = await S.call("POST", "posts/" + encodeURIComponent(id) + "/agent", { role, force: !!force });
       const i = S.state.posts.findIndex((x) => x.id === id); if (i >= 0) S.state.posts[i] = r.post;
       S.persist(); A.openFab(id); A.render();
       U.toast((role === "script" ? "Storyboard écrit : " : "Légende : ") + r.summary, role === "caption" ? { label: "Relire", fn: () => { A.closeLayer(); A.openPost(id); } } : null);
-    } catch (x) { U.toast("Impossible : " + x.message); btn.disabled = false; }
+    } catch (x) {
+      btn.disabled = false;
+      if (/storyboard/.test(x.message) && !force) U.toast("Cette vidéo a déjà un storyboard.", { label: "Le remplacer", fn: () => runAgent(id, role, btn, true) });
+      else U.toast("Impossible : " + x.message);
+    }
   }
   async function finish(id) {
     const p = S.post(id); if (!p) return;

@@ -42,10 +42,12 @@ export function shotsOf(o) {
 }
 
 // Fait travailler un rôle sur un post. Renvoie le post modifié et un résumé ; à l'appelant d'enregistrer.
-export async function work(client, roleKey, post, settings, now) {
+export async function work(client, roleKey, post, settings, now, opts = {}) {
   const role = Core.crewOf(settings).find((r) => r.key === roleKey);
   if (!role || !role.api) throw new Error("Ce rôle ne travaille pas avec la clé API (seulement Scénariste et Légendes).");
+  if (role.who !== "api") throw new Error("Dans l'Équipe, ce rôle n'est pas confié à la clé API : change « Qui tient ce rôle » d'abord.");
   if (post.status === "published") throw new Error("Ce post est déjà publié.");
+  if (role.key === "script" && ((post.prod && post.prod.shots) || []).length && !opts.force) { const e = new Error("Cette vidéo a déjà un storyboard : le remplacer ?"); e.code = "exists"; throw e; }
   const res = await client.beta.messages.create({
     model: MODEL, max_tokens: 8000, betas: ["server-side-fallback-2026-07-01"], fallbacks: "default", output_config: { effort: "low" },
     system: SYSTEM, messages: [{ role: "user", content: prompt(role, post, settings) }],

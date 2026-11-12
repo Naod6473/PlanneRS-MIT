@@ -215,9 +215,11 @@ export async function callTool(name, args, deps) {
       const p = get(args.id), changed = [];
       need(p.status !== "published", "Ce post est déjà publié.");
       p.prod = Object.assign({}, p.prod); p.prod.steps = Object.assign({}, p.prod.steps);
+      need(!args.role || Core.CREW.some((r) => r.key === args.role), "Rôle inconnu (voir planners_team).");
       if (args.step) {
+        need(Core.PROD_STEPS.some(([k]) => k === args.step), "Étape inconnue (script, voice, edit, subs, check).");
         need(["todo", "doing", "done"].includes(args.state || "doing"), "État inconnu (todo, doing, done).");
-        const role = args.role && Core.CREW.find((r) => r.key === args.role);
+        const role = args.role && Core.crewOf(set).find((r) => r.key === args.role);
         p.prod.steps[args.step] = { state: args.state || "doing", by: String(role ? "Claude · " + role.name : args.by || "Assistant IA").slice(0, 60), at: now, note: String(args.note || "").slice(0, 200) };
         changed.push(args.step + " → " + (args.state || "doing"));
       }
@@ -225,7 +227,7 @@ export async function callTool(name, args, deps) {
         p.prod.shots = args.shots.slice(0, 60).map((x) => ({ dur: Math.max(0, Math.min(600, +x.dur || 0)), screen: String(x.screen || "").slice(0, 300), voice: String(x.voice || "").slice(0, 600), visual: String(x.visual || "").slice(0, 300), music: String(x.music || "").slice(0, 120) }));
         changed.push("storyboard (" + p.prod.shots.length + " plans)");
       }
-      if (args.maxSec) { p.prod.maxSec = args.maxSec; changed.push("durée max"); }
+      if (args.maxSec) { const n = Math.round(+args.maxSec); need(n >= 5 && n <= 600, "Durée maximale entre 5 et 600 secondes."); p.prod.maxSec = n; changed.push("durée max"); }
       if (args.videoUrl) {
         const u = String(args.videoUrl).trim();
         need(/^https:\/\/[^\s]+$/.test(u), "Il faut une adresse https publique pour la vidéo.");

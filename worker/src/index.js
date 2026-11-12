@@ -155,7 +155,7 @@ async function api(request, env, path, url, auth) {
   const m = request.method;
   const me = (auth && auth.email) || "";
   let r0;
-  const body = m === "GET" || m === "DELETE" || path === "drive/upload" ? null : await request.json().catch(() => null);
+  const body = m === "GET" || m === "DELETE" || path === "drive/upload" || path === "storage/upload" ? null : await request.json().catch(() => null);
   if (path === "state" && m === "GET") {
     if ((await db.getKV(env, "origin")) !== url.origin) await db.putKV(env, "origin", url.origin); // pour les liens des notifications
     return json(Object.assign(await state(env), { me }));
@@ -168,8 +168,10 @@ async function api(request, env, path, url, auth) {
   }
   if (path === "backups" && m === "POST") { const st = (await db.getKV(env, "settings")) || {}; return json(await backup(env, localNow(st.timezone), "manuelle")); }
   if ((r0 = path.match(/^backups\/([A-Za-z0-9-]+)\/restore$/)) && m === "POST") {
+    if (!(await canValidate(env, me))) return err("Seuls les validateurs désignés peuvent restaurer une sauvegarde.", 403);
     const b = await db.getBackup(env, r0[1]);
     if (!b || !Array.isArray(b.posts)) return err("Sauvegarde introuvable", 404);
+    { const cur = (await db.getKV(env, "settings")) || {}; if (b.settings) { b.settings.team = cur.team; b.settings.ai = cur.ai; } } // les droits ne reviennent pas en arrière
     const st = (await db.getKV(env, "settings")) || {}, now = localNow(st.timezone);
     await backup(env, now, "avant-restauration");
     await db.restore(env, b);
@@ -194,11 +196,17 @@ async function api(request, env, path, url, auth) {
     if (!p) return err("Post introuvable", 404);
     const st = (await db.getKV(env, "settings")) || {}, role = String((body && body.role) || "");
     try {
-      const r = await agent.work(aiClient(env), role, p, st, localNow(st.timezone));
+      const r = await agent.work(aiClient(env), role, p, st, localNow(st.timezone), { force: !!(body && body.force) });
+      // Le modèle a pu mettre une minute : on repart du post tel qu'il est maintenant, et on n'y ajoute que le travail du rôle.
+      const now = (await db.getPost(env, p.id)) || p;
+      const merged = Object.assign({}, now, { prod: Object.assign({}, now.prod, { shots: r.post.prod.shots, steps: Object.assign({}, (now.prod || {}).steps, { script: r.post.prod.steps.script }) }) });
+      if (role === "caption") { if (!(now.caption || "").trim() && r.post.caption) { merged.caption = r.post.caption; merged.captionValidated = false; } else if (r.post.comments) merged.comments = (now.comments || []).concat(r.post.comments.slice(-1)); }
+      if (role !== "script") merged.prod = now.prod;
+      r.post = merged;
       await db.savePosts(env, [r.post]);
       await db.addLog(env, { at: localNow(st.timezone), level: "change", text: "Équipe : " + (Core.CREW.find((x) => x.key === role) || {}).name + " (clé API) sur « " + p.title + " » : " + r.summary + (me ? " (lancé par " + me + ")" : ""), postId: p.id });
       return json({ post: r.post, summary: r.summary });
-    } catch (e) { return err(e.status === 401 ? "Clé ANTHROPIC_API_KEY refusée : vérifie-la dans les secrets du Worker." : e.status === 429 ? "Trop de demandes à Claude : réessaie dans une minute." : e.status >= 500 ? "Claude est surchargé ou indisponible : réessaie dans un instant." : e.message, e.status ? 502 : 400); }
+    } catch (e) { return err(e.status === 401 ? "Clé ANTHROPIC_API_KEY refusée : vérifie-la dans les secrets du Worker." : e.status === 429 ? "Trop de demandes à Claude : réessaie dans une minute." : e.status >= 500 ? "Claude est surchargé ou indisponible : réessaie dans un instant." : e.status ? "Claude n'a pas pu répondre (" + e.status + "). Réessaie plus tard." : e.message, e.status ? 502 : e.code === "exists" ? 409 : 400); }
   }
   // Une vidéo, tous les réseaux : un texte adapté par réseau à partir du texte commun (jamais validé tout seul).
   if (path === "adapt" && m === "POST") {
@@ -305,6 +313,9 @@ async function api(request, env, path, url, auth) {
       for (const p of body.posts) {
         const old = await db.getPost(env, p.id);
         if (p.captionValidated && !(old && old.captionValidated)) return err("Seuls les validateurs désignés peuvent valider une légende.", 403);
+        // Texte ou médias changés sur un post validé : la validation tombe, un validateur devra relire.
+        const k = (x) => JSON.stringify([x.caption || "", x.captions || {}, x.firstComment || "", (x.media || []).map((m) => m.url || m.id || m.name || "")]);
+        if (p.captionValidated && old && old.captionValidated && k(p) !== k(old)) p.captionValidated = false;
       }
     }
     await db.savePosts(env, body.posts); return json({ ok: true });
@@ -388,7 +399,11 @@ async function api(request, env, path, url, auth) {
     const h = new Headers();
     for (const k of ["content-type", "content-length", "content-range", "accept-ranges"]) if (up.headers.get(k)) h.set(k, up.headers.get(k));
     const name = url.searchParams.get("name");
-    if (name) h.set("content-disposition", "inline; filename*=UTF-8''" + encodeURIComponent(name));
+    const ct = h.get("content-type") || "";
+    if (!/^(image|video|audio)\//i.test(ct)) h.set("content-type", "application/octet-stream"); // jamais de page HTML servie sous l'adresse de l'app
+    h.set("x-content-type-options", "nosniff");
+    h.set("content-security-policy", "default-src 'none'; sandbox");
+    if (name) h.set("content-disposition", (/^(image|video|audio)\//i.test(ct) ? "inline" : "attachment") + "; filename*=UTF-8''" + encodeURIComponent(name));
     h.set("cache-control", "private, max-age=3600");
     return new Response(up.body, { status: up.status, headers: h });
   }
@@ -447,7 +462,9 @@ async function api(request, env, path, url, auth) {
     const name = (url.searchParams.get("name") || "fichier").replace(/[\\/]/g, "_").slice(0, 200);
     const dest = await uploadTarget(env, (st.drive && st.drive.target) || "auto");
     if (!dest) return err("Aucun stockage où déposer les fichiers. Connecte-en un dans Réglages › Stockage et médias (Drive en envoi, Dropbox, OneDrive, NAS en WebDAV, R2/S3 ou GitHub Pages).", 409);
-    const bytes = await request.arrayBuffer(), type = request.headers.get("content-type") || undefined, folder = url.searchParams.get("path") || "";
+    const folder = url.searchParams.get("path") || "";
+    if (/^\.{1,2}$/.test(name) || folder.split(/[\\/]/).some((x) => x === "." || x === "..")) return err("Chemin de dépôt refusé.");
+    const bytes = await request.arrayBuffer(), type = request.headers.get("content-type") || undefined;
     try {
       if (dest.host) {
         const pub = await dest.mod.put(dest.cred, joinPath(folder, name), new Uint8Array(bytes), type);
@@ -637,11 +654,22 @@ async function runPlugs(env, st) {
 }
 
 // Relevé des pépites (comptes suivis). Sans compte suivi, rien n'est appelé.
+// Une fois par jour à partir de 7 h, avec une nouvelle tentative au passage suivant en cas d'échec.
+async function pepitesIfDue(env) {
+  const st = Object.assign({}, DEFAULT_SETTINGS, (await db.getKV(env, "settings")) || {});
+  const now = localNow(st.timezone), prev = (await db.getKV(env, "pepites")) || {};
+  if (!pepites.cleanRivals(st.rivals).length || now.slice(11, 13) < "07" || prev.day === now.slice(0, 10)) return;
+  const tries = (await db.getKV(env, "pepites-try")) || {};
+  if (tries.day === now.slice(0, 10) && tries.n >= 3) return;
+  await db.putKV(env, "pepites-try", { day: now.slice(0, 10), n: (tries.day === now.slice(0, 10) ? tries.n : 0) + 1 });
+  await refreshPepites(env);
+}
 async function refreshPepites(env) {
   const st = Object.assign({}, DEFAULT_SETTINGS, (await db.getKV(env, "settings")) || {});
   const rivals = pepites.cleanRivals(st.rivals);
   if (!rivals.length) { await db.putKV(env, "pepites", {}); return {}; }
   const out = await pepites.collect(env, rivals, rivals.some((r) => r.net === "instagram") ? await credFor(env, "instagram") : null, localNow(st.timezone).slice(0, 10));
+  if (out.accounts.length && out.accounts.every((a) => a.error)) out.day = null; // tout a échoué : on retentera
   await db.putKV(env, "pepites", out);
   return out;
 }
@@ -656,7 +684,6 @@ async function stats(env, onlyIfDue) {
   s.day = today;
   await db.putKV(env, "stats", s);
   if (onlyIfDue) await runPlugs(env, s).catch(() => null);
-  if (onlyIfDue) await refreshPepites(env).catch(() => null);
   return s;
 }
 
@@ -688,6 +715,9 @@ export default {
     }
     // Serveur MCP pour les assistants IA : même contrôle d'accès que l'API (voir mcp.js).
     if (url.pathname === "/mcp") {
+      const o = request.headers.get("origin");
+      if (o && o !== url.origin) return err("Origine refusée.", 403);
+      if (request.method === "POST" && !/application\/json/i.test(request.headers.get("content-type") || "")) return err("Le serveur MCP attend du JSON (content-type: application/json).", 415);
       const a = await checkAccess(request, env);
       if (!a.ok) return err(a.why, 401);
       const s0 = await state(env);
@@ -707,6 +737,6 @@ export default {
     catch (e) { return err("Erreur du serveur : " + e.message, 500); }
   },
   async scheduled(event, env, ctx) {
-    ctx.waitUntil(robot(env).finally(() => syncInstagram(env).catch(() => null)).finally(() => stats(env, true).catch(() => null)).finally(() => runDaily(env).catch(() => null)).finally(() => runWeekly(env).catch(() => null)).finally(() => runRss(env).catch(() => null)));
+    ctx.waitUntil(robot(env).finally(() => syncInstagram(env).catch(() => null)).finally(() => stats(env, true).catch(() => null)).finally(() => pepitesIfDue(env).catch(() => null)).finally(() => runDaily(env).catch(() => null)).finally(() => runWeekly(env).catch(() => null)).finally(() => runRss(env).catch(() => null)));
   },
 };

@@ -54,7 +54,10 @@ export async function folder(cred, path) {
 export async function download(cred, id, range) {
   const headers = { authorization: auth(cred) };
   if (range) headers.range = range;
-  return fetch(new URL(id, baseUrl(cred)), { headers });
+  const base = new URL(baseUrl(cred)), u = new URL(id, base);
+  // Seulement des fichiers du même serveur : jamais les identifiants envoyés ailleurs.
+  if (u.origin !== base.origin) return new Response(null, { status: 404 });
+  return fetch(u, { headers });
 }
 
 // Dépôt : crée les dossiers manquants (MKCOL, 405 = existe déjà) puis envoie le fichier (PUT).

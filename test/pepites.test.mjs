@@ -19,9 +19,11 @@ test("comptes suivis : nettoyés, sans doublon, 5 au plus", () => {
 
 test("score : fois la médiane du compte, 60 derniers jours", () => {
   assert.equal(median([3, 1, 2, 0]), 2);
-  const s = score([{ id: 1, metric: 100, at: "2026-11-10" }, { id: 2, metric: 10, at: "2026-11-09" }, { id: 3, metric: 20, at: "2026-11-08" }, { id: 4, metric: 999, at: "2026-08-01" }], "2026-11-12");
-  assert.deepEqual(s.map((x) => x.id), [1, 3, 2]);
+  const s = score([{ id: 1, metric: 100, at: "2026-11-10" }, { id: 2, metric: 10, at: "2026-11-09" }, { id: 3, metric: 20, at: "2026-11-08" }, { id: 5, metric: 20, at: "2026-11-07" }, { id: 6, metric: 30, at: "2026-11-06" }, { id: 4, metric: 999, at: "2026-08-01" }], "2026-11-12");
+  assert.deepEqual(s.map((x) => x.id), [1, 6, 3, 5, 2]);
   assert.equal(s[0].score, 5);
+  assert.equal(score([{ id: 1, metric: 1000, at: "2026-11-10" }, { id: 2, metric: 10, at: "2026-11-09" }], "2026-11-12")[0].score, 0); // trop peu de posts
+  assert.equal(cleanRivals([{ net: "youtube", handle: "https://m.youtube.com/channel/UCabcdefghijklmnopqrstuv" }])[0].handle, "UCabcdefghijklmnopqrstuv");
 });
 
 test("YouTube : identifiant de chaîne et flux public", () => {
@@ -41,7 +43,9 @@ test("collect : YouTube et Instagram, un compte en échec n'arrête pas les autr
     return { ok: true, json: async () => ({ business_discovery: { username: "boulange", followers_count: 1200, media: { data: [
       { id: "1", caption: "Top", like_count: 300, comments_count: 20, media_type: "VIDEO", media_product_type: "REELS", permalink: "https://instagram.com/reel/1", timestamp: "2026-11-11T08:00:00+0000" },
       { id: "2", caption: "Bof", like_count: 40, comments_count: 2, media_type: "IMAGE", permalink: "https://instagram.com/p/2", timestamp: "2026-11-09T08:00:00+0000" },
-      { id: "3", caption: "Moyen", like_count: 50, comments_count: 1, media_type: "CAROUSEL_ALBUM", permalink: "https://instagram.com/p/3", timestamp: "2026-11-08T08:00:00+0000" }] } } }) };
+      { id: "3", caption: "Moyen", like_count: 50, comments_count: 1, media_type: "CAROUSEL_ALBUM", permalink: "https://instagram.com/p/3", timestamp: "2026-11-08T08:00:00+0000" },
+      { id: "4", caption: "Moyen", like_count: 45, comments_count: 1, media_type: "IMAGE", permalink: "https://instagram.com/p/4", timestamp: "2026-11-07T08:00:00+0000" },
+      { id: "5", caption: "Moyen", like_count: 55, comments_count: 1, media_type: "IMAGE", permalink: "https://instagram.com/p/5", timestamp: "2026-11-06T08:00:00+0000" }] } } }) };
   };
   try {
     const r = await collect({}, [{ net: "youtube", handle: "PainMaison" }, { net: "instagram", handle: "boulange" }, { net: "instagram", handle: "sanscle" }], { token: "t", accountId: "17" }, "2026-11-12", fetchFn);
