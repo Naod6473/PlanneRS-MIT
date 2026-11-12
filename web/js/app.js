@@ -629,10 +629,16 @@
       const m = await c.match("shared/meta"); if (m) meta = await m.json();
       const r = await c.match("shared/0");
       if (r) { const b = await r.blob(); file = new File([b], decodeURIComponent(r.headers.get("x-name") || "media"), { type: b.type }); }
+      // Vidéos envoyées par le studio : toutes, avec leurs sous-titres.
+      if (meta && meta.source === "studio") {
+        meta.files = [];
+        for (let i = 0; i < (meta.n || 0); i++) { const x = await c.match("shared/" + i); if (x) { const b = await x.blob(); meta.files.push(new File([b], decodeURIComponent(x.headers.get("x-name") || "video.mp4"), { type: b.type || "video/mp4" })); } }
+      }
       for (const k of await c.keys()) await c.delete(k);
     } catch (e) { /* rien de reçu */ }
     A.render();
     if (!meta) return;
+    if (meta.source === "studio" && A.receiveStudio) return A.receiveStudio(meta);
     if (file) { A.quick(/^video/.test(file.type) ? "video" : /^image/.test(file.type) ? "photo" : "file", file); if (meta.n > 1) U.toast("Un fichier à la fois : seul le premier a été repris"); return; }
     const url = meta.url || ((meta.text || "").match(/https?:\/\/\S+/) || [""])[0];
     const f = () => document.querySelector("#q-form");

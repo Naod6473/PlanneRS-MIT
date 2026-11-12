@@ -42,7 +42,7 @@
     return {
       title: "La Fabrique",
       sub: "Tes vidéos, de l'idée à la vidéo finie",
-      tools: '<span class="grow"></span><button class="btn primary" data-new aria-label="Nouveau post">' + icon("plus") + '<span class="lbl">Nouveau post</span></button>',
+      tools: '<span class="grow"></span>' + (A.hasStudio ? '<a class="btn" href="studio/" aria-label="Faire des shorts dans le studio">' + icon("film") + '<span class="lbl">Faire des shorts</span></a>' : "") + '<button class="btn primary" data-new aria-label="Nouveau post">' + icon("plus") + '<span class="lbl">Nouveau post</span></button>',
       html: all.length ? '<section class="pband" aria-labelledby="h-fab"><div class="pband-h"><h2 id="h-fab" data-noi18n>' + esc(phrase) + "</h2>" + (f ? '<span class="muted"><button class="lk" data-fabst="">' + icon("x") + "Tout afficher</button></span>" : "") + "</div>" +
         '<div class="pkpis" role="group" aria-label="Filtrer par étape">' + kpis + "</div></section>" +
         '<div class="wcols fcols' + (f ? " one" : "") + '" role="group" aria-label="Vidéos par étape">' + cols + "</div>" +
@@ -70,7 +70,7 @@
       '<div class="fab-right"><h3 class="bh">Avancement · ' + pr.done + "/" + pr.total + "</h3>" + steps + "</div></div>" +
       '<h3 class="bh">Storyboard</h3>' + sb + "</div>" +
       '<div class="sh-foot">' + (pr.ready ? "" : '<button class="btn primary" data-fabok>' + icon("check") + "Vidéo finie et relue</button>") +
-      '<button class="btn" data-fabpost>' + icon("contents") + "Fiche du post</button><button class=\"btn quiet\" data-close>Fermer</button></div>", "Fabrication : " + p.title);
+      (A.hasStudio ? '<a class="btn" href="studio/">' + icon("film") + "Studio</a>" : "") + '<button class="btn" data-fabpost>' + icon("contents") + "Fiche du post</button><button class=\"btn quiet\" data-close>Fermer</button></div>", "Fabrication : " + p.title);
     const L = document.getElementById("layer");
     L.querySelector(".sheet").classList.add("wide");
     L.querySelectorAll("[data-fabstep]").forEach((b) => b.addEventListener("click", () => setStep(p.id, b.dataset.fabstep)));
@@ -100,6 +100,48 @@
     A.closeLayer(); A.render();
     U.toast(p.captionValidated ? "Vidéo prête" : "Vidéo prête. Reste à valider la légende", p.captionValidated ? null : { label: "Relire", fn: () => A.openPost(p.id) });
   }
+
+  // Studio vidéo : présent seulement dans la version privée (dossier web/studio/).
+  A.hasStudio = null;
+  fetch("studio/VERSION", { method: "HEAD" }).then((r) => { A.hasStudio = r.ok; if (r.ok && /fabrique/.test(location.hash)) A.render(); }).catch(() => { A.hasStudio = false; });
+
+  // Vidéos reçues du studio : une par post, dans La Fabrique, montage et sous-titres faits, à relire.
+  // La transcription sert de script : une IA peut en tirer les descriptions par réseau.
+  A.receiveStudio = async function (meta) {
+    const files = meta.files || [], items = meta.items || [];
+    if (!files.length) return;
+    location.hash = "#fabrique";
+    const dest = (S.state.settings.drive && S.state.settings.drive.inbox) || "PlanneRs/depots";
+    const nets = (S.state.settings.networks || ["instagram"]).filter((n) => ["instagram", "facebook", "tiktok", "youtube"].includes(n));
+    const made = [];
+    for (let i = 0; i < files.length; i++) {
+      const fl = files[i], it = items[i] || {};
+      if (S.mode === "api") U.toast((files.length > 1 ? "Vidéo " + (i + 1) + "/" + files.length + " : " : "") + "envoi de " + fl.name + "…");
+      let media = { name: fl.name, type: "video", role: "final" };
+      if (S.mode === "api") {
+        try {
+          const r = await fetch("api/drive/upload?path=" + encodeURIComponent(dest) + "&name=" + encodeURIComponent(fl.name), { method: "POST", headers: { "content-type": fl.type || "video/mp4" }, body: fl });
+          const j = await r.json().catch(() => ({}));
+          if (!r.ok) throw new Error(j.error || j.what || r.statusText);
+          media = Object.assign(media, { drive: j.id, url: j.url || "" });
+        } catch (e) { U.toast("Envoi de " + fl.name + " impossible : " + e.message + ". La vidéo est gardée sans fichier : ajoute-la à la main."); }
+      }
+      const by = "Studio";
+      const p = {
+        id: "s" + Date.now().toString(36) + i, title: fl.name.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim(), format: "reel",
+        networks: nets.length ? nets : ["instagram"], date: null, time: null, caption: "", captionValidated: false, manual: false,
+        media: [media], stage: "caption", status: "draft", folder: dest,
+        note: it.text ? "Transcription (studio) :\n" + it.text.replace(/^\d+\s*$/gm, "").replace(/^[\d:,.\s]+-->[\d:,.\s]+$/gm, "").replace(/\n{2,}/g, "\n").trim().slice(0, 4000) : "",
+        prod: { steps: { script: { state: "done", by }, voice: { state: "done", by }, edit: { state: "done", by, at: C.nowStamp() }, subs: { state: "done", by }, check: { state: "todo" } } },
+      };
+      made.push(p);
+    }
+    await S.savePosts(made);
+    await S.log({ level: "change", text: made.length + " vidéo" + (made.length > 1 ? "s reçues" : " reçue") + " du studio : " + made.map((p) => p.title).join(", ") });
+    A.render();
+    U.toast(made.length + " vidéo" + (made.length > 1 ? "s" : "") + " dans La Fabrique, à relire. Une IA peut écrire les descriptions à partir de la transcription.");
+    if (made.length === 1) A.openFab(made[0].id);
+  };
 
   document.addEventListener("click", (e) => {
     const t = e.target.closest("[data-fab],[data-fabst]");
