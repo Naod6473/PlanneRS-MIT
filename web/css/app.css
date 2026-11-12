@@ -1300,3 +1300,18 @@ body.fabdrag main::after{content:"Lâche tes vidéos ici : elles partent dans to
 .crew-act{font-size:13px;border-top:1px solid var(--line);padding-top:8px}
 .crew-act ul{margin:6px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:3px}
 .crew-act li{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Pépites (Stats) */
+.pep-accs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.pep-acc{display:inline-flex;align-items:center;gap:6px;padding:2px 2px 2px 10px}
+.pep-add{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pep-add input{flex:1;min-width:160px}
+.pep-lim{margin:10px 0 0}
+.pep-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.pep{display:flex;gap:12px;padding:12px;border:1px solid var(--line);border-radius:14px;background:var(--panel);min-width:0}
+.pep>img,.pep>.noimg{width:72px;height:96px;flex:none;border-radius:10px;object-fit:cover;background:var(--panel2);display:grid;place-items:center;color:var(--ink3)}
+.pep-b{display:flex;flex-direction:column;gap:6px;min-width:0;flex:1}
+.pep-h{display:flex;align-items:center;gap:6px;min-width:0}
+.pep-h b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pep-sc{margin-left:auto;font-weight:700;color:var(--n-stats);background:color-mix(in srgb,var(--n-stats) 14%,transparent);border-radius:999px;padding:1px 8px;font-variant-numeric:tabular-nums}
+.pep-cap{margin:0;font-size:14px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.pep .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:auto}

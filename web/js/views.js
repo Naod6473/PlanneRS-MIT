@@ -656,6 +656,7 @@
     return Object.keys(out).length ? out : null;
   };
   const fmtN = (n) => (n == null ? "—" : n >= 10000 ? (n / 1000).toFixed(n >= 1e5 ? 0 : 1).replace(".", ",") + " k" : String(n));
+  A.agoText = (iso) => agoText(iso);
   function agoText(iso) {
     if (!iso) return "jamais";
     const m = Math.round((Date.now() - new Date(iso).getTime()) / 6e4);
@@ -721,7 +722,15 @@
       .concat(r.best.length ? ["Meilleurs posts :"].concat(r.best.map((x, i) => (i + 1) + ". " + x.p.title + " (" + x.views + " vues)")) : []).join("\n");
   };
 
+  // Stats : tes chiffres, ou les Pépites (comptes suivis).
+  const statTabs = () => '<div class="seg" role="group" aria-label="Affichage"><button data-stattab="" aria-pressed="' + (A.statTab !== "pep") + '">Mes chiffres</button><button data-stattab="pep" aria-pressed="' + (A.statTab === "pep") + '">Pépites</button></div><span class="grow"></span>';
   A.views.stats = function () {
+    if (A.statTab === "pep" && A.pepitesHtml) return { title: "Stats", sub: "Ce qui marche chez les comptes que tu suis", tools: statTabs() + A.pepitesTools(), html: A.pepitesHtml() };
+    const v = statsMine();
+    v.tools = statTabs() + v.tools;
+    return v;
+  };
+  function statsMine() {
     const st = S.state.stats || (S.mode === "demo" ? A.demoStats() : {}) || {};
     const ig = st.instagram || {}, fb = st.facebook || {};
     const t = today();
@@ -774,7 +783,7 @@
         A.statCardsHtml(st, t) + best + A.bestTimesHtml() +
         '<div class="statgrid"><section class="panel"><div class="sec-row"><h2 class="sec-h"><span>Publications</span><span>' + rows.length + "</span></h2>" + sortSeg + "</div>" + (top ? top + '<p class="muted small" style="margin:10px 0 0">Un post a bien marché ? Ouvre-le et choisis « Republier » pour le reprogrammer quand tu veux.</p>' : '<div class="empty">Aucune publication reliée pour l\'instant.</div>') + "</section>" + againBox + tagBox + "</div>" + note,
     };
-  };
+  }
 
   // Commentaires Instagram : ceux sans réponse d'abord, réponse sur place, proposition de Claude.
   const DEMO_COMMENTS = () => { const p = top().filter((x) => x.status === "published").slice(-3); const at = (h) => new Date(Date.now() - h * 3600e3).toISOString(); return { username: "demo", rewrite: true, comments: [

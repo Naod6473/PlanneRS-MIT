@@ -724,6 +724,36 @@
       ]
     },
     {
+      "path": "utilisation/pepites.md",
+      "title": "Pépites",
+      "description": "Suivre jusqu'à 5 comptes, repérer leurs publications qui marchent bien mieux que d'habitude, et en tirer ta propre version (la recette, jamais une copie).",
+      "category": "Utilisation",
+      "tags": [
+        "pépites",
+        "concurrents",
+        "inspiration",
+        "veille",
+        "instagram",
+        "youtube",
+        "faire ma version",
+        "idées"
+      ],
+      "order": "4.5",
+      "updated": "2026-11-13",
+      "headings": [
+        {
+          "level": 2,
+          "text": "Suivre un compte",
+          "anchor": "suivre-un-compte"
+        },
+        {
+          "level": 2,
+          "text": "Faire ma version",
+          "anchor": "faire-ma-version"
+        }
+      ]
+    },
+    {
       "path": "utilisation/activite-et-reglages.md",
       "title": "Activité et réglages",
       "description": "Le journal d'activité, l'état des comptes et du robot, puis chaque rubrique des réglages (comptes, stockage, créneaux, règles, notifications, espace).",

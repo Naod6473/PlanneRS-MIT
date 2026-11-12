@@ -4,13 +4,14 @@ import { seal, open } from "./crypto.js";
 const row = (p) => [p.id, JSON.stringify(p), p.date || null, p.time || null, p.status || "draft", new Date().toISOString()];
 
 export async function loadState(env) {
-  const [posts, log, settings, robot, accounts, stats] = await env.DB.batch([
+  const [posts, log, settings, robot, accounts, stats, pep] = await env.DB.batch([
     env.DB.prepare("SELECT data FROM posts"),
     env.DB.prepare("SELECT at, level, text, why, post_id AS postId FROM log ORDER BY id DESC LIMIT 300"),
     env.DB.prepare("SELECT v FROM kv WHERE k = 'settings'"),
     env.DB.prepare("SELECT v FROM kv WHERE k = 'robot'"),
     env.DB.prepare("SELECT id, info FROM accounts"),
     env.DB.prepare("SELECT v FROM kv WHERE k = 'stats'"),
+    env.DB.prepare("SELECT v FROM kv WHERE k = 'pepites'"),
   ]);
   const acc = {};
   accounts.results.forEach((a) => { acc[a.id] = JSON.parse(a.info); });
@@ -20,6 +21,7 @@ export async function loadState(env) {
     settings: settings.results[0] ? JSON.parse(settings.results[0].v) : null,
     robot: robot.results[0] ? JSON.parse(robot.results[0].v) : null,
     stats: stats.results[0] ? JSON.parse(stats.results[0].v) : null,
+    pepites: pep.results[0] ? JSON.parse(pep.results[0].v) : null,
     accounts: acc,
   };
 }

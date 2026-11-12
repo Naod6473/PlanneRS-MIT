@@ -34,6 +34,7 @@ import * as ical from "./ical.js";
 import * as links from "./links.js";
 import * as rewriter from "./rewrite.js";
 import * as agent from "./agent.js";
+import * as pepites from "./pepites.js";
 import { aiClient } from "./ai.js";
 import * as igHistory from "./history.js";
 import * as igComments from "./comments.js";
@@ -458,6 +459,23 @@ async function api(request, env, path, url, auth) {
   }
   if (path === "instagram/sync" && m === "POST") { try { return json(await syncInstagram(env, true)); } catch (e) { return err(e.why || e.message, 502); } }
   if (path === "robot/run" && m === "POST") return json(await robot(env));
+  // Pépites : comptes suivis, relevé une fois par jour avec les statistiques, ou à la demande.
+  if (path === "pepites" && m === "GET") return json((await db.getKV(env, "pepites")) || {});
+  if (path === "pepites/refresh" && m === "POST") return json(await refreshPepites(env));
+  if (path === "pepites/remix" && m === "POST") {
+    const pp = (await db.getKV(env, "pepites")) || {}, id = String((body && body.id) || "");
+    const item = (pp.accounts || []).flatMap((a) => a.items || []).find((x) => x.id === id);
+    if (!item) return err("Pépite introuvable : actualise la liste.", 404);
+    const st = Object.assign({}, DEFAULT_SETTINGS, (await db.getKV(env, "settings")) || {}), now = localNow(st.timezone);
+    let recipe = "", why = "";
+    if (env.ANTHROPIC_API_KEY) { try { recipe = await pepites.remix(aiClient(env), item, st); } catch (e) { why = e.message; } }
+    const p = pepites.ideaOf(item, recipe, now);
+    p.networks = (st.networks || ["instagram"]).filter((n) => n === "instagram" || n === "facebook" || n === "youtube" || n === "tiktok");
+    if (!p.networks.length) p.networks = ["instagram"];
+    await db.savePosts(env, [p]);
+    await db.addLog(env, { at: now, level: "change", text: "Pépite de @" + item.handle + " transformée en idée : " + p.title + (me ? " (par " + me + ")" : ""), postId: p.id });
+    return json({ post: p, recipe: !!recipe, why });
+  }
   if (path === "stats" && m === "GET") return json((await db.getKV(env, "stats")) || {});
   if (path === "stats/refresh" && m === "POST") return json(await stats(env));
   return err("Introuvable", 404);
@@ -618,6 +636,16 @@ async function runPlugs(env, st) {
   return plugs.run(rules, s.posts, st, { env, adapters: ADAPTERS, cred: (n) => credFor(env, n), save: (ps) => db.savePosts(env, ps), log: (e) => db.addLog(env, e), now: localNow(s.settings.timezone), dryRun: env.DRY_RUN !== "false", settings: s.settings }, mediaKey);
 }
 
+// Relevé des pépites (comptes suivis). Sans compte suivi, rien n'est appelé.
+async function refreshPepites(env) {
+  const st = Object.assign({}, DEFAULT_SETTINGS, (await db.getKV(env, "settings")) || {});
+  const rivals = pepites.cleanRivals(st.rivals);
+  if (!rivals.length) { await db.putKV(env, "pepites", {}); return {}; }
+  const out = await pepites.collect(env, rivals, rivals.some((r) => r.net === "instagram") ? await credFor(env, "instagram") : null, localNow(st.timezone).slice(0, 10));
+  await db.putKV(env, "pepites", out);
+  return out;
+}
+
 // Relevé des statistiques : une fois par jour à partir de 7 h (heure de l'espace), ou à la demande.
 async function stats(env, onlyIfDue) {
   const settings = Object.assign({}, DEFAULT_SETTINGS, (await db.getKV(env, "settings")) || {});
@@ -628,6 +656,7 @@ async function stats(env, onlyIfDue) {
   s.day = today;
   await db.putKV(env, "stats", s);
   if (onlyIfDue) await runPlugs(env, s).catch(() => null);
+  if (onlyIfDue) await refreshPepites(env).catch(() => null);
   return s;
 }
 
