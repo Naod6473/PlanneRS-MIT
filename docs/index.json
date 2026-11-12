@@ -623,6 +623,44 @@
       ]
     },
     {
+      "path": "utilisation/la-fabrique.md",
+      "title": "La Fabrique",
+      "description": "Suivre la fabrication de chaque vidéo (script, voix, montage, sous-titres, relu), faite par toi ou par une IA, voir son storyboard et regarder la vidéo finie avant de la valider.",
+      "category": "Utilisation",
+      "tags": [
+        "la fabrique",
+        "production",
+        "vidéo",
+        "reel",
+        "montage",
+        "storyboard",
+        "voix",
+        "sous-titres",
+        "ia",
+        "agents",
+        "avancement"
+      ],
+      "order": "3.5",
+      "updated": "2026-11-12",
+      "headings": [
+        {
+          "level": 2,
+          "text": "Les cinq étapes",
+          "anchor": "les-cinq-étapes"
+        },
+        {
+          "level": 2,
+          "text": "La fiche de fabrication",
+          "anchor": "la-fiche-de-fabrication"
+        },
+        {
+          "level": 2,
+          "text": "Avec une IA",
+          "anchor": "avec-une-ia"
+        }
+      ]
+    },
+    {
       "path": "utilisation/stats.md",
       "title": "Stats",
       "description": "Les statistiques Instagram et Facebook dans PlanneRs, avec les chiffres affichés, leur fréquence de mise à jour et les autorisations nécessaires.",

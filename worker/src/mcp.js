@@ -45,6 +45,8 @@ export const TOOLS = [
   { name: "planners_remove_media", title: "Retirer un média", description: "Retire un média d'un post (numéro dans la liste, à partir de 0).", inputSchema: S({ id: str("Identifiant du post"), index: { type: "integer", minimum: 0 } }, ["id", "index"]) },
   { name: "planners_delete_post", title: "Supprimer un post", description: "Supprime un post pas encore publié (et ses stories liées). Le journal garde une trace.", inputSchema: S({ id: str("Identifiant du post") }, ["id"]), annotations: { destructiveHint: true } },
   { name: "planners_update_settings", title: "Modifier les réglages", description: "Change les créneaux habituels et les modèles (signature, groupes de hashtags). Les comptes connectés et les droits ne se changent que dans l'application.", inputSchema: S({ slots: { type: "array", items: { type: "object", properties: { time: TIME, label: { type: "string" } }, required: ["time"] }, description: "Créneaux habituels, ex. [{\"time\":\"12:30\",\"label\":\"Midi\"}]" }, signature: str("Signature ajoutée en fin de légende"), hashtagGroups: { type: "array", items: { type: "object", properties: { name: { type: "string" }, text: { type: "string" } }, required: ["name", "text"] } } }) },
+  { name: "planners_fabrique", title: "La Fabrique", description: "Les vidéos en cours de production (Reels et vidéos pas encore publiés) : étape en cours (script, voix, montage, sous-titres, relu), qui y travaille, durée du storyboard.", inputSchema: S({}), annotations: { readOnlyHint: true } },
+  { name: "planners_production", title: "Avancer une vidéo", description: "Met à jour la fabrication d'une vidéo, affichée en direct dans La Fabrique : une étape (script, voice, edit, subs, check) passe à todo, doing ou done, avec qui y travaille (ex. « Claude · Monteur ») et une note ; le storyboard plan par plan ; la vidéo finie (adresse https, ajoutée aux médias). Ne valide jamais la légende.", inputSchema: S({ id: str("Identifiant du post"), step: { type: "string", enum: ["script", "voice", "edit", "subs", "check"] }, state: { type: "string", enum: ["todo", "doing", "done"] }, by: str("Qui travaille sur l'étape (ex. « Claude · Monteur »)"), note: str("Note courte sur l'étape"), shots: { type: "array", description: "Storyboard, dans l'ordre : un objet par plan", items: { type: "object", properties: { dur: { type: "number", description: "Durée en secondes" }, screen: { type: "string", description: "Texte à l'écran" }, voice: { type: "string", description: "Réplique de la voix" }, visual: { type: "string", description: "Image ou plan filmé" }, music: { type: "string", description: "Musique ou bruitage" } } } }, maxSec: { type: "integer", minimum: 5, maximum: 600, description: "Durée maximale voulue (alerte au-delà), 30 par défaut" }, videoUrl: str("Adresse https de la vidéo finie") }, ["id"]) },
   { name: "planners_activity", title: "Journal", description: "Les dernières lignes du journal : envois, échecs, modifications.", inputSchema: S({ limit: { type: "integer", minimum: 1, maximum: 100 } }), annotations: { readOnlyHint: true } },
   { name: "planners_stats", title: "Statistiques", description: "Derniers chiffres relevés : abonnés, vues, et les publications récentes les plus vues.", inputSchema: S({}), annotations: { readOnlyHint: true } },
 ];
@@ -194,6 +196,38 @@ export async function callTool(name, args, deps) {
       need(changed.length, "Rien à modifier.");
       await deps.saveSettings(s2); await deps.log({ at: now, level: "change", text: "Réglages modifiés" + who + " : " + changed.join(", ") });
       return { slots: s2.slots, templates: s2.templates || {} };
+    }
+    case "planners_fabrique": {
+      return { videos: posts.filter(Core.inFabrique).sort((a, b) => (Core.at(a) || "9999").localeCompare(Core.at(b) || "9999")).map((p) => {
+        const pr = Core.prodOf(p);
+        return Object.assign(brief(p, now), { done: pr.done + "/" + pr.total, ready: pr.ready, current: pr.current && { step: pr.current.key, state: pr.current.state, by: pr.current.by }, seconds: pr.duration, tooLong: pr.tooLong, hasVideo: !!pr.video });
+      }) };
+    }
+    case "planners_production": {
+      const p = get(args.id), changed = [];
+      need(p.status !== "published", "Ce post est déjà publié.");
+      p.prod = Object.assign({}, p.prod); p.prod.steps = Object.assign({}, p.prod.steps);
+      if (args.step) {
+        need(["todo", "doing", "done"].includes(args.state || "doing"), "État inconnu (todo, doing, done).");
+        p.prod.steps[args.step] = { state: args.state || "doing", by: String(args.by || "Assistant IA").slice(0, 60), at: now, note: String(args.note || "").slice(0, 200) };
+        changed.push(args.step + " → " + (args.state || "doing"));
+      }
+      if (Array.isArray(args.shots)) {
+        p.prod.shots = args.shots.slice(0, 60).map((x) => ({ dur: Math.max(0, Math.min(600, +x.dur || 0)), screen: String(x.screen || "").slice(0, 300), voice: String(x.voice || "").slice(0, 600), visual: String(x.visual || "").slice(0, 300), music: String(x.music || "").slice(0, 120) }));
+        changed.push("storyboard (" + p.prod.shots.length + " plans)");
+      }
+      if (args.maxSec) { p.prod.maxSec = args.maxSec; changed.push("durée max"); }
+      if (args.videoUrl) {
+        const u = String(args.videoUrl).trim();
+        need(/^https:\/\/[^\s]+$/.test(u), "Il faut une adresse https publique pour la vidéo.");
+        p.media = (p.media || []).filter((m) => m.role !== "final");
+        p.media.unshift({ name: decodeURIComponent(u.split("?")[0].split("/").pop() || "video.mp4").slice(0, 200), type: "video", url: u, role: "final" });
+        changed.push("vidéo finie");
+      }
+      need(changed.length, "Rien à modifier.");
+      await deps.save([p]); await deps.log({ at: now, level: "change", text: "Fabrique" + who + " : " + p.title + " (" + changed.join(", ") + ")", postId: p.id });
+      const pr = Core.prodOf(p);
+      return { post: brief(p, now), done: pr.done + "/" + pr.total, current: pr.current && pr.current.key, seconds: pr.duration, tooLong: pr.tooLong };
     }
     case "planners_activity":
       return { log: (st.log || []).slice(0, Math.min(100, args.limit || 30)) };

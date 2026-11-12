@@ -112,6 +112,24 @@
       .forEach((x, k) => posts.push({ id: "d" + k, ref: String(210 + k), title: x[0], format: "reel", networks: ["instagram"],
         date: null, time: null, caption: "", captionValidated: false, manual: false, media: [], stage: x[1], status: "draft" }));
 
+    // La Fabrique : des Reels à venir à différentes étapes, avec un storyboard.
+    const sb = (t) => [
+      { dur: 3, screen: t + " ?", voice: "Tu t'es déjà demandé pourquoi ?", visual: "Gros plan sur la pâte", music: "Lofi, départ" },
+      { dur: 8, screen: "Étape 1", voice: "Tout commence la veille, au fournil.", visual: "Mains qui pétrissent", music: "" },
+      { dur: 9, screen: "Étape 2", voice: "Puis on laisse le temps faire son travail.", visual: "Pâton qui lève (accéléré)", music: "" },
+      { dur: 6, screen: "Le résultat", voice: "Et voilà le travail, tout chaud.", visual: "Sortie du four", music: "Montée" },
+      { dur: 4, screen: "Et toi ?", voice: "Dis-nous en commentaire ce que tu veux voir !", visual: "Logo + appel", music: "Fin" },
+    ];
+    const S5 = ["script", "voice", "edit", "subs", "check"];
+    const plan = [[4, "Claude · Contrôle qualité", "Vérifie le rythme et les sous-titres"], [3, "Claude · Sous-titres", "Sous-titres mot à mot"], [2, "Claude · Monteur", "Coupe les blancs, recadre en vertical"], [1, "Voix IA", "Réplique 3 sur 5"], [1, "", ""]];
+    posts.filter((p) => p.format === "reel" && !p.parent && p.date && p.date > today).slice(0, plan.length).forEach((p, k) => {
+      const [at, by, note] = plan[k], steps = {};
+      S5.forEach((s, i) => { steps[s] = i < at ? { state: "done", by: i === 0 ? "Claude · Scénariste" : i === 1 ? "Voix IA" : "Claude · Monteur" } : i === at && by ? { state: "doing", by, note } : { state: "todo" }; });
+      p.prod = { steps, shots: sb(p.title) };
+      if (at < 2) p.media = [];
+    });
+    posts.filter((p) => p.id === "d2" || p.id === "d3").forEach((p, k) => { p.prod = { steps: { script: { state: k ? "done" : "doing", by: "Claude · Scénariste" } }, shots: k ? sb(p.title).slice(0, 4) : [] }; });
+
     const log = [
       { at: y + "T18:00", level: "error", postId: f && f.id, text: "Instagram a refusé le carrousel " + (f && f.ref) + ".", why: "Erreur 2207052 : média introuvable à l'adresse publique." },
       { at: y + "T18:02", level: "error", postId: f && f.id, text: "Nouvel essai automatique : refusé.", why: "Facebook n'est pas tenté : il part après Instagram." },

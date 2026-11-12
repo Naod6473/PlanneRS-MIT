@@ -4,7 +4,7 @@
   const C = window.Core, U = window.UI, S = window.Store, A = window.App;
   const { esc, safeUrl, icon } = U;
 
-  const NAV = [["today", "Aujourd'hui", "today"], ["calendar", "Calendrier", "calendar"], ["contents", "Contenus", "contents"], ["stats", "Stats", "chart"], ["activity", "Activité", "activity"], ["settings", "Réglages", "settings"]];
+  const NAV = [["today", "Aujourd'hui", "today"], ["calendar", "Calendrier", "calendar"], ["contents", "Contenus", "contents"], ["fabrique", "La Fabrique", "film"], ["stats", "Stats", "chart"], ["activity", "Activité", "activity"], ["settings", "Réglages", "settings"]];
   const route = () => (location.hash.replace("#", "").split("/")[0] || "today");
   const navOf = (r) => (r === "list" ? "today" : r === "report" ? "stats" : r);
 
@@ -18,7 +18,7 @@
     const hl = document.getElementById("health");
     hl.innerHTML = '<span class="dot ' + h.cls + '"></span><span><b>' + esc(h.text) + "</b>" + "Voir l'activité" + "</span>";
     const tabs = [["today", "Aujourd'hui", "today"], ["calendar", "Calendrier", "calendar"], ["contents", "Contenus", "contents"], ["more", "Plus", "more"]];
-    document.getElementById("tabbar").innerHTML = tabs.map(([k, l, ic]) => '<a href="#' + k + '"' + ((navOf(r) === k || (k === "more" && ["stats", "activity", "settings", "more"].includes(r))) ? ' aria-current="page"' : "") + ">" + icon(ic) + l +
+    document.getElementById("tabbar").innerHTML = tabs.map(([k, l, ic]) => '<a href="#' + k + '"' + ((navOf(r) === k || (k === "more" && ["fabrique", "stats", "activity", "settings", "more"].includes(r))) ? ' aria-current="page"' : "") + ">" + icon(ic) + l +
       (k === "today" && n ? '<span class="badge">' + n + "</span>" : "") + (k === "more" && h.cls === "bad" ? '<span class="badge" style="background:var(--fail)">!</span>' : "") + "</a>").join("");
   }
 
@@ -27,7 +27,7 @@
     let v;
     if (r === "more") {
       const h = A.health();
-      v = { title: "Plus", html: '<div class="morelist"><a href="#stats">' + icon("chart") + "Stats</a><a href=\"#activity\">" + icon("activity") + "Activité<span class=\"muted\" style=\"margin-left:auto;font-weight:400\">" + esc(h.text) + "</span></a>" +
+      v = { title: "Plus", html: '<div class="morelist"><a href="#fabrique">' + icon("film") + "La Fabrique</a><a href=\"#stats\">" + icon("chart") + "Stats</a><a href=\"#activity\">" + icon("activity") + "Activité<span class=\"muted\" style=\"margin-left:auto;font-weight:400\">" + esc(h.text) + "</span></a>" +
         '<a href="#settings">' + icon("settings") + "Réglages</a>" + '<a href="#" data-search>' + icon("search") + "Rechercher</a>" + '<a href="#" data-theme-toggle>' + icon("moon") + "Changer de thème</a>" + '<a href="#" data-tour>' + icon("today") + "Visite guidée</a></div>" };
     } else v = (A.views[r] || A.views.today)();
     document.getElementById("title").textContent = v.title;

@@ -38,9 +38,10 @@ Pas à pas, avec des captures d'écran (prises dans l'espace de démonstration ;
 
 | Page | Contenu |
 |---|---|
-| [Aujourd'hui](utilisation/aujourdhui.md) | Tableau de bord, « À faire », manqués, raccourcis, dépôt de fichiers |
-| [Calendrier](utilisation/calendrier.md) | Semaine par créneaux, mois, grille du profil, glisser-déposer, confirmation |
+| [Aujourd'hui](utilisation/aujourdhui.md) | Prochaine étape, tableau de bord, « À faire », manqués, raccourcis, dépôt de fichiers |
+| [Calendrier](utilisation/calendrier.md) | Semaine par créneaux, vignettes, mois, grille du profil, chiffres de la semaine, glisser-déposer, confirmation |
 | [Contenus](utilisation/contenus.md) | Tableau en 5 étapes (Idée → Publié), alertes, verrous, fiche d'un post, aperçu Instagram |
+| [La Fabrique](utilisation/la-fabrique.md) | Avancement des vidéos (script, voix, montage, sous-titres, relu), storyboard, vidéo finie à valider, IA via MCP |
 | [Stats](utilisation/stats.md) | Abonnés, vues, portée, meilleur Reel, tri des publications |
 | [Activité et réglages](utilisation/activite-et-reglages.md) | Journal, état des comptes et du robot, créneaux, règles, notifications, import et export |
 | [Automatisations](utilisation/automatisations.md) | Flux RSS repris en posts à relire, commentaire automatique au-delà d'un nombre de likes |

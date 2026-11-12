@@ -255,9 +255,31 @@
     }).join(";")).join("\r\n") + "\r\n";
   }
 
+  // ---------------------------------------------------------------- La Fabrique (production des vidéos)
+  // Cinq étapes, faites par une personne ou une IA (by). state : todo | doing | done.
+  const PROD_STEPS = [["script", "Script"], ["voice", "Voix"], ["edit", "Montage"], ["subs", "Sous-titres"], ["check", "Relu"]];
+  const isVideoFmt = (f) => f === "reel" || f === "video";
+  const hasVideo = (p) => (p.media || []).some((m) => m.type === "video" || /\.(mp4|mov|webm)(\?|$)/i.test(m.url || m.name || ""));
+  // Dans La Fabrique : vidéo pas encore publiée (ou tout post qui a une fiche de production).
+  function inFabrique(p) { return !p.parent && p.status !== "published" && (!!p.prod || isVideoFmt(p.format)); }
+  // État de production : les étapes enregistrées, sinon déduites (texte écrit, vidéo déposée, légende validée).
+  function prodOf(p) {
+    const own = (p.prod && p.prod.steps) || {}, vid = hasVideo(p), text = !!(p.caption || p.note || (p.prod && (p.prod.shots || []).length));
+    const guess = { script: text, voice: vid, edit: vid, subs: vid, check: !!p.captionValidated && vid };
+    const steps = PROD_STEPS.map(([k, label]) => {
+      const o = own[k] || {};
+      return { key: k, label, state: o.state || (guess[k] ? "done" : "todo"), by: o.by || "", at: o.at || "", note: o.note || "" };
+    });
+    const done = steps.filter((x) => x.state === "done").length;
+    const current = steps.find((x) => x.state === "doing") || steps.find((x) => x.state !== "done") || null;
+    const shots = ((p.prod && p.prod.shots) || []).map((x, i) => ({ n: i + 1, dur: +x.dur || 0, screen: x.screen || "", voice: x.voice || "", visual: x.visual || "", music: x.music || "" }));
+    const duration = shots.reduce((n, x) => n + x.dur, 0);
+    return { steps, done, total: steps.length, current, ready: done === steps.length, shots, duration, tooLong: isVideoFmt(p.format) && duration > ((p.prod && p.prod.maxSec) || 30), video: (p.media || []).find((m) => m.type === "video" || /\.(mp4|mov|webm)(\?|$)/i.test(m.url || m.name || "")) || null };
+  }
+
   function nowStamp(d) { d = d || new Date(); return ymd(d) + "T" + pad(d.getHours()) + ":" + pad(d.getMinutes()); }
 
   const api = { STATUS, FORMATS, STAGES, STEPS, step, alertOf, pad, ymd, parseYmd, addDays, mondayOf, toMin, at, longDate, shortDay, MONTHS, DAYS, setLang,
-    displayStatus, missed, willSend, hashtags, checks, mediaChecks, slotOf, nowStamp, fold, seriesOf, matchQuery, parseCsv, toCsv, manualNets, autoNets, pendingManual, prefillUrl, titleFor, capFor, TEXT_MAX, utm, textOut };
+    displayStatus, missed, willSend, hashtags, checks, mediaChecks, slotOf, nowStamp, fold, seriesOf, matchQuery, parseCsv, toCsv, manualNets, autoNets, pendingManual, prefillUrl, titleFor, capFor, TEXT_MAX, utm, textOut, PROD_STEPS, inFabrique, prodOf };
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.Core = api;
 })(typeof self !== "undefined" ? self : this);

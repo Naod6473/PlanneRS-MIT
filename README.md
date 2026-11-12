@@ -40,9 +40,10 @@ Ce que PlanneRs ne fait pas, volontairement : génération d'images ou de vidéo
 
 ## Ce que ça fait
 
-- **Aujourd'hui** : ce qui t'attend d'abord (échecs, posts manqués, posts à faire à la main, légendes à valider), puis le programme du jour.
-- **Calendrier** : une grille par créneaux (tes horaires types en lignes, les jours en colonnes). Glisser-déposer à la souris et au doigt (appui long), avec confirmation désactivable. Vues Mois et Grille du profil Instagram.
+- **Aujourd'hui** : la prochaine étape en une phrase, ce qui t'attend d'abord (échecs, posts manqués, posts à faire à la main, légendes à valider), puis le programme du jour.
+- **Calendrier** : une grille par créneaux (tes horaires types en lignes, les jours en colonnes). Glisser-déposer à la souris et au doigt (appui long), avec confirmation désactivable. Vues Vignettes (7 colonnes avec images), Mois et Grille du profil Instagram, et les chiffres de la semaine en cartes cliquables.
 - **Contenus** : tableau de production (idée → publié), liste sujet × réseaux, aperçu Instagram de chaque post.
+- **La Fabrique** : où en est chaque vidéo (script, voix, montage, sous-titres, relu), qui y travaille (toi ou une IA), son storyboard et la vidéo finie à regarder avant de valider ([guide](docs/utilisation/la-fabrique.md)).
 - **Stats** : abonnés, vues, portée et classement des publications.
 - **Activité** : état des comptes et du robot, journal en clair.
 - **Réglages** : comptes, stockage des médias, créneaux, modèles, règles d'envoi, notifications, équipe.
