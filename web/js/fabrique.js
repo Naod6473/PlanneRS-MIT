@@ -142,7 +142,7 @@
         id: "s" + Date.now().toString(36) + i, title: fl.name.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim(), format: "reel",
         networks: nets.length ? nets : ["instagram"], date: null, time: null, caption: "", captionValidated: false, manual: false,
         media: [media], stage: "caption", status: "draft", folder: dest,
-        note: it.note ? it.note : it.text ? "Transcription (studio) :\n" + it.text.replace(/^\d+\s*$/gm, "").replace(/^[\d:,.\s]+-->[\d:,.\s]+$/gm, "").replace(/\n{2,}/g, "\n").trim().slice(0, 4000) : "",
+        note: it.note ? String(it.note).slice(0, 6000) : it.text ? "Transcription (studio) :\n" + it.text.replace(/^\d+\s*$/gm, "").replace(/^[\d:,.\s]+-->[\d:,.\s]+$/gm, "").replace(/\n{2,}/g, "\n").trim().slice(0, 4000) : "",
         prod: { steps: Object.assign({}, steps, { edit: Object.assign({}, steps.edit, { at: C.nowStamp() }) }) },
       };
       made.push(p);
