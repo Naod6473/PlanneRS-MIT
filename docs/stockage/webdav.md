@@ -1,10 +1,10 @@
 ---
 title: WebDAV (Nextcloud, ownCloud, NAS)
-description: Relier un dossier WebDAV (Nextcloud, ownCloud, Synology, kDrive…) en lecture avec un mot de passe d'application.
+description: Relier un dossier WebDAV (Nextcloud, ownCloud, Synology, kDrive…) avec un mot de passe d'application, pour lire tes médias et y déposer tes vidéos.
 category: Stockage
-tags: [webdav, nextcloud, owncloud, synology, nas, kdrive, mot de passe d'application, lecture seule]
+tags: [webdav, nextcloud, owncloud, synology, nas, kdrive, mot de passe d'application, dépôt, nas]
 order: 5
-updated: 2026-11-10
+updated: 2026-11-13
 ---
 
 # WebDAV (Nextcloud, ownCloud, NAS)
@@ -13,7 +13,7 @@ updated: 2026-11-10
 |---|---|
 | Accès | Adresse WebDAV + identifiant + mot de passe d'application |
 | Prérequis | Serveur joignable depuis Internet en **https** |
-| Sert à | « Ouvrir le dossier » d'un post, liens vers chaque fichier, copie automatique vers l'hébergement public |
+| Sert à | « Ouvrir le dossier » d'un post, liens vers chaque fichier, copie automatique vers l'hébergement public, **dépôt de fichiers** depuis PlanneRs |
 
 ## Nextcloud
 
@@ -27,6 +27,12 @@ updated: 2026-11-10
 | ownCloud | `https://ton-serveur/remote.php/dav/files/ton-identifiant/` | [Accès WebDAV](https://doc.owncloud.com/server/next/classic_ui/files/access_webdav.html) |
 | Synology | `https://ton-nas:5006/` (paquet WebDAV Server) | [WebDAV Server](https://kb.synology.com/fr-fr/DSM/help/WebDAVServer/webdav_server) |
 | Infomaniak kDrive | `https://ID_KDRIVE.connect.kdrive.infomaniak.com/` | [kDrive en WebDAV](https://www.infomaniak.com/fr/support/faq/2409) |
+
+## Déposer des fichiers sur ton NAS
+
+Choisis **WebDAV** dans **Réglages › Stockage et médias › Dossier des dépôts** (ou laisse « Automatique »). Les vidéos déposées dans La Fabrique, Aujourd'hui ou la fenêtre de création partent alors dans ton NAS, dans le dossier du post ou le dossier des dépôts ; les sous-dossiers manquants sont créés. Le compte doit avoir le droit d'écriture sur le dossier.
+
+Pour publier sur Instagram ou Facebook, il faut en plus un hébergement public (R2 ou GitHub Pages) : PlanneRs y copie le fichier au moment de publier. Ton NAS doit donc rester joignable depuis Internet.
 
 ## Champs dans PlanneRs
 

@@ -7,6 +7,40 @@
   const layer = () => document.getElementById("layer");
   A.closeLayer = function () { if (A.beforeClose && A.beforeClose() === false) return; A.beforeClose = null; layer().innerHTML = ""; document.body.style.overflow = ""; if (A.lastFocus) { try { A.lastFocus.focus(); } catch (e) { /* rien */ } } };
   A.openLayer = (h, l) => openLayer(h, l);
+
+  // ------------------------------------------------------------ Dépôt de fichiers dans le stockage choisi
+  // Réglages › Stockage › Dossier des dépôts : « auto » = le premier stockage connecté qui sait écrire.
+  const WRITERS = [["gdrivewrite", "Google Drive"], ["onedrive", "OneDrive"], ["dropbox", "Dropbox"], ["webdav", "ton NAS ou Nextcloud (WebDAV)"], ["r2", "R2 / S3"], ["ghpages", "GitHub Pages"]];
+  A.WRITERS = WRITERS;
+  A.depositTarget = function () {
+    const acc = S.state.accounts || {}, ok = (id) => acc[id] && acc[id].status === "ok";
+    const want = (S.state.settings.drive || {}).target || "auto", w = want === "gdrive" ? "gdrivewrite" : want;
+    const hit = WRITERS.find(([id]) => id === w && ok(id)) || (want === "auto" ? WRITERS.find(([id]) => ok(id)) : null);
+    return hit ? { id: hit[0], label: hit[1] } : null;
+  };
+  A.canDeposit = () => !!A.depositTarget();
+  A.depositHint = "Pour envoyer un fichier, connecte d'abord un stockage où déposer (Google Drive en envoi, Dropbox, OneDrive, NAS en WebDAV, R2/S3 ou GitHub Pages) dans Réglages › Stockage. Sinon colle un lien.";
+  // Envoi avec suivi : renvoie { where, id, name, url, webUrl }.
+  A.deposit = function (file, folder, onProgress) {
+    if (file.size > 95 * 1024 * 1024) return Promise.reject(new Error("fichier trop lourd pour passer par PlanneRs (" + Math.round(file.size / 1048576) + " Mo, 95 Mo au plus). Dépose-le directement dans ton stockage, puis ajoute-le au post par son nom"));
+    return new Promise((ok, ko) => {
+      const x = new XMLHttpRequest();
+      x.open("POST", "api/storage/upload?path=" + encodeURIComponent(folder) + "&name=" + encodeURIComponent(file.name));
+      x.setRequestHeader("content-type", file.type || "application/octet-stream");
+      x.upload.onprogress = (ev) => { if (ev.lengthComputable && onProgress) onProgress(ev.loaded / ev.total); };
+      x.onload = () => { let j = {}; try { j = JSON.parse(x.responseText); } catch (er) { /* rien */ } if (x.status < 300) ok(j); else ko(new Error(j.error || j.what || x.statusText)); };
+      x.onerror = () => ko(new Error("Réseau indisponible"));
+      x.send(file);
+    });
+  };
+  // Média d'un post à partir de la réponse du dépôt (le nom peut changer si un fichier du même nom existait)
+  A.depositMedia = function (r, file, extra) {
+    const type = /^video/.test(file.type) ? "video" : /^image/.test(file.type) ? "image" : "file";
+    const m = { name: r.name || file.name, type, url: r.url || "" };
+    if (r.where === "gdrive") m.drive = r.id; else if (r.id) m.ref = r.id;
+    if (r.where && !r.url) m.store = r.where;
+    return Object.assign(m, extra || {});
+  };
   function openLayer(html, label) {
     A.lastFocus = document.activeElement;
     layer().innerHTML = '<div class="scrim" data-close></div><div class="sheet" role="dialog" aria-modal="true" aria-label="' + esc(label) + '">' + html + "</div>";
@@ -485,32 +519,26 @@
         '<label>Pour quel contenu ?<select name="target"><option value="">Nouvelle idée (titre = nom du fichier)</option>' +
         targets.map((p) => '<option value="' + esc(p.id) + '">' + esc((p.date ? C.shortDay(p.date) + " · " : "") + p.title) + "</option>").join("") + "</select></label>" +
         '<p class="muted small" id="q-dest"></p><div class="bar" id="q-bar" hidden><i></i></div>' +
-        '<button class="btn primary big" id="q-go">' + icon("cloud") + "Envoyer dans le Drive</button></form>", kind === "video" ? "Ajouter une vidéo" : kind === "photo" ? "Ajouter une photo" : "Ajouter un fichier"), "Ajouter un média");
+        '<button class="btn primary big" id="q-go">' + icon("cloud") + "Envoyer" + (A.depositTarget() ? " dans " + esc(A.depositTarget().label) : "") + "</button></form>", kind === "video" ? "Ajouter une vidéo" : kind === "photo" ? "Ajouter une photo" : "Ajouter un fichier"), "Ajouter un média");
       const f = layer().querySelector("#q-form");
       const dest = () => { const p = S.post(f.target.value); return (p && p.folder && !/^https?:/.test(p.folder) ? p.folder : (S.state.settings.drive && S.state.settings.drive.inbox) || "PlanneRs/depots"); };
-      const showDest = () => { layer().querySelector("#q-dest").textContent = "Dossier Drive : " + dest(); };
+      const showDest = () => { layer().querySelector("#q-dest").textContent = (A.depositTarget() ? "Dossier (" + A.depositTarget().label + ") : " : "Dossier : ") + dest(); };
       f.target.addEventListener("change", showDest); showDest();
       f.addEventListener("submit", async (e) => {
         e.preventDefault();
         const fl = (f.file.files && f.file.files[0]) || file; if (!fl) return;
         if (S.mode !== "api") { U.toast("Mode démo : aucun fichier n'est envoyé"); return; }
+        if (!A.canDeposit()) { U.toast(A.depositHint); return; }
         const go = layer().querySelector("#q-go"), bar = layer().querySelector("#q-bar");
         go.disabled = true; go.textContent = "Envoi…"; bar.hidden = false;
         try {
-          const r = await new Promise((ok, ko) => {
-            const x = new XMLHttpRequest();
-            x.open("POST", "api/drive/upload?path=" + encodeURIComponent(dest()) + "&name=" + encodeURIComponent(fl.name));
-            x.setRequestHeader("content-type", fl.type || "application/octet-stream");
-            x.upload.onprogress = (ev) => { if (ev.lengthComputable) bar.firstChild.style.width = Math.round(ev.loaded / ev.total * 100) + "%"; };
-            x.onload = () => { let j = {}; try { j = JSON.parse(x.responseText); } catch (er) { /* rien */ } if (x.status < 300) ok(j); else ko(new Error(j.error || j.what || x.statusText)); };
-            x.onerror = () => ko(new Error("Réseau indisponible"));
-            x.send(fl);
-          });
+          const r = await A.deposit(fl, dest(), (f2) => { bar.firstChild.style.width = Math.round(f2 * 100) + "%"; });
           let p = S.post(f.target.value);
           if (!p) p = await addIdea({ title: fl.name.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " "), format: /^video/.test(fl.type) ? "reel" : "image", stage: "media" });
-          p.media = (p.media || []).concat([{ name: fl.name, type: /^video/.test(fl.type) ? "video" : /^image/.test(fl.type) ? "image" : "file", drive: r.id, url: r.url || "" }]);
+          p.media = (p.media || []).concat([A.depositMedia(r, fl)]);
           if (!p.folder) p.folder = dest();
-          await S.savePosts([p]); await S.log({ level: "change", text: "Fichier ajouté dans le Drive : " + fl.name, postId: p.id });
+          if (r.where && !r.url && !p.store) p.store = r.where;
+          await S.savePosts([p]); await S.log({ level: "change", text: "Fichier déposé (" + (r.where || "stockage") + ") : " + (r.name || fl.name), postId: p.id });
           A.closeLayer(); A.render(); U.toast("Envoyé dans " + dest(), r.webUrl ? { label: "Ouvrir", fn: () => window.open(r.webUrl, "_blank", "noopener") } : null);
         } catch (er) { go.disabled = false; go.innerHTML = icon("cloud") + "Réessayer"; U.toast("Envoi impossible : " + er.message); }
       });

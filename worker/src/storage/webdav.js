@@ -1,4 +1,4 @@
-// NAS ou Nextcloud par WebDAV (lecture seule) : adresse + identifiant + mot de passe d'application.
+// NAS ou Nextcloud par WebDAV (lecture, et dépôt de fichiers) : adresse + identifiant + mot de passe d'application.
 // Nextcloud : https://ton-serveur/remote.php/dav/files/<utilisateur>/
 // Le serveur doit être joignable depuis Internet.
 import { err, joinPath } from "./common.js";
@@ -41,7 +41,7 @@ async function propfind(cred, url) {
 export async function test(env, cred) {
   if (!cred.url || !cred.username || !cred.password) throw err("Identifiants incomplets.", "Il faut l'adresse, l'identifiant et le mot de passe.");
   const items = await propfind(cred, dirUrl(cred, ""));
-  return "Dossier joignable · " + Math.max(0, items.length - 1) + " éléments (lecture seule)";
+  return "Dossier joignable · " + Math.max(0, items.length - 1) + " éléments";
 }
 
 export async function folder(cred, path) {
@@ -55,4 +55,21 @@ export async function download(cred, id, range) {
   const headers = { authorization: auth(cred) };
   if (range) headers.range = range;
   return fetch(new URL(id, baseUrl(cred)), { headers });
+}
+
+// Dépôt : crée les dossiers manquants (MKCOL, 405 = existe déjà) puis envoie le fichier (PUT).
+export async function upload(cred, path, name, bytes, type) {
+  const parts = joinPath(cred.root || "", path).split("/").filter(Boolean);
+  let at = baseUrl(cred);
+  for (const part of parts) {
+    at = new URL(encodeURIComponent(part) + "/", at);
+    const r = await fetch(at, { method: "MKCOL", headers: { authorization: auth(cred) } });
+    if (r.status === 401) throw err("WebDAV : identifiants refusés.", "Vérifie l'identifiant et le mot de passe d'application.", 401);
+    if (!r.ok && r.status !== 405 && r.status !== 301) throw err("WebDAV : impossible de créer le dossier « " + part + " » (" + r.status + ").", "Le compte a-t-il le droit d'écrire ?", r.status);
+  }
+  const file = new URL(encodeURIComponent(name), at);
+  const r = await fetch(file, { method: "PUT", headers: { authorization: auth(cred), "content-type": type || "application/octet-stream" }, body: bytes });
+  if (r.status === 401 || r.status === 403) throw err("WebDAV : écriture refusée (" + r.status + ").", "Le compte n'a que le droit de lecture sur ce dossier.", r.status);
+  if (!r.ok) throw err("WebDAV : envoi refusé (" + r.status + ").", (await r.text()).slice(0, 200), r.status);
+  return { id: file.pathname, name, webUrl: cred.webUrl || "" };
 }

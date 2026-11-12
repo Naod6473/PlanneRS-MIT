@@ -297,23 +297,15 @@
         files.forEach((f) => d.media.push({ name: f.name, type: /^video/.test(f.type) ? "video" : "image", url: URL.createObjectURL(f), local: true, size: f.size, mime: f.type }));
         touch(); media(); U.toast("Mode démo : le fichier reste dans ce navigateur"); return;
       }
-      const w = (S.state.accounts || {}).gdrivewrite;
-      if (!w || w.status !== "ok") { U.toast("Pour envoyer un fichier, connecte d'abord « Google Drive (envoi) » dans Réglages › Stockage. Sinon colle un lien."); return; }
+      if (!A.canDeposit()) { U.toast(A.depositHint); return; }
       const dest = (d.folder && !/^https?:/.test(d.folder) ? d.folder : (set.drive && set.drive.inbox) || "PlanneRs/depots");
       const bar = $("#cp-bar"); bar.hidden = false;
       for (const f of files) {
         try {
-          const r = await new Promise((ok, ko) => {
-            const x = new XMLHttpRequest();
-            x.open("POST", "api/drive/upload?path=" + encodeURIComponent(dest) + "&name=" + encodeURIComponent(f.name));
-            x.setRequestHeader("content-type", f.type || "application/octet-stream");
-            x.upload.onprogress = (ev) => { if (ev.lengthComputable) bar.firstChild.style.width = Math.round(ev.loaded / ev.total * 100) + "%"; };
-            x.onload = () => { let j = {}; try { j = JSON.parse(x.responseText); } catch (er) { /* rien */ } if (x.status < 300) ok(j); else ko(new Error(j.error || x.statusText)); };
-            x.onerror = () => ko(new Error("Réseau indisponible"));
-            x.send(f);
-          });
-          d.media.push({ name: f.name, type: /^video/.test(f.type) ? "video" : "image", drive: r.id, url: r.url || "", _pv: URL.createObjectURL(f), size: f.size, mime: f.type });
+          const r = await A.deposit(f, dest, (f2) => { bar.firstChild.style.width = Math.round(f2 * 100) + "%"; });
+          d.media.push(A.depositMedia(r, f, { _pv: URL.createObjectURL(f), size: f.size, mime: f.type }));
           if (!d.folder) d.folder = dest;
+          if (r.where && !r.url && !d.store) d.store = r.where;
           touch(); media();
         } catch (er) { U.toast("Envoi impossible : " + er.message); }
       }

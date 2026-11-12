@@ -1281,3 +1281,8 @@ table.sb td{padding:8px;border-bottom:1px solid var(--line);vertical-align:top}
 .sbtot{display:flex;align-items:center;gap:6px;margin:6px 0 0;font-weight:600;font-size:13px}
 .sbtot.warn{color:var(--fail)}
 @media (max-width:760px){.fab-grid{grid-template-columns:1fr}.fvideo{max-width:260px;margin:0 auto}.fcols{grid-template-columns:repeat(6,minmax(160px,72vw))}}
+/* Dépôt de fichiers : réglage et glisser-déposer sur La Fabrique */
+.warnline{display:flex;gap:6px;align-items:center;margin:0;color:var(--main);background:var(--main-bg);border-radius:8px;padding:8px 10px;font-size:13px}
+.warnline svg{flex:none}
+body.fabdrag main{outline:3px dashed var(--n-fabrique);outline-offset:-10px}
+body.fabdrag main::after{content:"Lâche tes vidéos ici : elles partent dans ton stockage et arrivent dans La Fabrique";position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--n-fabrique);color:#fff;font-weight:700;padding:10px 16px;border-radius:99px;z-index:50;pointer-events:none}

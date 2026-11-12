@@ -51,11 +51,21 @@ async function pick(env, ids) {
   return null;
 }
 
+// Où déposer un fichier : le stockage choisi s'il est connecté, sinon le premier qui sait écrire.
+// Google Drive écrit par sa connexion « envoi » ; R2/S3 et GitHub Pages donnent directement une adresse publique.
+const WRITERS = ["gdrivewrite", "onedrive", "dropbox", "webdav", "r2", "ghpages"];
+async function uploadTarget(env, target) {
+  const want = target === "gdrive" ? "gdrivewrite" : target;
+  const order = WRITERS.includes(want) ? [want] : WRITERS;
+  const d = await pick(env, order);
+  return d ? Object.assign(d, { host: HOSTS.includes(d.id) }) : null;
+}
+
 // Avant d'envoyer : un média sans adresse publique est copié depuis le stockage source vers l'hébergement public.
 async function ensurePublic(env, p) {
   const need = (p.media || []).filter((m) => !/^https:\/\//.test(m.url || "") && m.role !== "guide");
   if (!need.length) return false;
-  const src = await pick(env, SOURCES), host = await pick(env, HOSTS);
+  const src = await pick(env, p.store && SOURCES.includes(p.store) ? [p.store] : SOURCES), host = await pick(env, HOSTS);
   if (!src || !host || !p.folder || /^https?:/.test(p.folder)) throw new PublishError("Un média n'a pas d'adresse publique.", { why: "Il faut un stockage (Drive, Dropbox…) ET un hébergement public (GitHub Pages ou R2) connectés pour copier les fichiers automatiquement.", todo: "Connecte-les dans Réglages › Stockage et médias, ou poste à la main.", retryable: false });
   const dir = await src.mod.folder(src.cred, p.folder, src.save);
   for (const m of need) {
@@ -416,13 +426,21 @@ async function api(request, env, path, url, auth) {
     await db.putKV(env, "oauth-state", null);
     return back(info.status === "ok" ? "TikTok autorisé" : "Échec : " + info.detail);
   }
-  if (path === "drive/upload" && m === "POST") {
-    const info = (await db.accountsInfo(env)).gdrivewrite;
-    if (!info || info.status !== "ok") return err("L'envoi vers le Drive n'est pas connecté (Réglages › Stockage › Google Drive, envoi).", 409);
-    const cred = await db.getCred(env, "gdrivewrite");
+  // Dépôt d'un fichier (vidéo, photo) dans le stockage choisi (Réglages › Stockage › Dossier des dépôts).
+  if ((path === "storage/upload" || path === "drive/upload") && m === "POST") {
+    const st = (await db.getKV(env, "settings")) || {};
     const name = (url.searchParams.get("name") || "fichier").replace(/[\\/]/g, "_").slice(0, 200);
-    try { return json(await gdrivewrite.upload(cred, url.searchParams.get("path") || "", name, await request.arrayBuffer(), request.headers.get("content-type"))); }
-    catch (e) { return err(e.why ? e.message + " " + e.why : e.message, 502); }
+    const dest = await uploadTarget(env, (st.drive && st.drive.target) || "auto");
+    if (!dest) return err("Aucun stockage où déposer les fichiers. Connecte-en un dans Réglages › Stockage et médias (Drive en envoi, Dropbox, OneDrive, NAS en WebDAV, R2/S3 ou GitHub Pages).", 409);
+    const bytes = await request.arrayBuffer(), type = request.headers.get("content-type") || undefined, folder = url.searchParams.get("path") || "";
+    try {
+      if (dest.host) {
+        const pub = await dest.mod.put(dest.cred, joinPath(folder, name), new Uint8Array(bytes), type);
+        return json({ where: dest.id, name, url: pub });
+      }
+      const r = await dest.mod.upload(dest.cred, folder, name, bytes, type, dest.save);
+      return json({ where: dest.id === "gdrivewrite" ? "gdrive" : dest.id, id: r.id, name: r.name || name, webUrl: r.webUrl || "", folderUrl: r.folderUrl || "" });
+    } catch (e) { return err(e.why ? e.message + " " + e.why : e.message, e.status === 403 || e.status === 401 ? 403 : 502); }
   }
   if (path === "instagram/sync" && m === "POST") { try { return json(await syncInstagram(env, true)); } catch (e) { return err(e.why || e.message, 502); } }
   if (path === "robot/run" && m === "POST") return json(await robot(env));

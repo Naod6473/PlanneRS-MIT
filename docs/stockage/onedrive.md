@@ -1,10 +1,10 @@
 ---
 title: OneDrive
-description: Relier un dossier OneDrive (compte personnel ou Microsoft 365) en lecture seule via une application Microsoft Entra et un jeton de rafraîchissement.
+description: Relier un dossier OneDrive (compte personnel ou Microsoft 365) en lecture (et en dépôt de fichiers, au choix) via une application Microsoft Entra et un jeton de rafraîchissement.
 category: Stockage
-tags: [onedrive, microsoft, entra, azure, graph, oauth, refresh token, files.read, lecture seule]
+tags: [onedrive, microsoft, entra, azure, graph, oauth, refresh token, files.read, files.readwrite, dépôt]
 order: 3
-updated: 2026-11-10
+updated: 2026-11-13
 ---
 
 # OneDrive
@@ -22,7 +22,7 @@ updated: 2026-11-10
 3. URI de redirection : plateforme **Client public/natif (mobile et bureau)**, valeur `https://login.microsoftonline.com/common/oauth2/nativeclient`.
 4. **Inscrire**, puis copie l'**ID d'application (client)**.
 5. **Authentification** › **Autoriser les flux clients publics** : **Oui** › **Enregistrer**.
-6. **Autorisations d'API** › **Ajouter une autorisation** › **Microsoft Graph** › **Autorisations déléguées** › coche `Files.Read` et `offline_access`.
+6. **Autorisations d'API** › **Ajouter une autorisation** › **Microsoft Graph** › **Autorisations déléguées** › coche `Files.Read` et `offline_access`. Pour déposer tes vidéos dans OneDrive depuis PlanneRs, coche `Files.ReadWrite` à la place de `Files.Read`, et demande ce droit en faisant le jeton (`scope=Files.ReadWrite offline_access`).
 
 ## 2. Obtenir le jeton de rafraîchissement
 

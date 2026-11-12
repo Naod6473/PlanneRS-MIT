@@ -306,6 +306,7 @@
     const t = e.target, d = t.dataset, st = S.state.settings;
     if (t.matches("[data-lang]")) { I18N.set(t.value); return; }
     if (t.matches("[data-utm-domains]")) { const d = t.value.split(/[\s,;]+/).map((x) => x.trim().replace(/^https?:\/\//, "").replace(/\/.*$/, "").toLowerCase()).filter((x) => x.includes(".")); st.utm = Object.assign({ medium: "social" }, st.utm, { domains: d }); await S.saveSettings(st); U.toast(d.length ? "Liens suivis activés" : "Liens suivis désactivés"); return; }
+    if (t.matches("[data-drive-target]")) { st.drive = Object.assign({}, st.drive, { target: t.value }); await S.saveSettings(st); U.toast("Stockage des dépôts enregistré"); A.render(); return; }
     if (t.matches("[data-drive-inbox]")) { const v = t.value.trim().replace(/^\/+|\/+$/g, ""); st.drive = Object.assign({}, st.drive, { inbox: v || "PlanneRs/depots" }); await S.saveSettings(st); U.toast("Dossier enregistré"); return; }
     if (t.matches("[data-ai-validate]")) {
       if (t.checked && !confirm("Les posts validés par l'assistant partiront tout seuls, sans relecture humaine. Continuer ?")) { t.checked = false; return; }

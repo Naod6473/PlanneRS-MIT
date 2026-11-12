@@ -1,4 +1,5 @@
-// Dropbox (lecture seule) : clé et secret de l'application + jeton de rafraîchissement (n'expire pas).
+// Dropbox : clé et secret de l'application + jeton de rafraîchissement (n'expire pas).
+// Lecture : files.content.read. Dépôt de fichiers : files.content.write en plus.
 // Doc : https://www.dropbox.com/developers/documentation/http/documentation
 import { err, okJson, joinPath } from "./common.js";
 
@@ -28,7 +29,7 @@ export async function test(env, cred) {
   if (!cred.appKey || !cred.appSecret || !cred.refreshToken) throw err("Identifiants incomplets.", "Il faut l'App key, l'App secret et le refresh token.");
   const t = await token(cred);
   const me = await okJson("Dropbox", await fetch("https://api.dropboxapi.com/2/users/get_current_account", { method: "POST", headers: { authorization: "Bearer " + t } }));
-  return "Compte " + (me.name && me.name.display_name || me.email) + (cred.root ? " · dossier " + cred.root : "") + " (lecture seule)";
+  return "Compte " + (me.name && me.name.display_name || me.email) + (cred.root ? " · dossier " + cred.root : "") + "";
 }
 
 export async function folder(cred, path) {
@@ -48,4 +49,18 @@ export async function download(cred, id, range) {
   const headers = { authorization: "Bearer " + t, "dropbox-api-arg": JSON.stringify({ path: id }).replace(/[\u007f-￿]/g, (c) => "\\u" + c.charCodeAt(0).toString(16).padStart(4, "0")) };
   if (range) headers.range = range;
   return fetch("https://content.dropboxapi.com/2/files/download", { method: "POST", headers });
+}
+
+// Dépôt (jusqu'à 150 Mo en un envoi) : un fichier du même nom est gardé, le nouveau est renommé.
+export async function upload(cred, path, name, bytes) {
+  const t = await token(cred);
+  const arg = JSON.stringify({ path: full(cred, path) + "/" + name, mode: "add", autorename: true }).replace(/[\u007f-\uffff]/g, (c) => "\\u" + c.charCodeAt(0).toString(16).padStart(4, "0"));
+  const r = await fetch("https://content.dropboxapi.com/2/files/upload", { method: "POST", headers: { authorization: "Bearer " + t, "content-type": "application/octet-stream", "dropbox-api-arg": arg }, body: bytes });
+  if (r.status === 401 || r.status === 403 || r.status === 400) {
+    const t2 = await r.text();
+    if (/scope|files\.content\.write/i.test(t2)) throw err("Dropbox : l'application n'a pas le droit d'écrire.", "Coche « files.content.write » dans l'onglet Permissions de l'application, puis refais le jeton de rafraîchissement.", 403);
+    throw err("Dropbox refuse l'envoi (" + r.status + ").", t2.slice(0, 200), r.status);
+  }
+  const j = await okJson("Dropbox", r);
+  return { id: j.path_lower, name: j.name, webUrl: "https://www.dropbox.com/home" + encodeURI(j.path_display.split("/").slice(0, -1).join("/")) + "?preview=" + encodeURIComponent(j.name) };
 }

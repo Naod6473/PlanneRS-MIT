@@ -4,7 +4,7 @@ description: Suivre la fabrication de chaque vidéo (script, voix, montage, sous
 category: Utilisation
 tags: [la fabrique, production, vidéo, reel, montage, storyboard, voix, sous-titres, ia, agents, avancement]
 order: 3.5
-updated: 2026-11-12
+updated: 2026-11-13
 ---
 
 # La Fabrique
@@ -26,6 +26,10 @@ Chaque vidéo est rangée dans la colonne de son étape en cours ; la dernière 
 Les cartes chiffres en haut comptent les vidéos par étape ; un clic n'affiche que cette colonne.
 
 Sans rien renseigner, PlanneRs devine l'avancement : un texte écrit coche le Script, une vidéo dans les médias coche Voix, Montage et Sous-titres, une légende validée coche Relu.
+
+## Déposer des vidéos
+
+**Déposer des vidéos** (en haut de La Fabrique), ou glisse tes fichiers sur la page : chaque vidéo part dans ton stockage (celui choisi dans **Réglages › Stockage et médias › Dossier des dépôts** : Drive, OneDrive, Dropbox, NAS, R2…) et devient un Reel dans La Fabrique, montage fait, sous-titres et relecture à faire. En mode démo, rien n'est envoyé.
 
 ## La fiche de fabrication
 

@@ -88,3 +88,41 @@ test("Drive (envoi) : crée le sous-dossier manquant puis envoie en reprise", as
   assert.equal(r.id, "F1"); assert.equal(r.folderId, "NEW");
   assert.match(gdw.authUrl({ clientId: "c" }, "https://app.ex", "st"), /redirect_uri=https%3A%2F%2Fapp.ex%2Fapi%2Foauth%2Fgoogle%2Fcallback.*access_type=offline/);
 });
+
+test("WebDAV : dépôt, crée les dossiers manquants puis envoie le fichier", async () => {
+  const calls = route([
+    [/remote\.php/, m("MKCOL", (u) => new Response("", { status: /depots\/$/.test(u) ? 201 : 405 }))],
+    [/remote\.php/, m("PUT", () => new Response("", { status: 201 }))],
+  ]);
+  const r = await webdav.upload({ url: "https://nas.ex/remote.php/dav/files/moi", username: "moi", password: "p", root: "MesMedias" }, "PlanneRs/depots", "ma vidéo.mp4", new Uint8Array([1, 2]), "video/mp4");
+  assert.deepEqual(calls.map((c) => c.opts.method), ["MKCOL", "MKCOL", "MKCOL", "PUT"]);
+  assert.equal(calls[3].url, "https://nas.ex/remote.php/dav/files/moi/MesMedias/PlanneRs/depots/ma%20vid%C3%A9o.mp4");
+  assert.equal(r.id, "/remote.php/dav/files/moi/MesMedias/PlanneRs/depots/ma%20vid%C3%A9o.mp4");
+});
+
+test("WebDAV : écriture refusée → message clair", async () => {
+  route([[/nas/, m("MKCOL", () => new Response("", { status: 405 }))], [/nas/, m("PUT", () => new Response("", { status: 403 }))]]);
+  await assert.rejects(webdav.upload({ url: "https://nas.ex/dav/", username: "u", password: "p" }, "a", "b.mp4", new Uint8Array(1)), /écriture refusée/);
+});
+
+test("Dropbox : dépôt dans le dossier, nom renommé si déjà pris", async () => {
+  const calls = route([
+    [/oauth2\/token/, m("POST", () => J({ access_token: "T", expires_in: 3600 }))],
+    [/files\/upload/, m("POST", () => J({ name: "clip (1).mp4", path_lower: "/medias/depots/clip (1).mp4", path_display: "/Medias/depots/clip (1).mp4" }))],
+  ]);
+  const r = await dropbox.upload({ appKey: "k", appSecret: "s", refreshToken: "rw", root: "/Medias" }, "depots", "clip.mp4", new Uint8Array(3));
+  const arg = JSON.parse(calls[1].opts.headers["dropbox-api-arg"]);
+  assert.deepEqual(arg, { path: "/Medias/depots/clip.mp4", mode: "add", autorename: true });
+  assert.equal(r.name, "clip (1).mp4");
+});
+
+test("OneDrive : dépôt avec le droit d'écriture, dossiers créés par OneDrive", async () => {
+  const calls = route([
+    [/oauth2\/v2\.0\/token/, m("POST", (u, o) => J({ access_token: "W", expires_in: 3600, scope: String(o.body) }))],
+    [/graph\.microsoft\.com/, m("PUT", () => J({ id: "ID1", name: "clip.mp4", webUrl: "https://onedrive.live.com/x" }))],
+  ]);
+  const r = await onedrive.upload({ clientId: "c", refreshToken: "r2", root: "Docs" }, "PlanneRs/depots", "clip.mp4", new Uint8Array(2), "video/mp4");
+  assert.match(String(calls[0].opts.body), /Files\.ReadWrite/);
+  assert.equal(calls[1].url, "https://graph.microsoft.com/v1.0/me/drive/root:/Docs/PlanneRs/depots/clip.mp4:/content?@microsoft.graph.conflictBehavior=rename");
+  assert.equal(r.id, "ID1");
+});

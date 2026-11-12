@@ -1,10 +1,10 @@
 ---
 title: Dropbox
-description: Relier un dossier Dropbox en lecture seule avec une application Dropbox (App key, App secret) et un jeton de rafraîchissement hors ligne.
+description: Relier un dossier Dropbox en lecture (et en dépôt de fichiers, au choix) avec une application Dropbox (App key, App secret) et un jeton de rafraîchissement hors ligne.
 category: Stockage
-tags: [dropbox, oauth, app key, app secret, refresh token, offline, lecture seule]
+tags: [dropbox, oauth, app key, app secret, refresh token, offline, lecture, dépôt]
 order: 4
-updated: 2026-11-10
+updated: 2026-11-13
 ---
 
 # Dropbox
@@ -19,7 +19,7 @@ updated: 2026-11-10
 
 1. [Dropbox App Console](https://www.dropbox.com/developers/apps) › **Create app**.
 2. **Scoped access**, puis **Full Dropbox** (ou **App folder** pour limiter l'accès à un seul dossier). Nom : « PlanneRs-ton-nom ».
-3. Onglet **Permissions** : coche `files.metadata.read`, `files.content.read`, `account_info.read` › **Submit**.
+3. Onglet **Permissions** : coche `files.metadata.read`, `files.content.read`, `account_info.read` › **Submit**. Pour déposer tes vidéos dans Dropbox depuis PlanneRs, coche aussi `files.content.write` (avant de faire le jeton : un jeton déjà fait n'a pas ce droit).
 4. Onglet **Settings** : copie l'**App key** et l'**App secret**.
 
 ## 2. Obtenir le jeton de rafraîchissement

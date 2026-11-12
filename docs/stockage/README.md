@@ -4,7 +4,7 @@ description: Différence entre stockage source et hébergement public, ce dont l
 category: Stockage
 tags: [stockage, médias, hébergement public, adresse publique, google drive, dropbox, onedrive, r2, github pages, copie automatique]
 order: 0
-updated: 2026-11-10
+updated: 2026-11-13
 ---
 
 # Stockage : vue d'ensemble
@@ -20,10 +20,16 @@ LinkedIn, X, Bluesky et Mastodon, eux, reçoivent le fichier : PlanneRs le tél�
 | Famille | Services | Rôle |
 |---|---|---|
 | **Stockage source** (lecture seule) | [Google Drive](google-drive-lecture.md), [OneDrive](onedrive.md), [Dropbox](dropbox.md), [WebDAV](webdav.md) | Là où tu ranges tes fichiers. Bouton « Ouvrir le dossier » de chaque post, liens vers les fichiers, « Enregistrer » sur le téléphone. |
-| **Envoi de fichiers** | [Google Drive (envoi)](google-drive-envoi.md) | Envoyer vidéos et photos depuis PlanneRs (raccourcis d'Aujourd'hui, dépôt de fichier). |
+| **Envoi de fichiers** | [Google Drive (envoi)](google-drive-envoi.md), et aussi [OneDrive](onedrive.md), [Dropbox](dropbox.md), [WebDAV](webdav.md) avec le droit d'écriture | Envoyer vidéos et photos depuis PlanneRs (La Fabrique, raccourcis d'Aujourd'hui, fenêtre de création). |
 | **Hébergement public** | [Cloudflare R2 / S3](cloudflare-r2.md), [GitHub Pages](github-pages.md) | Donne une adresse publique aux médias. |
 
 Si plusieurs stockages sources sont connectés, PlanneRs utilise le premier dans cet ordre : Google Drive, OneDrive, Dropbox, WebDAV.
+
+## Où vont les fichiers déposés
+
+**Réglages › Stockage et médias › Dossier des dépôts** : choisis le stockage qui reçoit les vidéos et photos déposées dans PlanneRs, ou laisse **Automatique** (le premier connecté dans cet ordre : Google Drive en envoi, OneDrive, Dropbox, WebDAV, R2/S3, GitHub Pages). Avec R2/S3 ou GitHub Pages, le fichier est directement en ligne. Avec un stockage source, il reste chez toi et n'est copié en public qu'au moment de publier.
+
+Un fichier envoyé depuis PlanneRs fait 95 Mo au plus. Au-delà, dépose-le directement dans ton stockage et ajoute-le au post par son nom.
 
 ## Copie automatique
 

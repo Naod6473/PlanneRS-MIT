@@ -42,7 +42,7 @@
     return {
       title: "La Fabrique",
       sub: "Tes vidéos, de l'idée à la vidéo finie",
-      tools: '<span class="grow"></span>' + (A.hasStudio ? '<button class="btn" data-cutvideo aria-label="Couper une vidéo (blancs et euh)">' + icon("film") + '<span class="lbl">Couper une vidéo</span></button>' : "") + '<button class="btn primary" data-new aria-label="Nouveau post">' + icon("plus") + '<span class="lbl">Nouveau post</span></button>',
+      tools: '<span class="grow"></span>' + ('<label class="btn" title="Une vidéo finie à relire : elle part dans ton stockage et devient un Reel dans La Fabrique">' + icon("cloud") + '<span class="lbl">Déposer des vidéos</span><input type="file" accept="video/*" multiple hidden data-fabdrop aria-label="Déposer des vidéos"></label>') + (A.hasStudio ? '<button class="btn" data-cutvideo aria-label="Couper une vidéo (blancs et euh)">' + icon("film") + '<span class="lbl">Couper une vidéo</span></button>' : "") + '<button class="btn primary" data-new aria-label="Nouveau post">' + icon("plus") + '<span class="lbl">Nouveau post</span></button>',
       html: all.length ? '<section class="pband" aria-labelledby="h-fab"><div class="pband-h"><h2 id="h-fab" data-noi18n>' + esc(phrase) + "</h2>" + (f ? '<span class="muted"><button class="lk" data-fabst="">' + icon("x") + "Tout afficher</button></span>" : "") + "</div>" +
         '<div class="pkpis" role="group" aria-label="Filtrer par étape">' + kpis + "</div></section>" +
         '<div class="wcols fcols' + (f ? " one" : "") + '" role="group" aria-label="Vidéos par étape">' + cols + "</div>" +
@@ -128,31 +128,44 @@
     for (let i = 0; i < files.length; i++) {
       const fl = files[i], it = items[i] || {};
       if (S.mode === "api") U.toast((files.length > 1 ? "Vidéo " + (i + 1) + "/" + files.length + " : " : "") + "envoi de " + fl.name + "…");
-      let media = { name: fl.name, type: "video", role: "final" };
-      if (S.mode === "api") {
+      let media = { name: fl.name, type: "video", role: "final" }, store = "";
+      if (S.mode === "api" && !A.canDeposit()) U.toast(A.depositHint);
+      else if (S.mode === "api") {
         try {
-          const r = await fetch("api/drive/upload?path=" + encodeURIComponent(dest) + "&name=" + encodeURIComponent(fl.name), { method: "POST", headers: { "content-type": fl.type || "video/mp4" }, body: fl });
-          const j = await r.json().catch(() => ({}));
-          if (!r.ok) throw new Error(j.error || j.what || r.statusText);
-          media = Object.assign(media, { drive: j.id, url: j.url || "" });
+          const r = await A.deposit(fl, dest);
+          media = A.depositMedia(r, fl, { type: "video", role: "final" });
+          if (r.where && !r.url) store = r.where;
         } catch (e) { U.toast("Envoi de " + fl.name + " impossible : " + e.message + ". La vidéo est gardée sans fichier : ajoute-la à la main."); }
       }
       const by = "Studio", steps = meta.steps || { script: { state: "done", by }, voice: { state: "done", by }, edit: { state: "done", by }, subs: { state: "done", by }, check: { state: "todo" } };
       const p = {
         id: "s" + Date.now().toString(36) + i, title: fl.name.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim(), format: "reel",
         networks: nets.length ? nets : ["instagram"], date: null, time: null, caption: "", captionValidated: false, manual: false,
-        media: [media], stage: "caption", status: "draft", folder: dest,
+        media: [media], stage: "caption", status: "draft", folder: dest, ...(store ? { store } : {}),
         note: it.note ? String(it.note).slice(0, 6000) : it.text ? "Transcription (studio) :\n" + it.text.replace(/^\d+\s*$/gm, "").replace(/^[\d:,.\s]+-->[\d:,.\s]+$/gm, "").replace(/\n{2,}/g, "\n").trim().slice(0, 4000) : "",
         prod: { steps: Object.assign({}, steps, { edit: Object.assign({}, steps.edit, { at: C.nowStamp() }) }) },
       };
       made.push(p);
     }
     await S.savePosts(made);
-    await S.log({ level: "change", text: made.length + " vidéo" + (made.length > 1 ? "s reçues" : " reçue") + " du studio : " + made.map((p) => p.title).join(", ") });
+    await S.log({ level: "change", text: made.length + " vidéo" + (made.length > 1 ? "s reçues" : " reçue") + (meta.source === "drop" ? " par dépôt : " : " du studio : ") + made.map((p) => p.title).join(", ") });
     A.render();
     U.toast(made.length + " vidéo" + (made.length > 1 ? "s" : "") + " dans La Fabrique, à relire." + (items.some((it) => it.text) ? " Une IA peut écrire les descriptions à partir de la transcription." : ""));
     if (made.length === 1) A.openFab(made[0].id);
   };
+
+  // Dépôt de vidéos finies : bouton, ou glisser-déposer sur La Fabrique
+  A.dropVideos = function (list) {
+    const files = [...list].filter((f) => /^video\//.test(f.type) || /\.(mp4|mov|m4v|webm)$/i.test(f.name));
+    if (!files.length) { U.toast("Dépose des fichiers vidéo (MP4, MOV, WebM)"); return; }
+    const by = "Dépôt";
+    return A.receiveStudio({ source: "drop", files, items: [], steps: { script: { state: "done", by }, voice: { state: "done", by }, edit: { state: "done", by }, subs: { state: "todo" }, check: { state: "todo" } } });
+  };
+  document.addEventListener("change", (e) => { if (e.target.matches("[data-fabdrop]") && e.target.files.length) { A.dropVideos(e.target.files); e.target.value = ""; } });
+  const onFab = () => /^#fabrique/.test(location.hash) && !document.querySelector("#layer .sheet");
+  document.addEventListener("dragover", (e) => { if (onFab() && e.dataTransfer && [...e.dataTransfer.types].includes("Files")) { e.preventDefault(); document.body.classList.add("fabdrag"); } });
+  document.addEventListener("dragleave", (e) => { if (!e.relatedTarget) document.body.classList.remove("fabdrag"); });
+  document.addEventListener("drop", (e) => { if (!onFab() || !e.dataTransfer || !e.dataTransfer.files.length) return; e.preventDefault(); document.body.classList.remove("fabdrag"); A.dropVideos(e.dataTransfer.files); });
 
   document.addEventListener("click", (e) => {
     if (e.target.closest("[data-cutvideo]")) { A.lastFocus = e.target.closest("[data-cutvideo]"); A.openCut(); return; }

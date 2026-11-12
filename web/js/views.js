@@ -919,6 +919,16 @@
   function netChecks(attr, picked) {
     return (A.nets()).map((n) => '<label class="chip"><input type="checkbox" ' + attr + ' value="' + n + '"' + ((picked || []).includes(n) ? " checked" : "") + ">" + brand(n) + esc(window.BRANDS[n] ? window.BRANDS[n].title : n) + "</label>").join("");
   }
+  // Où vont les fichiers déposés depuis PlanneRs : au choix parmi les stockages connectés qui savent écrire.
+  function depositPanel() {
+    const acc = S.state.accounts || {}, dv = settings().drive || {}, want = dv.target || "auto", cur = A.depositTarget && A.depositTarget();
+    const opts = [["auto", "Automatique" + (want === "auto" && cur ? " (" + cur.label + ")" : "")]].concat((A.WRITERS || []).map(([id, l]) => [id, l + (acc[id] && acc[id].status === "ok" ? "" : " · pas connecté")]));
+    return '<section class="panel"><h2>Dossier des dépôts</h2><p>Les vidéos et photos que tu déposes dans PlanneRs (La Fabrique, Aujourd\'hui, partage depuis le téléphone, fenêtre de création) partent dans le stockage de ton choix : Drive, OneDrive, Dropbox, ton NAS ou Nextcloud (WebDAV), ou directement en ligne (R2/S3, GitHub Pages). Tes fichiers restent chez toi.</p><div class="form">' +
+      '<label>Stockage<select data-drive-target>' + opts.map(([v, l]) => '<option value="' + v + '"' + (v === want ? " selected" : "") + ">" + esc(l) + "</option>").join("") + "</select></label>" +
+      (want !== "auto" && !cur ? '<p class="warnline">' + icon("alert") + "Ce stockage n'est pas connecté : les dépôts sont bloqués. Connecte-le plus bas ou repasse en automatique.</p>" : "") +
+      '<label>Dossier<input value="' + esc(dv.inbox || "PlanneRs/depots") + '" data-drive-inbox placeholder="PlanneRs/depots"></label>' +
+      '<p class="muted" style="margin:0;font-size:12px">Chemin dans le stockage, utilisé quand le fichier n\'est rattaché à aucun post. 95 Mo au plus par fichier envoyé depuis PlanneRs. Dropbox et OneDrive demandent le droit d\'écriture (voir leurs guides).</p></div></section>';
+  }
   const SET = {
     accounts: () => connGroup("social", "Comptes connectés", "Les réseaux sur lesquels PlanneRs publie ou te rappelle de publier."),
     storage: () => {
@@ -931,7 +941,7 @@
         lk(sto, "Là où tu ranges tes fichiers", "Stockage") + '<span class="arrow">' + icon("right") + "</span>" +
         lk(pubh, "Copie publique, le temps de publier", "Hébergement public") + '<span class="arrow">' + icon("right") + "</span>" +
         '<div class="link"><b>' + brands((A.nets()).filter((n) => acc[n] && acc[n].status === "ok")) + " Réseaux</b><small class=\"muted\">Récupèrent le média à l'heure prévue</small></div></div></section>" +
-        '<section class="panel"><h2>Dossier des dépôts</h2><p>Là où partent les photos et vidéos ajoutées depuis Aujourd\'hui ou partagées depuis le téléphone, quand elles ne sont rattachées à aucun post (chemin dans ton stockage).</p><div class="form"><label>Dossier<input value="' + esc((settings().drive || {}).inbox || "PlanneRs/depots") + '" data-drive-inbox placeholder="PlanneRs/depots"></label></div></section>' +
+        depositPanel() +
         connGroup("storage", "Stockages connectés", "Tes dossiers de médias et l'hébergement public utilisé au moment de publier.");
     },
     slots: () => bestSlots() + '<section class="panel"><h2>Créneaux types</h2><p>Ils forment les lignes du calendrier. Un post déposé sur un créneau prend son heure.</p><div class="form" id="slots">' +

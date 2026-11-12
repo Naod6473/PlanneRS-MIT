@@ -641,12 +641,17 @@
         "avancement"
       ],
       "order": "3.5",
-      "updated": "2026-11-12",
+      "updated": "2026-11-13",
       "headings": [
         {
           "level": 2,
           "text": "Les cinq étapes",
           "anchor": "les-cinq-étapes"
+        },
+        {
+          "level": 2,
+          "text": "Déposer des vidéos",
+          "anchor": "déposer-des-vidéos"
         },
         {
           "level": 2,
@@ -1368,7 +1373,7 @@
         "copie automatique"
       ],
       "order": 0,
-      "updated": "2026-11-10",
+      "updated": "2026-11-13",
       "headings": [
         {
           "level": 2,
@@ -1379,6 +1384,11 @@
           "level": 2,
           "text": "Deux familles",
           "anchor": "deux-familles"
+        },
+        {
+          "level": 2,
+          "text": "Où vont les fichiers déposés",
+          "anchor": "où-vont-les-fichiers-déposés"
         },
         {
           "level": 2,
@@ -1475,7 +1485,7 @@
     {
       "path": "stockage/onedrive.md",
       "title": "OneDrive",
-      "description": "Relier un dossier OneDrive (compte personnel ou Microsoft 365) en lecture seule via une application Microsoft Entra et un jeton de rafraîchissement.",
+      "description": "Relier un dossier OneDrive (compte personnel ou Microsoft 365) en lecture (et en dépôt de fichiers, au choix) via une application Microsoft Entra et un jeton de rafraîchissement.",
       "category": "Stockage",
       "tags": [
         "onedrive",
@@ -1486,10 +1496,11 @@
         "oauth",
         "refresh token",
         "files.read",
-        "lecture seule"
+        "files.readwrite",
+        "dépôt"
       ],
       "order": 3,
-      "updated": "2026-11-10",
+      "updated": "2026-11-13",
       "headings": [
         {
           "level": 2,
@@ -1516,7 +1527,7 @@
     {
       "path": "stockage/dropbox.md",
       "title": "Dropbox",
-      "description": "Relier un dossier Dropbox en lecture seule avec une application Dropbox (App key, App secret) et un jeton de rafraîchissement hors ligne.",
+      "description": "Relier un dossier Dropbox en lecture (et en dépôt de fichiers, au choix) avec une application Dropbox (App key, App secret) et un jeton de rafraîchissement hors ligne.",
       "category": "Stockage",
       "tags": [
         "dropbox",
@@ -1525,10 +1536,11 @@
         "app secret",
         "refresh token",
         "offline",
-        "lecture seule"
+        "lecture",
+        "dépôt"
       ],
       "order": 4,
-      "updated": "2026-11-10",
+      "updated": "2026-11-13",
       "headings": [
         {
           "level": 2,
@@ -1555,7 +1567,7 @@
     {
       "path": "stockage/webdav.md",
       "title": "WebDAV (Nextcloud, ownCloud, NAS)",
-      "description": "Relier un dossier WebDAV (Nextcloud, ownCloud, Synology, kDrive…) en lecture avec un mot de passe d'application.",
+      "description": "Relier un dossier WebDAV (Nextcloud, ownCloud, Synology, kDrive…) avec un mot de passe d'application, pour lire tes médias et y déposer tes vidéos.",
       "category": "Stockage",
       "tags": [
         "webdav",
@@ -1565,10 +1577,11 @@
         "nas",
         "kdrive",
         "mot de passe d'application",
-        "lecture seule"
+        "dépôt",
+        "nas"
       ],
       "order": 5,
-      "updated": "2026-11-10",
+      "updated": "2026-11-13",
       "headings": [
         {
           "level": 2,
@@ -1579,6 +1592,11 @@
           "level": 2,
           "text": "Autres serveurs",
           "anchor": "autres-serveurs"
+        },
+        {
+          "level": 2,
+          "text": "Déposer des fichiers sur ton NAS",
+          "anchor": "déposer-des-fichiers-sur-ton-nas"
         },
         {
           "level": 2,
