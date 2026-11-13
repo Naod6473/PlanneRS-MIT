@@ -67,11 +67,11 @@ async function ensureFolder(t, root, path) {
 }
 
 // Envoi en reprise (« resumable ») : valable pour les gros fichiers.
-export async function upload(cred, path, name, bytes, type) {
+export async function upload(cred, path, name, bytes, type, save, size) {
   const t = await token(cred);
   const parent = await ensureFolder(t, cred.rootFolderId, path);
   const init = await fetch(UP + "/files?uploadType=resumable&supportsAllDrives=true&fields=id,name,webViewLink", { method: "POST",
-    headers: { authorization: "Bearer " + t, "content-type": "application/json; charset=UTF-8", "x-upload-content-type": type || "application/octet-stream", "x-upload-content-length": String(bytes.byteLength) },
+    headers: { authorization: "Bearer " + t, "content-type": "application/json; charset=UTF-8", "x-upload-content-type": type || "application/octet-stream", "x-upload-content-length": String(size || bytes.byteLength) },
     body: JSON.stringify({ name, parents: [parent] }) });
   if (!init.ok) throw err("Drive refuse l'envoi (" + init.status + ").", (await init.text()).slice(0, 200));
   const r = await fetch(init.headers.get("location"), { method: "PUT", headers: { "content-type": type || "application/octet-stream" }, body: bytes });

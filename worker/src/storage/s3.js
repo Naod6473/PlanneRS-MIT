@@ -44,7 +44,8 @@ const base = (cred) => cred.endpoint.replace(/\/$/, "") + "/" + encodeURICompone
 
 async function s3(cred, method, path, body, type) {
   const url = base(cred) + path;
-  const payloadHash = body ? await sha256(body) : await sha256("");
+  // Fichier envoyé en flux : pas d'empreinte calculable d'avance (accepté en https par S3 et R2).
+  const payloadHash = body && typeof body.getReader === "function" ? "UNSIGNED-PAYLOAD" : body ? await sha256(body) : await sha256("");
   const headers = { "x-amz-content-sha256": payloadHash };
   if (type) headers["content-type"] = type;
   const signed = await sign({ method, url, headers, payloadHash, accessKeyId: cred.accessKeyId, secretAccessKey: cred.secretAccessKey, region: cred.region || "auto" });

@@ -464,13 +464,18 @@ async function api(request, env, path, url, auth) {
     if (!dest) return err("Aucun stockage où déposer les fichiers. Connecte-en un dans Réglages › Stockage et médias (Drive en envoi, Dropbox, OneDrive, NAS en WebDAV, R2/S3 ou GitHub Pages).", 409);
     const folder = url.searchParams.get("path") || "";
     if (/^\.{1,2}$/.test(name) || folder.split(/[\\/]/).some((x) => x === "." || x === "..")) return err("Chemin de dépôt refusé.");
-    const bytes = await request.arrayBuffer(), type = request.headers.get("content-type") || undefined;
+    const type = request.headers.get("content-type") || undefined, size = +request.headers.get("content-length") || 0;
+    // Les gros fichiers passent en flux, sans être gardés en mémoire (limite du Worker) ; GitHub Pages veut le fichier entier (base64).
+    const stream = size && request.body && dest.id !== "ghpages" && typeof FixedLengthStream !== "undefined";
+    let body;
+    if (stream) { const f = new FixedLengthStream(size); request.body.pipeTo(f.writable).catch(() => null); body = f.readable; }
+    else body = new Uint8Array(await request.arrayBuffer());
     try {
       if (dest.host) {
-        const pub = await dest.mod.put(dest.cred, joinPath(folder, name), new Uint8Array(bytes), type);
+        const pub = await dest.mod.put(dest.cred, joinPath(folder, name), body, type, size || body.byteLength);
         return json({ where: dest.id, name, url: pub });
       }
-      const r = await dest.mod.upload(dest.cred, folder, name, bytes, type, dest.save);
+      const r = await dest.mod.upload(dest.cred, folder, name, body, type, dest.save, size || body.byteLength);
       return json({ where: dest.id === "gdrivewrite" ? "gdrive" : dest.id, id: r.id, name: r.name || name, webUrl: r.webUrl || "", folderUrl: r.folderUrl || "" });
     } catch (e) { return err(e.why ? e.message + " " + e.why : e.message, e.status === 403 || e.status === 401 ? 403 : 502); }
   }
@@ -737,6 +742,12 @@ export default {
     catch (e) { return err("Erreur du serveur : " + e.message, 500); }
   },
   async scheduled(event, env, ctx) {
-    ctx.waitUntil(robot(env).finally(() => syncInstagram(env).catch(() => null)).finally(() => stats(env, true).catch(() => null)).finally(() => pepitesIfDue(env).catch(() => null)).finally(() => runDaily(env).catch(() => null)).finally(() => runWeekly(env).catch(() => null)).finally(() => runRss(env).catch(() => null)));
+    // Chaque tâche suit son propre chemin : un envoi lent (vidéo en préparation chez Instagram) ne retarde plus le reste.
+    const safe = (f) => Promise.resolve().then(f).catch(() => null);
+    ctx.waitUntil(safe(() => robot(env)).then(() => safe(() => syncInstagram(env))));
+    ctx.waitUntil(safe(() => stats(env, true)).then(() => safe(() => pepitesIfDue(env))));
+    ctx.waitUntil(safe(() => runDaily(env)));
+    ctx.waitUntil(safe(() => runWeekly(env)));
+    ctx.waitUntil(safe(() => runRss(env)));
   },
 };

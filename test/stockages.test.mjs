@@ -33,6 +33,14 @@ test("R2 : envoi d'un fichier et adresse publique", async () => {
   assert.match(calls[0].opts.headers.authorization, /^AWS4-HMAC-SHA256 Credential=k\/\d{8}\/auto\/s3\/aws4_request/);
 });
 
+test("R2 : un fichier envoyé en flux n'est pas lu en mémoire (UNSIGNED-PAYLOAD)", async () => {
+  const calls = route([[/r2\.cloudflarestorage/, m("PUT", () => new Response("", { status: 200 }))]]);
+  const body = new ReadableStream({ start(c) { c.enqueue(new Uint8Array([1, 2])); c.close(); } });
+  await s3.put({ endpoint: "https://acc.r2.cloudflarestorage.com", bucket: "media", accessKeyId: "k", secretAccessKey: "s", publicBaseUrl: "https://media.ex.fr" }, "a.mp4", body, "video/mp4");
+  assert.equal(calls[0].opts.headers["x-amz-content-sha256"], "UNSIGNED-PAYLOAD");
+  assert.equal(calls[0].opts.body, body);
+});
+
 test("GitHub Pages : adresse publique et mise à jour d'un fichier existant (sha)", async () => {
   assert.equal(ghpages.publicBase({ repo: "MonCompte/mes-medias" }), "https://moncompte.github.io/mes-medias/");
   assert.equal(ghpages.publicBase({ repo: "moi/moi.github.io" }), "https://moi.github.io/");
