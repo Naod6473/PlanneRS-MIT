@@ -22,6 +22,9 @@ test("adresse publique : vitrine à la racine, démo sur /demo/, rien d'autre de
     const r = await go(p);
     assert.equal(r.status, 302, p);
   }
+  const c = await go("/confidentialite");
+  assert.equal(c.status, 301);
+  assert.equal(c.headers.get("location"), "https://info.example.org/accueil#confidentialite");
   const t = await go("/t", { method: "OPTIONS" });
   assert.equal(t.status, 204);
   assert.equal(t.headers.get("access-control-allow-origin"), "*");

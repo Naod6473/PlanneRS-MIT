@@ -797,6 +797,8 @@ async function publicSite(request, env, url) {
   const p = url.pathname;
   if (p === "/") return get("/vitrine/");
   if (p === "/js/suivi.js") return get("/js/suivi.js");
+  // Politique de confidentialité et conditions (vérification Google) : toujours sur la page d'accueil d'origine.
+  if (/^\/(confidentialite|conditions)(\.html)?$/.test(p)) return Response.redirect(url.origin + "/accueil#" + p.slice(1).replace(".html", ""), 301);
   if (p === "/demo") return Response.redirect(url.origin + "/demo/" + url.search, 301);
   if (p === "/demo/" || p === "/demo/index.html") {
     const r = await get("/");
