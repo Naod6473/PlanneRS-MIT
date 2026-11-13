@@ -11,7 +11,7 @@ Auto-hébergé sur Cloudflare (gratuit pour un usage personnel), sans abonnement
 
 *Two short intro videos (in French).*
 
-**Essayer sans rien installer :** [la démo en ligne](https://naod6473.github.io/PlanneRS-MIT/) (données d'exemple, rien n'est publié).
+**Essayer sans rien installer :** [la démo en ligne](https://naod6473.github.io/PlanneRS-MIT/demo/) · [la page de présentation](https://naod6473.github.io/PlanneRS-MIT/) (données d'exemple, rien n'est publié).
 
 ## Installer en une commande
 
