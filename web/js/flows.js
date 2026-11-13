@@ -194,7 +194,7 @@
     const tplRow = done || p.format === "story" ? "" : (tpl.signature || tags.length)
       ? '<div class="tplrow"><span class="muted">Insérer</span>' + (tpl.signature ? '<button type="button" class="chip sm" data-tpl="sig">' + icon("pen") + "Signature</button>" : "") + tags.map((t, i) => '<button type="button" class="chip sm" data-tpl="' + i + '">#&nbsp;' + esc(t.name) + "</button>").join("") + "</div>"
       : '<div class="tplrow"><button type="button" class="lk muted" data-settab="templates">' + icon("plus") + "Modèles de signature et de hashtags</button></div>";
-    const html = '<div class="sh-top">' + brands(p.networks, "lg") + '<span class="muted" style="font-size:13px">' + esc(C.FORMATS[p.format] || "") + (p.date ? " · " + esc(C.longDate(p.date)) + " · " + p.time : " · sans date") + "</span>" +
+    const html = '<div class="sh-top tinted"' + U.tint((p.networks || [])[0]) + ">" + brands(p.networks, "lg") + '<span class="muted" style="font-size:13px">' + esc(C.FORMATS[p.format] || "") + (p.date ? " · " + esc(C.longDate(p.date)) + " · " + p.time : " · sans date") + "</span>" +
       '<span style="flex:1"></span><button class="iconbtn" data-close aria-label="Fermer">' + icon("x") + "</button></div>" +
       '<div class="sh-body">' + (st === "failed" ? "" : U.abar(p, now)) + '<div class="meta">' + U.badge(p, now) + (p.ref ? '<span class="mono">' + esc(p.ref) + "</span>" : "") + (p.category ? "<span>" + esc(p.category) + "</span>" : "") + "</div>" +
       "<h2>" + esc(p.title) + "</h2>" +
@@ -577,7 +577,7 @@
     let k = 0; // numéro affiché : les étapes sans contenu sont retirées
     const step = (n, title, body, doneFlag) => '<div class="step' + (doneFlag ? " done" : "") + '" data-step="' + n + '"><span class="n">' + (doneFlag ? icon("check") : ++k) + "</span><div><h4>" + title + "</h4>" + body + "</div></div>";
     const has2 = p.format === "story" ? !!p.note : !!C.capFor(p, net).trim();
-    openLayer('<div class="sh-top">' + brands(p.networks, "lg") + '<span class="muted" style="font-size:13px">' + esc(C.FORMATS[p.format]) + " · " + (p.date ? esc(C.shortDay(p.date)) + " " + p.time : "") + ' · à la main</span><span style="flex:1"></span><button class="iconbtn" data-close aria-label="Fermer">' + icon("x") + "</button></div>" +
+    openLayer('<div class="sh-top tinted"' + U.tint((p.networks || [])[0]) + ">" + brands(p.networks, "lg") + '<span class="muted" style="font-size:13px">' + esc(C.FORMATS[p.format]) + " · " + (p.date ? esc(C.shortDay(p.date)) + " " + p.time : "") + ' · à la main</span><span style="flex:1"></span><button class="iconbtn" data-close aria-label="Fermer">' + icon("x") + "</button></div>" +
       '<div class="sh-body"><h2>' + esc(p.title) + '</h2>' + mtabs +
       '<div class="onego" id="m-onego" hidden><button class="btn primary big" data-onego>' + icon("send") + "Poster en un geste</button><p class=\"muted\">" + (p.format === "story" ? (p.note ? "Copie la consigne et ouvre" : "Ouvre") : C.capFor(p, net).trim() ? "Copie le texte et ouvre" : "Ouvre") + " le menu Partager avec le fichier : choisis " + esc(appName) + ".</p></div>" +
       '<div class="steps">' +
@@ -641,6 +641,7 @@
       A.closeLayer(); A.render();
       if (rest.length) { U.toast("Noté pour " + appName + ". Reste : " + rest.map((n) => (window.BRANDS[n] ? window.BRANDS[n].title : n)).join(", ")); A.openManual(p.id, rest[0]); }
       else U.toast("Noté comme publié");
+      if (A.launch) A.launch({ net: net, word: (window.I18N || {}).lang === "en" ? "Posted." : "Parti." });
     });
     L.querySelector("[data-later]").addEventListener("click", async () => {
       p.date = C.addDays(C.ymd(new Date()), 1); p.ignored = false;
@@ -672,7 +673,7 @@
     const name = (n) => (window.BRANDS[n] ? window.BRANDS[n].title : n);
     const order = [...new Set(p.networks.concat(POST_TO))].filter((n) => window.BRANDS[n]);
     const done = (n) => !!(p.results && p.results[n] && p.results[n].status === "ok");
-    const top = '<div class="sh-top">' + brands(p.networks, "lg") + '<span class="muted" style="font-size:13px">' + esc(C.FORMATS[p.format] || "") + (p.date ? " · " + esc(C.shortDay(p.date)) + " " + (p.time || "") : "") + '</span><span style="flex:1"></span><button class="iconbtn" data-close aria-label="Fermer">' + icon("x") + "</button></div>";
+    const top = '<div class="sh-top tinted"' + U.tint((p.networks || [])[0]) + ">" + brands(p.networks, "lg") + '<span class="muted" style="font-size:13px">' + esc(C.FORMATS[p.format] || "") + (p.date ? " · " + esc(C.shortDay(p.date)) + " " + (p.time || "") : "") + '</span><span style="flex:1"></span><button class="iconbtn" data-close aria-label="Fermer">' + icon("x") + "</button></div>";
     if (!net) {
       openLayer(top + '<div class="sh-body"><h2>Poster sur…</h2><p class="muted" style="margin:0">« ' + esc(p.title) + " » : choisis le réseau. Tu récupères le titre, la description et les médias, et le réseau s'ouvre.</p>" +
         '<div class="pt-grid" role="group" aria-label="Réseaux">' + order.map((n) => '<button class="pt-net" data-ptnet="' + n + '"' + U.tint(n) + ">" + brand(n, "lg") + "<span>" + esc(name(n)) + "</span>" +
@@ -730,6 +731,7 @@
       if (p.networks.includes(net) && !C.pendingManual(p, set).length && p.status !== "published" && !C.autoNets(p, set).some((n) => !(p.results[n] && p.results[n].status === "ok"))) { p.status = "published"; p.stage = "published"; if (u && !p.url) p.url = u; }
       await S.savePosts([p]); await S.log({ level: "ok", text: "Posté à la main sur " + name(net) + " : " + p.title, postId: p.id });
       A.closeLayer(); A.render(); U.toast("Noté : posté sur " + name(net));
+      if (A.launch) A.launch({ net: net, word: (window.I18N || {}).lang === "en" ? "Posted." : "Parti." });
     });
   };
 

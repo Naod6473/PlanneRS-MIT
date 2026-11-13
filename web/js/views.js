@@ -155,7 +155,7 @@
     return {
       title: "Aujourd'hui", sub: C.longDate(t),
       tools: '<span class="grow"></span><button class="btn primary" data-new aria-label="Nouveau post">' + icon("plus") + '<span class="lbl">Nouveau post</span></button>',
-      html: nextStepCard(td, k) + '<div class="today dash"><section aria-labelledby="h-todo" class="dash-main">' + setupCard() + '<h2 class="sec-h" id="h-todo"><span>' + (mob ? "À faire maintenant" : "À faire") + "</span><span>" + td.count + "</span></h2>" +
+      html: nextHero() + nextStepCard(td, k) + '<div class="today dash"><section aria-labelledby="h-todo" class="dash-main">' + setupCard() + '<h2 class="sec-h" id="h-todo"><span>' + (mob ? "À faire maintenant" : "À faire") + "</span><span>" + td.count + "</span></h2>" +
         '<div class="todo">' + todo + "</div>" + (mob && todo.includes("data-swipe") ? '<p class="muted swipe-hint">Glisse une carte à droite pour valider (ou poster), à gauche pour reporter à demain.</p>' : "") + quickBar() + "</section>" +
         '<aside class="dash-side" aria-labelledby="h-prog"><div class="kpis two">' + kpi("today", pub + " / " + day.length, "publiés aujourd'hui", pub === day.length && day.length ? "ok" : "") +
         kpi("ahead", k.ahead + " j", "de planning d'avance" + (k.holes ? " · " + k.holes + " trou" + (k.holes > 1 ? "s" : "") : ""), k.holes ? "warn" : "") + "</div>" +
@@ -179,6 +179,18 @@
     if (nx) return { tone: "ok", text: en ? "Nothing to do: " + q(nx) + " goes out on its own " + when(nx) + "." : "Rien à faire : " + q(nx) + " part tout seul " + when(nx) + ".", btn: "Voir", attr: 'data-open="' + esc(nx.id) + '"' };
     return { tone: "ok", text: en ? "Your plan is empty: create your first post." : "Ton planning est vide : crée ton premier post.", btn: "Nouveau post", attr: "data-new" };
   };
+  // Scène : le prochain post qui part, en grand, sur l'aplat de son réseau (dans la DA de l'ouverture).
+  function nextHero() {
+    const now = C.nowStamp(), en = (window.I18N || {}).lang === "en";
+    const p = top().filter((x) => x.date && x.time && x.status === "scheduled" && !x.ignored && (x.date + "T" + x.time) > now.replace(" ", "T").slice(0, 16))
+      .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))[0];
+    if (!p) return "";
+    const net = (p.networks || [])[0];
+    const mins = Math.round((C.parseYmd(p.date).getTime() + C.toMin(p.time) * 6e4 - Date.now()) / 6e4);
+    const inTxt = mins < 60 ? (en ? "in " + mins + " min" : "dans " + mins + " min") : mins < 24 * 60 ? (en ? "in " + Math.floor(mins / 60) + " h " + C.pad(mins % 60) : "dans " + Math.floor(mins / 60) + " h " + C.pad(mins % 60)) : C.shortDay(p.date);
+    return '<button class="nexthero"' + tint(net) + ' data-open="' + esc(p.id) + '" data-noi18n><span class="nh-top">' + (p.networks || []).map((n) => tintLogo(n)).join("") +
+      "<span>" + (en ? "Next post" : "Prochain post") + " · " + esc(p.time) + "</span></span><b>" + esc(p.title) + "</b><span class=\"nh-in\">" + esc(inTxt) + (p.captionValidated || p.manual ? "" : en ? " · caption to approve" : " · texte à valider") + "</span></button>";
+  }
   function nextStepCard(td, k) {
     const n = A.nextStep(td, k);
     return '<section class="nextstep t-' + n.tone + '" aria-labelledby="h-next"><span class="ns-ic">' + icon(n.tone === "ok" ? "check" : n.tone === "info" ? "spark" : "alert") + '</span>' +
@@ -355,10 +367,11 @@
       '<button class="btn" data-nav="0" title="Aujourd\'hui">' + icon("calendar") + '<span class="lbl">Aujourd\'hui</span></button>' +
       '<div class="seg" role="group" aria-label="Affichage">' + [["week", "Semaine"], ["cols", "Vignettes"], ["month", "Mois"], ["grid", 'Grille<span class="lbl"> du profil</span>']].map(([k, l]) =>
         '<button data-calmode="' + k + '" aria-pressed="' + (A.calMode === k) + '">' + l + "</button>").join("") + "</div>" +
-      '<span class="grow"></span>' + (mode === "week" || mode === "month" ? '<div class="seg small-seg" role="group" aria-label="Densité"><button data-caldense="1" aria-pressed="' + !!A.calCompact + '">Compact</button><button data-caldense="0" aria-pressed="' + !A.calCompact + '">Détaillé</button></div>' : "") + netMenu() +
+      '<span class="grow"></span>' + (mode === "week" || mode === "month" ? '<div class="seg small-seg" role="group" aria-label="Densité"><button data-caldense="1" aria-pressed="' + !!A.calCompact + '">Compact</button><button data-caldense="0" aria-pressed="' + !A.calCompact + '">Détaillé</button></div>' : "") +
+      (mode === "week" || mode === "month" || mode === "cols" ? '<button class="btn" data-caltint="' + (A.calTint === "steps" ? "net" : "steps") + '" aria-pressed="' + (A.calTint !== "steps") + '" title="Colorer les posts aux couleurs de leur réseau" aria-label="Couleurs des réseaux">' + icon("spark") + '<span class="lbl">Couleurs</span></button>' : "") + netMenu() +
       (mode === "agenda" && top().some((p) => !p.date && p.status === "ready") ? '<button class="btn" data-fillweek aria-label="Remplir la semaine">' + icon("spark") + '<span class="lbl">Remplir la semaine</span></button>' : "") +
       '<button class="iconbtn" data-quick="weekimg" title="Ma semaine en image" aria-label="Ma semaine en image">' + icon("image") + "</button>" +
-      '<button class="btn" data-quick="week" title="Une semaine en 10 minutes">' + icon("spark") + '<span class="lbl">Semaine express</span></button>' +
+      '<button class="btn wf-btn" data-quick="week" title="Une semaine en 10 minutes" aria-label="Une semaine en 10 minutes">' + icon("spark") + '<span class="lbl">Semaine express</span></button>' +
       '<button class="btn primary desk" data-new>' + icon("plus") + "Nouveau post</button>";
     let html;
     if (mode === "agenda") html = agenda();
@@ -415,7 +428,7 @@
         (d === t ? '<span class="sr"> (aujourd\'hui)</span>' : "") + '<span class="n">' + (here.length || "") + "</span></h3>" +
         here.map((p) => {
           const L = U.look(p, now), cov = coverOf(p), kids = kidsOf(p.id).length;
-          return '<button class="wcard ' + L.cls + (p.ignored ? " is-off" : "") + '" data-open="' + esc(p.id) + '">' + U.abar(p, now, true) +
+          return '<button class="wcard ' + L.cls + (p.ignored ? " is-off" : "") + '" data-open="' + esc(p.id) + '"' + (A.calTint !== "steps" ? U.tint((p.networks || [])[0]) : "") + ">" + U.abar(p, now, true) +
             '<span class="pic' + (cov ? "" : " noimg") + '">' + (cov ? '<img src="' + esc(cov) + '" alt="" loading="lazy" draggable="false">' : '<span class="ph">' + icon(p.format === "reel" || p.format === "video" ? "film" : "contents") + "</span>") +
             '<span class="tm">' + (p.time || "") + "</span></span>" +
             '<span class="ttl">' + esc(p.title) + '</span><span class="meta">' + brands(p.networks) + '<span class="fmt">' + esc(C.FORMATS[p.format] || "") + (kids ? " +" + kids : "") + "</span></span>" + U.badge(p, now) + "</button>";
@@ -1036,9 +1049,9 @@
       '<label>Nom de l\'espace<input value="' + esc(settings().workspace.name) + '" data-ws-name></label>' +
       '<label>Langue · Language<select data-lang><option value="fr"' + (window.I18N && I18N.lang === "fr" ? " selected" : "") + '>Français</option><option value="en"' + (window.I18N && I18N.lang === "en" ? " selected" : "") + ">English</option></select></label>" +
       '<div class="accent-pick"><span class="lbl">Couleur de l\'appli</span><div class="swatches" role="group" aria-label="Couleur de l\'appli">' +
-        U.ACCENTS.map(([hex, name]) => '<button type="button" class="sw' + (hex ? "" : " sw-def") + '" data-accent="' + hex + '" aria-pressed="' + ((settings().accent || "") === hex) + '" title="' + esc(name) + '" style="--sw:' + (hex || "var(--ink)") + '"><span class="sr">' + esc(name) + "</span></button>").join("") +
+        U.ACCENTS.map(([hex, name]) => '<button type="button" class="sw' + (hex ? "" : " sw-def") + (hex === "net" ? " sw-net" : "") + '" data-accent="' + hex + '" aria-pressed="' + ((settings().accent || "") === hex) + '" title="' + esc(name) + '" style="--sw:' + (hex || "var(--ink)") + '"><span class="sr">' + esc(name) + "</span></button>").join("") +
         '<label class="sw sw-custom" title="Autre couleur"><input type="color" value="' + esc(settings().accent || "#7C4DEB") + '" data-accent-custom aria-label="Autre couleur"></label></div>' +
-        '<small class="muted">Les boutons principaux prennent cette couleur. Prends celle de ta marque.</small></div>' +
+        '<small class="muted">Les boutons principaux prennent cette couleur. Prends celle de ta marque, ou « Réseaux » : la couleur de ton réseau principal.</small></div>' +
       '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-export>' + icon("download") + "Exporter (JSON)</button>" +
       '<label class="btn" style="cursor:pointer">' + icon("plus") + 'Importer<input type="file" accept="application/json" data-import hidden></label>' +
       (S.mode === "demo" ? '<button class="btn danger" data-reset>Réinitialiser la démo</button>' : "") + "</div></div></section>" +

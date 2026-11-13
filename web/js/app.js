@@ -24,8 +24,16 @@
       (k === "today" && n ? '<span class="badge">' + n + "</span>" : "") + (k === "more" && h.cls === "bad" ? '<span class="badge" style="background:var(--fail)">!</span>' : "") + "</a>").join("");
   }
 
+  // Thème « Réseaux » : l'accent suit le réseau le plus utilisé de l'espace.
+  const NET_ACCENT = { instagram: "#D62976", facebook: "#0866FF", youtube: "#FF0000", linkedin: "#0A66C2", pinterest: "#E60023", bluesky: "#1185FE", tiktok: "#FE2C55", x: "#14171A", threads: "#14171A", mastodon: "#6364FF" };
+  A.mainNet = function () {
+    const n = {}; (S.state.posts || []).forEach((p) => { if (!p.parent) (p.networks || []).forEach((k) => { n[k] = (n[k] || 0) + 1; }); });
+    return Object.keys(n).filter((k) => NET_ACCENT[k]).sort((a, b) => n[b] - n[a])[0] || "instagram";
+  };
   A.render = function () {
-    U.accent((S.state.settings || {}).accent);
+    const acc = (S.state.settings || {}).accent, mn = acc === "net" ? A.mainNet() : "";
+    U.accent(mn ? NET_ACCENT[mn] : acc);
+    if (mn) document.documentElement.setAttribute("data-netaccent", mn); else document.documentElement.removeAttribute("data-netaccent");
     const r = route();
     let v;
     if (r === "more") {
@@ -131,6 +139,7 @@
   };
 
   try { A.calCompact = localStorage.getItem("planners-caldense") === "1"; } catch (x) { /* rien */ }
+  try { A.calTint = localStorage.getItem("planners-caltint") || "net"; } catch (x) { A.calTint = "net"; }
   try { A.trayClosed = localStorage.getItem("planners-tray") === "1"; A.dashRange = localStorage.getItem("planners-dash") || "today"; } catch (x) { /* rien */ }
   document.addEventListener("toggle", (e) => { if (e.target.matches && e.target.matches(".netdd")) A.netOpen = e.target.open; }, true);
   document.addEventListener("click", (e) => { const dd = document.querySelector(".netdd[open]"); if (dd && !dd.contains(e.target)) { dd.open = false; A.netOpen = false; } });
@@ -293,6 +302,7 @@
     if ((b = g("[data-slot-del]"))) { S.state.settings.slots.splice(+b.dataset.slotDel, 1); await saveSet(); return; }
     if ((b = g("[data-chk-add]"))) { (S.state.settings.customChecks = S.state.settings.customChecks || []).push({ label: "Mention du crédit absente", contains: "Crédit" }); await saveSet(); return; }
     if ((b = g("[data-chk-del]"))) { S.state.settings.customChecks.splice(+b.dataset.chkDel, 1); await saveSet(); return; }
+    if ((b = g("[data-caltint]"))) { A.calTint = b.dataset.caltint; try { localStorage.setItem("planners-caltint", A.calTint); } catch (x) { /* rien */ } A.render(); return; }
     if ((b = g("[data-caldense]"))) { A.calCompact = b.dataset.caldense === "1"; try { localStorage.setItem("planners-caldense", A.calCompact ? "1" : ""); } catch (x) { /* rien */ } A.render(); return; }
     if ((b = g("[data-shortcuts]"))) { A.openShortcuts(); return; }
     if ((b = g("[data-fclear]"))) { A.q = ""; A.serie = ""; A.render(); return; }

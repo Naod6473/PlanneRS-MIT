@@ -108,14 +108,17 @@
     const n = PERIODS.some(([d]) => d === A.statDays) ? A.statDays : 7;
     const acc = st[net] || {};
     const name = (x) => (x === "instagram" ? "@" + ((st.instagram.account || {}).username || "Instagram") : x === "youtube" ? (st.youtube.account || {}).name || "YouTube" : (st.facebook.account || {}).name || "Page Facebook");
-    const side = '<nav class="sc-side" aria-label="Comptes"><h2>Comptes</h2>' + nets.map((x) => '<button type="button" data-stat-chan="' + x + '" aria-pressed="' + (x === net) + '">' + brand(x, "lg") + '<span data-noi18n>' + esc(name(x)) + "</span></button>").join("") + "</nav>";
+    const side = '<nav class="sc-side" aria-label="Comptes"><h2>Comptes</h2>' + nets.map((x) => '<button type="button" data-stat-chan="' + x + '" aria-pressed="' + (x === net) + '"' + (x === net ? U.tint(x) : "") + ">" + brand(x, "lg") + '<span data-noi18n>' + esc(name(x)) + "</span></button>").join("") + "</nav>";
+    const NETC = { instagram: "#D62976", facebook: "#0866FF", youtube: "#FF0000" };
+    let first = true;
     const cards = CARDS[net].map((card) => {
       const r = A.statCard(st, net, card, n, today);
       if (r.value == null && !r.pts.some((p) => p.v != null)) return "";
-      const color = "var(--sc" + card[4] + ")";
+      const hero = first; first = false; // la première carte en aplat, aux couleurs du réseau
+      const color = hero ? "#FFFFFF" : NETC[net] || "var(--sc" + card[4] + ")";
       const badge = card[0] === "followers" ? (r.diff != null ? '<span class="sc-d ' + (r.diff > 0 ? "up" : r.diff < 0 ? "down" : "") + '">' + (r.diff > 0 ? "▲ +" : r.diff < 0 ? "▼ " : "") + r.diff + "</span>" : "")
         : r.delta != null ? '<span class="sc-d ' + (r.delta > 0 ? "up" : r.delta < 0 ? "down" : "") + '" title="Par rapport aux ' + n + ' jours d\'avant (' + fmt(r.prev) + ')">' + (r.delta > 0 ? "▲ " : r.delta < 0 ? "▼ " : "") + Math.abs(r.delta) + " %</span>" : "";
-      return '<section class="sc-card"><div class="sc-h"><i style="background:' + color + '"></i><span>' + esc(card[1]) + "</span>" + badge + "</div>" + area(r.pts, color, card[1], card[0] === "followers") + '<b class="sc-v">' + fmt(r.value) + "</b></section>";
+      return '<section class="sc-card' + (hero ? ' hero"' + U.tint(net) : '"') + '><div class="sc-h"><i style="background:' + color + '"></i><span>' + esc(card[1]) + "</span>" + badge + "</div>" + area(r.pts, color, card[1], card[0] === "followers") + '<b class="sc-v">' + fmt(r.value) + "</b></section>";
     }).join("");
     const err = acc.error ? '<p class="muted small">Relevé impossible : ' + esc(acc.error) + "</p>" : acc.insightsError ? '<p class="muted small">Une partie des chiffres manque : ' + esc(acc.insightsError) + "</p>" : "";
     return '<div class="sc">' + side + '<div class="sc-main"><div class="sc-top"><label><span class="sr">Période</span><select data-stat-days>' + PERIODS.map(([d, l]) => '<option value="' + d + '"' + (d === n ? " selected" : "") + ">" + l + "</option>").join("") + "</select></label>" +

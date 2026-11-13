@@ -1661,3 +1661,81 @@ input:user-invalid,textarea:user-invalid,select:user-invalid{border-color:var(--
 .pt-net[data-tint] .brand{background:none!important;box-shadow:none}
 .pt-net[data-tint] .pt-ok,.pt-net[data-tint] .pt-in{color:inherit;opacity:.9}
 .noimg[data-tint] .tlogo{width:22px;height:22px}
+
+/* Calendrier en aplats : chaque post prend la couleur de son réseau principal (bascule Réseaux / Étapes). */
+.pc[data-tint],.wcard[data-tint]{background:var(--tc);border-color:var(--tc);color:#fff}
+.pc[data-tint="instagram"],.wcard[data-tint="instagram"]{background:linear-gradient(110deg,#FA7E1E,#D62976 50%,#962FBF);border-color:transparent}
+.pc[data-tint] .ttl,.pc[data-tint] .fmtp,.pc[data-tint] .kids,.wcard[data-tint] .ttl,.wcard[data-tint] .fmt,.wcard[data-tint] .meta{color:#fff}
+.pc[data-tint] .fmtp,.pc[data-tint] .kids,.wcard[data-tint] .fmt{opacity:.85}
+.pc[data-tint] .brand,.wcard[data-tint] .brand{box-shadow:0 0 0 1.5px rgba(255,255,255,.9)}
+.pc[data-tint] .sti,.wcard[data-tint] .sti{background:#fff;border-radius:99px}
+.pc[data-tint].is-published,.wcard[data-tint].is-published{opacity:.62}
+.pc[data-tint].is-failed,.pc[data-tint].is-late,.wcard[data-tint].is-failed,.wcard[data-tint].is-late{outline:3px solid var(--bad,#D92D20);outline-offset:-1px}
+.pc[data-tint]:hover,.wcard[data-tint]:hover{filter:brightness(1.07)}
+.wcard[data-tint] .pic.noimg{background:rgba(0,0,0,.18)}
+.wcard[data-tint] .pic.noimg .ph{color:#fff}
+.btn[data-caltint][aria-pressed="true"]{background:linear-gradient(100deg,#FA7E1E,#D62976 45%,#962FBF 80%,#4F5BD5);border-color:transparent;color:#fff}
+@media (max-width:1700px){.wf-btn .lbl,[data-caltint] .lbl{display:none}}
+
+/* Bandeau de la fiche d'un post : aplat à la couleur du réseau principal. */
+.sheet .sh-top.tinted[data-tint]{background:var(--tc);color:#fff;border-bottom-color:transparent;min-height:72px}
+.sheet .sh-top.tinted[data-tint="instagram"]{background:linear-gradient(100deg,#FA7E1E,#D62976 45%,#962FBF 80%,#4F5BD5)}
+.sh-top.tinted[data-tint] .muted{color:rgba(255,255,255,.92)!important;font-weight:700}
+.sh-top.tinted[data-tint] .brand{box-shadow:0 0 0 2px rgba(255,255,255,.95)}
+.sh-top.tinted[data-tint] .iconbtn{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.4);color:#fff}
+.sh-top.tinted[data-tint] .iconbtn:hover{background:rgba(255,255,255,.28)}
+
+/* Choix des réseaux en cartes : vides tant qu'on ne coche pas, puis aplat à la vraie couleur du réseau. */
+.cp-nets{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
+.cp-nets .cp-net{height:auto;min-height:68px;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:8px;padding:10px 12px;border-radius:14px;background:var(--panel2);color:var(--ink);opacity:1;box-shadow:inset 0 0 0 1px var(--line);text-align:left}
+.cp-nets .cp-net .brand.lg{width:28px;height:28px;border-radius:8px;background:var(--bc)!important}
+.cp-nets .cp-net.n-instagram .brand.lg{background:linear-gradient(135deg,#FEDA75,#FA7E1E 30%,#D62976 55%,#962FBF 80%,#4F5BD5)!important}
+.cp-nets .cp-net .brand.lg svg{width:16px;height:16px}
+.cp-nets .cp-net .lbl{max-width:none;opacity:1;padding:0;margin:0;font-weight:800;font-size:13.5px}
+.cp-nets .cp-net[aria-pressed="true"]{background:var(--bc);color:#fff;box-shadow:none;animation:cpland .32s cubic-bezier(.2,.8,.2,1)}
+.cp-nets .cp-net.n-instagram[aria-pressed="true"]{background:linear-gradient(110deg,#FA7E1E,#D62976 45%,#962FBF 80%,#4F5BD5)}
+.cp-nets .cp-net[aria-pressed="true"] .brand.lg{background:rgba(255,255,255,.18)!important}
+.cp-nets .cp-net[aria-pressed="true"] .lbl{padding:0;margin:0}
+.cp-nets .cp-net[aria-pressed="true"]::after{content:"✓";position:absolute;top:8px;right:10px;font-weight:900}
+.cp-nets .cp-net{position:relative}
+.cp-nets .cp-net:hover{transform:translateY(-1px)}
+@keyframes cpland{from{transform:translateY(10px) scale(.96)}to{transform:none}}
+@media (prefers-reduced-motion: reduce){.cp-nets .cp-net[aria-pressed="true"]{animation:none}}
+.cp-nets .cp-net:not([aria-pressed="true"]),.cp-nets .cp-net:not([aria-pressed="true"]) .lbl{text-shadow:none}
+
+/* Stats aux couleurs du réseau : compte choisi et première carte en aplat, courbes à la couleur du réseau. */
+.sc-side button[aria-pressed="true"][data-tint]{background:var(--tc);border-color:transparent;color:#fff}
+.sc-side button[aria-pressed="true"][data-tint="instagram"]{background:linear-gradient(100deg,#FA7E1E,#D62976 45%,#962FBF 80%,#4F5BD5)}
+.sc-side button[aria-pressed="true"][data-tint] .brand{box-shadow:0 0 0 2px rgba(255,255,255,.9)}
+.sc-card.hero[data-tint]{background:var(--tc);border-color:transparent;color:#fff}
+.sc-card.hero[data-tint="instagram"]{background:linear-gradient(120deg,#FA7E1E,#D62976 45%,#962FBF 80%,#4F5BD5)}
+.sc-card.hero[data-tint] .sc-v{font-weight:900;font-size:44px;letter-spacing:-.03em}
+.sc-card.hero[data-tint] .sc-h,.sc-card.hero[data-tint] .sc-d{color:#fff}
+.sc-card.hero[data-tint] .sc-d{background:rgba(255,255,255,.2)}
+
+/* Thème « Réseaux » */
+.sw-net{background:conic-gradient(#D62976 0 25%,#0866FF 0 50%,#FF0000 0 75%,#0A66C2 0)}
+.sw-net[aria-pressed="true"]{box-shadow:0 0 0 2px var(--panel),0 0 0 4px #D62976}
+:root[data-netaccent="instagram"] .btn.primary:not([data-tint]),:root[data-netaccent="instagram"] .nav a[aria-current="page"]::before{background:linear-gradient(100deg,#FA7E1E,#D62976 45%,#962FBF 80%,#4F5BD5);border-color:transparent}
+
+/* Envoi : la carte du réseau monte, remplit l'écran, le mot reste lisible, puis elle repart vers le haut. */
+.launch{position:fixed;inset:0;z-index:200;display:grid;place-items:center;pointer-events:auto;cursor:pointer}
+.launch-card{width:min(420px,80vw);aspect-ratio:4/5;border-radius:28px;color:#fff;display:flex;flex-direction:column;justify-content:flex-end;gap:6px;padding:28px;
+  animation:launch-in .5s cubic-bezier(.2,.8,.2,1) both, launch-fill .45s .45s cubic-bezier(.6,0,.2,1) forwards}
+.launch-card svg{width:56px;height:56px;fill:#fff;margin-bottom:auto}
+.launch-card b{font:900 clamp(56px,11vw,140px)/.95 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;letter-spacing:-.04em}
+.launch-card span{font:700 clamp(16px,2vw,22px)/1.2 system-ui,sans-serif;opacity:.9}
+.launch.out .launch-card{animation:launch-out .38s cubic-bezier(.6,0,.8,.2) forwards}
+@keyframes launch-in{from{transform:translateY(70vh)}to{transform:none}}
+@keyframes launch-fill{to{width:100vw;height:100vh;aspect-ratio:auto;border-radius:0;padding:max(32px,6vw)}}
+@keyframes launch-out{from{width:100vw;height:100vh;aspect-ratio:auto;border-radius:0;padding:max(32px,6vw)}to{width:100vw;height:100vh;aspect-ratio:auto;border-radius:0;padding:max(32px,6vw);transform:translateY(-100vh)}}
+
+/* Aujourd'hui : le prochain post en scène, aplat à la couleur de son réseau */
+.nexthero{display:flex;flex-direction:column;align-items:flex-start;gap:6px;width:100%;margin:0 0 14px;padding:22px 26px;border:0;border-radius:22px;background:var(--tc,#000);color:#fff;text-align:left;cursor:pointer;font-family:inherit}
+.nexthero[data-tint="instagram"]{background:linear-gradient(110deg,#FA7E1E,#D62976 45%,#962FBF 80%,#4F5BD5)}
+.nexthero .nh-top{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;opacity:.95}
+.nexthero .nh-top .tlogo{width:20px;height:20px}
+.nexthero b{font:900 clamp(30px,4.4vw,56px)/1 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;letter-spacing:-.035em;text-wrap:balance}
+.nexthero .nh-in{font-weight:700;font-size:15px;opacity:.9}
+.nexthero:hover{filter:brightness(1.05)}
+.nexthero:focus-visible{outline:3px solid var(--focus);outline-offset:3px}

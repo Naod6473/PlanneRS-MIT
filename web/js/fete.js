@@ -42,6 +42,24 @@
     setTimeout(bye, 2200);
   };
 
+  // Au clic sur Publier / Programmer : la carte du réseau monte, remplit l'écran, le mot reste lisible, puis elle repart.
+  const NETBG = { instagram: "linear-gradient(110deg,#FA7E1E,#D62976 45%,#962FBF 80%,#4F5BD5)", facebook: "#0866FF", youtube: "#FF0000", linkedin: "#0A66C2", tiktok: "#000", x: "#000", threads: "#000", pinterest: "#E60023", bluesky: "#1185FE", mastodon: "#6364FF" };
+  A.launch = function (o) {
+    o = o || {};
+    if (reduce() || navigator.webdriver) return;
+    const old = document.querySelector(".launch"); if (old) old.remove();
+    const b = window.BRANDS && window.BRANDS[o.net];
+    const el = document.createElement("div");
+    el.className = "launch"; el.setAttribute("role", "status"); el.setAttribute("data-noi18n", "");
+    el.innerHTML = '<div class="launch-card" style="background:' + (NETBG[o.net] || "#0866FF") + '">' +
+      (b ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + b.path + '"/></svg>' : "") +
+      "<b>" + U.esc(o.word || "") + "</b>" + (o.sub ? "<span>" + U.esc(o.sub) + "</span>" : "") + "</div>";
+    document.body.appendChild(el);
+    const bye = () => { if (!el.isConnected) return; el.classList.add("out"); setTimeout(() => el.remove(), 380); };
+    el.addEventListener("click", bye);
+    setTimeout(bye, 1700);
+  };
+
   // Au chargement : ce qui est parti depuis la dernière visite, et les caps.
   const CAPS = [10, 50, 100, 250, 500, 1000];
   const KEY = "planners-fete-pub";

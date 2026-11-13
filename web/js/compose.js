@@ -394,6 +394,7 @@
       await S.savePosts([d]);
       await S.log({ level: "change", text: (orig ? "Post modifié : " : "Nouveau post : ") + d.title + (changedText && !d.captionValidated ? " (texte à valider)" : ""), postId: d.id });
       dirty = false; A.beforeClose = null; A.closeLayer();
+      if (act === "go" && d.date && A.launch) A.launch({ net: (d.networks || [])[0], word: (window.I18N || {}).lang === "en" ? "Scheduled." : "Programmé.", sub: C.shortDay(d.date) + " · " + d.time });
       if (moveLater) A.queueMove(d.id, { date: w.date, time: w.date ? w.time : null });
       A.render();
       U.toast(act === "draft" ? "Brouillon enregistré" : d.date ? (d.captionValidated ? "Programmé le " + C.shortDay(d.date) + " à " + d.time : "Programmé le " + C.shortDay(d.date) + " à " + d.time + " : texte à valider avant l'envoi") : moveLater ? "Enregistré : valide le changement de date en bas de l'écran" : "Enregistré dans « Prêts à programmer »",

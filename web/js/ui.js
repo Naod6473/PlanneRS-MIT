@@ -113,7 +113,8 @@
       const label = p.title + ", " + C.STATUS[st].label + (L.al ? ", " + C.STATUS[L.al].label : "") + (kids ? " (" + kids + ")" : "");
       // Mode « Détaillé » du calendrier : grande miniature en haut de la carte.
       const cov = !(window.App || {}).calCompact && (window.App || {}).coverOf ? window.App.coverOf(p) : "";
-      return '<button class="pc mini ' + L.cls + ((window.App || {}).calCompact ? "" : " big") + '" data-open="' + esc(p.id) + '"' + drag + ' aria-label="' + esc(label) + '">' +
+      const tn = (window.App || {}).calTint !== "steps" ? tint((p.networks || [])[0]) : "";
+      return '<button class="pc mini ' + L.cls + ((window.App || {}).calCompact ? "" : " big") + '" data-open="' + esc(p.id) + '"' + drag + tn + ' aria-label="' + esc(label) + '">' +
         abar(p, now, true) + (cov ? '<img class="mthumb" src="' + safeUrl(cov) + '" alt="" loading="lazy" draggable="false">' : "") +
         '<span class="row1">' + (cov ? "" : thumb) + brands(p.networks) + (L.hand ? '<span class="hand">' + icon("hand") + "</span>" : "") + '<span class="sti c-' + st + '">' + icon(C.STATUS[st].icon) + "</span></span>" +
         '<span class="ttl"><span class="fmtp">' + esc(C.FORMATS[p.format] || "") + " · </span>" + esc(p.title) + "</span>" + (kids ? '<span class="kids">' + esc(kids) + "</span>" : "") + "</button>";
@@ -209,7 +210,7 @@
   }
   if (window.MutationObserver) new MutationObserver(() => decorateEmpty()).observe(document.documentElement, { childList: true, subtree: true });
   // Couleur d'accent choisie dans Réglages › Espace : boutons principaux et contour de focus.
-  const ACCENTS = [["", "Par défaut"], ["#0866FF", "Facebook"], ["#D62976", "Instagram"], ["#FF0000", "YouTube"], ["#0A66C2", "LinkedIn"], ["#E60023", "Pinterest"], ["#1185FE", "Bluesky"], ["#FE2C55", "TikTok"], ["#7C4DEB", "Violet"], ["#0E9F6E", "Vert"]];
+  const ACCENTS = [["", "Par défaut"], ["net", "Réseaux : la couleur de ton réseau principal"], ["#0866FF", "Facebook"], ["#D62976", "Instagram"], ["#FF0000", "YouTube"], ["#0A66C2", "LinkedIn"], ["#E60023", "Pinterest"], ["#1185FE", "Bluesky"], ["#FE2C55", "TikTok"], ["#7C4DEB", "Violet"], ["#0E9F6E", "Vert"]];
   function accent(hex) {
     const r = document.documentElement.style;
     if (!/^#[0-9a-f]{6}$/i.test(hex || "")) { ["--action", "--action-fg", "--focus"].forEach((k) => r.removeProperty(k)); return; }
