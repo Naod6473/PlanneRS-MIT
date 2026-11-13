@@ -11,6 +11,8 @@
 <meta name="color-scheme" content="dark">
 <link rel="icon" href="favicon.png">
 <meta name="theme-color" content="#000000">
+<meta name="planners-stats" content=""><!-- adresse de réception du suivi des visites (…/t), remplie au déploiement ; vide = aucun suivi -->
+<script defer src="suivi.js"></script>
 <style>
 /* DA de l'ouverture : scène noire, aplats aux vraies couleurs des réseaux, gros mots en noir épais. Pas de flou, pas de lueur. */
 :root {
@@ -155,7 +157,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 10px 24px; justify-content: 
 </div></header>
 
 <main>
-<section class="hero"><div class="wrap grid">
+<section class="hero" data-sec="hero"><div class="wrap grid">
   <div>
     <span class="eyebrow">Libre · gratuit · collaboratif</span>
     <h1 style="margin-top:18px"><span>Planifie.</span><span>Valide.</span><span>Publie.</span><em>0 € par mois.</em></h1>
@@ -171,7 +173,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 10px 24px; justify-content: 
   <figure class="shot"><img src="img/calendrier.jpg" alt="Le calendrier de PlanneRs : une semaine de posts par créneau, avec leur statut (publié, programmé, à valider)." width="1600" height="1000"></figure>
 </div></section>
 
-<section class="price flood fb"><div class="wrap"><div class="box">
+<section class="price flood fb" data-sec="prix"><div class="wrap"><div class="box">
   <div style="display:grid;gap:14px">
     <span class="eyebrow">Le prix</span>
     <h2>Les outils de planification se paient chaque mois. Pas celui-ci.</h2>
@@ -200,7 +202,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 10px 24px; justify-content: 
   </div>
 </div></section>
 
-<section class="sec"><div class="wrap duo rev">
+<section class="sec" data-sec="chiffres"><div class="wrap duo rev">
   <div>
     <span class="eyebrow">Suivre ce qui marche</span>
     <h2 style="margin-top:12px">Tes chiffres, sans tableur.</h2>
@@ -214,7 +216,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 10px 24px; justify-content: 
   <figure class="shot"><img src="img/stats.jpg" alt="L'écran Stats de PlanneRs : abonnés, vues et classement des publications." width="1600" height="1000" loading="lazy"></figure>
 </div></section>
 
-<section class="flood ig"><div class="wrap"><div class="collab">
+<section class="flood ig" data-sec="collaboratif"><div class="wrap"><div class="collab">
   <span class="eyebrow">Collaboratif</span>
   <h2>Un outil qui s'améliore avec ceux qui l'utilisent.</h2>
   <div class="three">
@@ -247,7 +249,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 10px 24px; justify-content: 
   </div>
 </div></section>
 
-<section class="final flood yt"><div class="wrap">
+<section class="final flood yt" data-sec="fin"><div class="wrap">
   <h2>Essaie, c'est gratuit.</h2>
   <p>La démo tourne dans ton navigateur, avec des données d'exemple. Rien n'est publié.</p>
   <div class="cta"><a class="btn acc" href="demo/">Ouvrir la démo</a><a class="btn" href="https://deploy.workers.cloudflare.com/?url=https://github.com/Naod6473/PlanneRS-MIT">Installer gratuitement</a></div>

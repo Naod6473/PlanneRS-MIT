@@ -74,7 +74,7 @@
   });
   document.addEventListener("click", async (e) => {
     const del = e.target.closest("[data-pep-del]"), ref = e.target.closest("[data-pep-refresh]"), tab = e.target.closest("[data-stattab]");
-    if (tab) { A.statTab = ["pep", "ach", "mv"].includes(tab.dataset.stattab) ? tab.dataset.stattab : ""; A.render(); return; }
+    if (tab) { A.statTab = ["pep", "ach", "mv", "site"].includes(tab.dataset.stattab) ? tab.dataset.stattab : ""; A.render(); return; }
     if (del) { const l = rivals(); l.splice(+del.dataset.pepDel, 1); await saveRivals(l); A.render(); return; }
     if (ref) {
       if (S.mode !== "api") { U.toast("Mode démo : pépites d'exemple"); return; }

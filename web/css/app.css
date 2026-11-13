@@ -1764,3 +1764,27 @@ input:user-invalid,textarea:user-invalid,select:user-invalid{border-color:var(--
 .tday input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
 .fill-row .st[data-tint]{background:var(--tc);color:#fff}
 .fill-row .st .tlogo{width:12px;height:12px}
+
+/* Stats › Site : visites du site vitrine et de la démo */
+.vis-grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));margin-bottom:14px}
+.vis-grid .panel{margin:0}
+.vis-bars{list-style:none;margin:0;padding:0;display:grid;gap:7px}
+.vis-bars li{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(60px,1fr) auto;gap:10px;align-items:center;font-size:13px}
+.vis-k{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vis-bar{height:8px;border-radius:99px;background:var(--line);overflow:hidden}
+.vis-bar i{display:block;height:100%;border-radius:inherit;background:var(--accent,#0866FF)}
+.vis-bars b{font-variant-numeric:tabular-nums;font-size:12px;white-space:nowrap}
+.vis-days{display:flex;align-items:flex-end;gap:2px;height:120px}
+.vis-days span{flex:1;display:flex;flex-direction:column-reverse;height:100%;min-width:0}
+.vis-days i{display:block;border-radius:3px 3px 0 0;min-height:1px}
+.vis-days i.a,.vis-leg i.a{background:var(--accent,#0866FF)}.vis-days i.b,.vis-leg i.b{background:#D62976}
+.vis-days i.a{border-radius:0}
+.vis-leg{display:inline-flex;align-items:center;gap:6px;text-transform:none;letter-spacing:0}
+.vis-leg i{display:inline-block;width:10px;height:10px;border-radius:3px}
+.vis-log{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.vis-log summary{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;cursor:pointer;padding:8px 10px;border-radius:10px;border:1px solid var(--line)}
+.vis-tags{margin-left:auto;display:flex;gap:6px}
+.vis-steps{margin:8px 0 4px 14px;padding:0;display:grid;gap:4px;font-size:13px}
+.vis-steps time{display:inline-block;min-width:68px;color:var(--ink3);font-variant-numeric:tabular-nums}
+.panel .sec-h{gap:4px 12px;flex-wrap:wrap}
+.vis-hint{text-transform:none;letter-spacing:0;font-weight:500}
