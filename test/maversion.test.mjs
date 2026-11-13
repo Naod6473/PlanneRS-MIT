@@ -118,3 +118,14 @@ test("même sujet : le sujet repris ne compte pas, le contenu collé est compar�
   const pr = versionPrompt(r, sauce, {});
   assert.match(pr, /Même sujet que l'original/); assert.match(pr, /<contenu_original>[\s\S]*eau trop chaude/);
 });
+
+test("lien partagé : format, compte et réseau devinés depuis l'adresse", () => {
+  assert.equal(R.kindOfUrl("https://www.instagram.com/p/abc/"), "carousel");
+  assert.equal(R.kindOfUrl("https://www.instagram.com/reel/abc/"), "reel");
+  assert.equal(R.handleOfUrl("https://www.tiktok.com/@boulange/video/1"), "boulange");
+  assert.equal(R.handleOfUrl("https://www.instagram.com/reel/abc/"), "");
+  assert.equal(R.netOfUrl("https://youtu.be/x"), "youtube");
+  assert.equal(R.netOfUrl("https://example.com/x"), "");
+  const r = R.guessRecipe({ type: "link", url: "https://www.instagram.com/reel/abc/", kind: "reel", caption: "" });
+  assert.equal(r.from.url, "https://www.instagram.com/reel/abc/");
+});

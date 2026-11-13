@@ -502,6 +502,10 @@ async function api(request, env, path, url, auth) {
       const p = await db.getPost(env, id);
       if (p) src = { type: "post", id: p.id, title: p.title, kind: p.format, score: +s0.score || 0, url: ((p.results || {}).instagram || {}).url || "",
         caption: [p.caption || "", ...((p.prod && p.prod.shots) || []).map((x) => x.voice || "")].filter(Boolean).join("\n") };
+    } else if (s0.type === "link") {
+      // Lien partagé depuis le téléphone : seul le texte fourni est lu, rien n'est récupéré sur le réseau.
+      const url = String(s0.url || "").slice(0, 500);
+      if (/^https?:\/\//.test(url)) src = { type: "link", id: url, url, handle: String(s0.handle || Recette.handleOfUrl(url)), kind: Recette.kindOfUrl(url), caption: String(s0.caption || "").slice(0, 3000) };
     } else {
       const pp = (await db.getKV(env, "pepites")) || {}, it = (pp.accounts || []).flatMap((a) => a.items || []).find((x) => x.id === id);
       if (it) src = Object.assign({ type: "pepite" }, it);

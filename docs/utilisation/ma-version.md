@@ -67,3 +67,8 @@ Dans **Stats › Ma version**, le carnet garde jusqu'à 100 recettes. **Mélange
 ## La boucle
 
 Quand une version est publiée, PlanneRs compare ses interactions à ta médiane. Le carnet affiche, pour chaque recette, le score moyen de tes versions (par exemple « ×3 chez toi ») et met en tête celles qui marchent chez toi.
+
+## Depuis le téléphone : partager un lien
+
+PlanneRs installé sur l'écran d'accueil du téléphone apparaît dans le menu **Partager**. Sur une publication Instagram, TikTok, YouTube ou Facebook : **Partager** › **PlanneRs**, puis **Faire ma version**. L'atelier s'ouvre sur ce lien. Le lien seul ne dit pas ce que raconte la vidéo : colle sa légende ou sa transcription dans **Ce que dit l'original** pour une version plus juste. **Garder comme idée** crée une idée avec le lien, comme avant.
+

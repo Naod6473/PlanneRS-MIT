@@ -651,6 +651,19 @@
     if (file) { A.quick(/^video/.test(file.type) ? "video" : /^image/.test(file.type) ? "photo" : "file", file); if (meta.n > 1) U.toast("Un fichier à la fois : seul le premier a été repris"); return; }
     const url = meta.url || ((meta.text || "").match(/https?:\/\/\S+/) || [""])[0];
     const f = () => document.querySelector("#q-form");
+    // Lien d'une publication (Instagram, TikTok…) : au choix, en faire ma version ou le garder comme idée.
+    if (url && window.Recette && Recette.netOfUrl(url) && A.openVersion) {
+      const text = String(meta.text || "").replace(url, "").trim(), handle = Recette.handleOfUrl(url);
+      A.openLayer('<div class="sh-top"><b>Lien reçu</b><span style="flex:1"></span><button class="iconbtn" data-close aria-label="Fermer">' + U.icon("x") + '</button></div><div class="sh-body"><p class="muted" data-noi18n style="word-break:break-all">' + U.esc(url) + "</p>" +
+        '<div class="share-pick"><button class="btn primary big" data-shpick="mv">' + U.icon("spark") + "Faire ma version</button><button class=\"btn big\" data-shpick=\"idea\">" + U.icon("bulb") + "Garder comme idée</button></div>" +
+        '<p class="muted small">Ma version reprend la recette de la publication (accroche, structure, format), jamais ses images ni ses phrases.</p></div>', "Lien reçu");
+      document.getElementById("layer").querySelectorAll("[data-shpick]").forEach((b) => b.addEventListener("click", () => {
+        A.closeLayer();
+        if (b.dataset.shpick === "mv") A.openVersion({ type: "link", item: { id: url, url, handle, caption: text, kind: Recette.kindOfUrl(url) } });
+        else { A.quick("link"); if (f()) { f().url.value = url; if (meta.title) f().title.value = meta.title; } }
+      }));
+      return;
+    }
     if (url) { A.quick("link"); if (f()) { f().url.value = url; if (meta.title) f().title.value = meta.title; } return; }
     A.quick("idea"); if (f()) f().title.value = (meta.title || meta.text || "").trim().slice(0, 200);
   };

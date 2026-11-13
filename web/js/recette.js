@@ -183,6 +183,22 @@
     };
   }
 
-  const api = { MAT_MAX, sourceSubject, checkOrig, ANGLES, FORMATS, ORIG_MIN, MAX_RECIPES, originality, versionText, guessRecipe, cleanRecipe, draftVersion, fitDurations, cleanVersion, mixRecipes, keep, ranking, ownTops, sortBook, postOf, median };
+  // Lien partagé : format et compte devinés depuis l'adresse (rien n'est téléchargé).
+  function kindOfUrl(url) {
+    const u = String(url || "");
+    if (/instagram\.com\/(?:[\w.]+\/)?p\//i.test(u)) return "carousel";
+    return "reel";
+  }
+  function handleOfUrl(url) {
+    const m = String(url || "").match(/tiktok\.com\/@([\w.]+)/i) || String(url || "").match(/instagram\.com\/(?!p\/|reels?\/|stories\/|tv\/)([\w.]+)\/(?:p|reels?)\//i) || String(url || "").match(/youtube\.com\/@([\w.-]+)/i);
+    return m ? m[1] : "";
+  }
+  function netOfUrl(url) {
+    const m = String(url || "").match(/(instagram|tiktok|youtube|youtu\.be|facebook|fb\.watch|threads|x\.com|twitter|linkedin)/i);
+    if (!m) return "";
+    const k = m[1].toLowerCase();
+    return k === "youtu.be" ? "youtube" : k === "fb.watch" ? "facebook" : k === "x.com" || k === "twitter" ? "x" : k;
+  }
+  const api = { kindOfUrl, handleOfUrl, netOfUrl, MAT_MAX, sourceSubject, checkOrig, ANGLES, FORMATS, ORIG_MIN, MAX_RECIPES, originality, versionText, guessRecipe, cleanRecipe, draftVersion, fitDurations, cleanVersion, mixRecipes, keep, ranking, ownTops, sortBook, postOf, median };
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.Recette = api;
 })(typeof self !== "undefined" ? self : this);

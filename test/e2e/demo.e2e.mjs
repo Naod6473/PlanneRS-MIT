@@ -253,3 +253,13 @@ test("assistant Meta : trouver la Page, connecter, ou passer « à la main »", 
   assert.deepEqual(errors, []);
   await page.close();
 });
+
+test("lien partagé depuis le téléphone : au choix ma version ou une idée", { skip }, async () => {
+  const { page, errors } = await open({ mobile: true });
+  await page.evaluate(async () => { const c = await caches.open("planners-share"); await c.put("shared/meta", new Response(JSON.stringify({ title: "", text: "Regarde ça https://www.instagram.com/reel/abc/", url: "", n: 0 }))); await App.receiveShare(); });
+  await page.click('[data-shpick="mv"]');
+  await page.locator(".mv-name").waitFor();
+  assert.match(await page.locator("#mv").innerText(), /Lien partagé/);
+  assert.deepEqual(errors, []);
+  await page.close();
+});

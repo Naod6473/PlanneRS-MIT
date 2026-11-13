@@ -835,6 +835,11 @@
           "level": 2,
           "text": "La boucle",
           "anchor": "la-boucle"
+        },
+        {
+          "level": 2,
+          "text": "Depuis le téléphone : partager un lien",
+          "anchor": "depuis-le-téléphone--partager-un-lien"
         }
       ]
     },

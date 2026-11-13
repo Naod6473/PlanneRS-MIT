@@ -583,14 +583,18 @@
       '<button class="btn quiet" data-later style="width:100%">Reporter à demain</button></div>', "Poster à la main");
     const L = layer();
     // Sur téléphone : prépare le fichier pour le menu Partager (« Enregistrer l'image » / « Enregistrer la vidéo » => Photos).
-    let shareFile = null;
+    // Carrousel : toutes les images partent ensemble (10 au plus, la limite d'Instagram).
+    let shareFile = null, shareFiles = null;
+    const fileOf = (x, url) => fetch(url).then((r) => (r.ok ? r.blob() : null)).then((bl) => bl && new File([bl], x.name || "media", { type: bl.type || (x.type === "video" ? "video/mp4" : "image/jpeg") })).catch(() => null);
     const prepShare = (url) => {
       if (!navigator.canShare) return;
-      fetch(url).then((r) => (r.ok ? r.blob() : null)).then((bl) => {
-        if (!bl) return;
-        const f = new File([bl], m.name || "media", { type: bl.type || (m.type === "video" ? "video/mp4" : "image/jpeg") });
-        if (navigator.canShare({ files: [f] })) { shareFile = f; const og = L.querySelector("#m-onego"); if (og) og.hidden = false; }
-      }).catch(() => {});
+      const all = (p.media || []).filter((x) => x.role !== "guide" && /^https?:/.test(x.url || "")).slice(0, 10);
+      const list = p.format === "carousel" && all.length > 1 && url === m.url ? all.map((x) => fileOf(x, x.url)) : [fileOf(m, url)];
+      Promise.all(list).then((fs) => {
+        fs = fs.filter(Boolean); if (!fs.length) return;
+        if (fs.length > 1 && !navigator.canShare({ files: fs })) fs = fs.slice(0, 1);
+        if (navigator.canShare({ files: fs })) { shareFile = fs[0]; shareFiles = fs; const og = L.querySelector("#m-onego"); if (og) og.hidden = false; if (fs.length > 1) { const t = og && og.querySelector("p"); if (t) t.insertAdjacentText("beforeend", " Les " + fs.length + " images partent ensemble."); } }
+      });
     };
     if (m && /^https?:/.test(m.url || "")) prepShare(m.url);
     else if (m && relPath(p.folder) && driveOn()) A.driveFolder(p.folder).then((d) => {
@@ -608,7 +612,7 @@
       if (!shareFile) return;
       const txt = (p.format === "story" ? p.note : C.textOut(p, net, S.state.settings)) || "";
       if (txt) U.copy(txt);
-      navigator.share({ files: [shareFile] }).then(() => { [1, 2, 3].forEach(doneStep); U.toast(txt ? "Texte copié : colle-le dans " + appName : "Fichier envoyé à " + appName); }).catch(() => {});
+      navigator.share({ files: shareFiles || [shareFile] }).then(() => { [1, 2, 3].forEach(doneStep); U.toast(txt ? "Texte copié : colle-le dans " + appName : "Fichier envoyé à " + appName); }).catch(() => {});
     });
     L.querySelectorAll("[data-mstep]").forEach((b) => b.addEventListener("click", (e) => {
       if (b.getAttribute("href") === "#") { e.preventDefault(); return; }

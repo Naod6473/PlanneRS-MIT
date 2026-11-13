@@ -42,7 +42,7 @@
       try {
         if (S.mode !== "api") { await new Promise((r) => setTimeout(r, 500)); one.recipe = R.guessRecipe(srcOf(src)); }
         else {
-          const r = await S.call("POST", "maversion/recipe", { source: { type: src.type, id: src.type === "post" ? src.post.id : src.item.id, score: src.score || 0 } });
+          const r = await S.call("POST", "maversion/recipe", { source: src.type === "link" ? { type: "link", url: src.item.url, caption: src.item.caption, handle: src.item.handle } : { type: src.type, id: src.type === "post" ? src.post.id : src.item.id, score: src.score || 0 } });
           one.recipe = r.recipe; one.ai = r.ai; one.why = r.why || "";
         }
         one.sauce.format = one.recipe.format || "reel";
@@ -56,7 +56,7 @@
   };
   function srcOf(src) {
     if (src.type === "post") { const p = src.post; return { type: "post", id: p.id, title: p.title, kind: p.format, score: src.score || 0, caption: [p.caption || "", ...((p.prod && p.prod.shots) || []).map((x) => x.voice || "")].filter(Boolean).join("\n") }; }
-    return Object.assign({ type: "pepite" }, src.item);
+    return Object.assign({ type: src.type === "link" ? "link" : "pepite" }, src.item);
   }
   function close() {
     const el = document.getElementById("mv"); if (el) { el.hidden = true; el.innerHTML = ""; U.unmodal(el); }
@@ -73,13 +73,14 @@
   }
   function source() {
     const f = (M.recipe && M.recipe.from) || {}, it = M.src.item, p = M.src.post;
-    const head = M.src.type === "post" ? "Ton succès" + (M.src.score ? " · " + xs(M.src.score) + " ta médiane" : "") : it ? "@" + it.handle : f.handle ? "@" + f.handle : "Recette du carnet";
+    const head = M.src.type === "post" ? "Ton succès" + (M.src.score ? " · " + xs(M.src.score) + " ta médiane" : "") : it ? (it.handle ? "@" + it.handle : "Lien partagé") : f.handle ? "@" + f.handle : "Recette du carnet";
     const text = M.src.type === "post" ? p.title : it ? it.caption : f.text || "";
     const score = it ? it.score : f.score;
     return '<div class="mv-card mv-src"><div class="mv-row"><span class="mv-play">' + icon(it && (it.kind === "carousel" || it.kind === "image") ? "contents" : "film") + '</span><div class="mv-col"><b data-noi18n>' + esc(head) + "</b>" +
-      '<span class="muted small">' + esc(it ? (it.kind || "") + " · " + it.metric + " " + it.unit : M.recipe && M.recipe.mix ? "Mélange de deux recettes" : M.src.type === "post" ? "Publié" + (p.date ? " le " + C.shortDay(p.date) : "") : "") + "</span></div>" +
+      '<span class="muted small">' + esc(it ? (M.src.type === "link" ? (R.FORMATS[it.kind] || it.kind || "") + " · " + (R.netOfUrl(it.url) || "lien") : (it.kind || "") + " · " + it.metric + " " + it.unit) : M.recipe && M.recipe.mix ? "Mélange de deux recettes" : M.src.type === "post" ? "Publié" + (p.date ? " le " + C.shortDay(p.date) : "") : "") + "</span></div>" +
       (score && M.src.type !== "post" ? '<span class="mv-x">' + xs(score) + "</span>" : "") + "</div>" +
       (text ? '<p class="mv-quote" data-noi18n>« ' + esc(String(text).split("\n")[0].slice(0, 160)) + " »</p>" : "") +
+      (M.src.type === "link" && !it.caption ? '<p class="muted small">Le lien seul ne dit pas ce que raconte la vidéo : colle sa légende ou sa transcription dans « Ce que dit l\'original », la version sera plus juste.</p>' : "") +
       '<span class="muted small">' + (M.src.type === "post" ? "On garde ce qui a marché chez toi, sur un nouveau sujet." : "Le lien d'origine reste en note privée. Aucune image ni phrase de l'original n'est reprise telle quelle.") + "</span></div>";
   }
   function recipeCard() {
@@ -132,7 +133,7 @@
   function draw() {
     const el = document.getElementById("mv"); if (!el || !M) return;
     const steps = '<ol class="mv-steps"><li class="s1"><span>1</span>La recette</li><li class="s2"><span>2</span>Ta sauce</li><li class="s3"><span>3</span>Ta version</li></ol>';
-    el.innerHTML = '<header class="mv-top"><div class="mv-col grow"><span class="eyebrow">' + (M.src.type === "post" ? "Tes succès" : M.src.item ? "Pépites" : "Carnet") + ' › Ma version</span><h1>Reprends la recette, pas la vidéo</h1></div>' + steps +
+    el.innerHTML = '<header class="mv-top"><div class="mv-col grow"><span class="eyebrow">' + (M.src.type === "post" ? "Tes succès" : M.src.type === "link" ? "Lien partagé" : M.src.item ? "Pépites" : "Carnet") + ' › Ma version</span><h1>Reprends la recette, pas la vidéo</h1></div>' + steps +
       '<button class="iconbtn" data-mv-close aria-label="Fermer">' + icon("x") + "</button></header>" +
       '<div class="mv-grid"><section class="mv-col mv-left">' + source() + recipeCard() + "</section>" + sauce() + versionCard() + "</div>";
   }
