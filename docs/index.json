@@ -1028,6 +1028,9 @@
       "category": "Réseaux sociaux",
       "tags": [
         "meta",
+        "assistant",
+        "sans app",
+        "à la main",
         "facebook",
         "instagram",
         "application",
@@ -1039,8 +1042,18 @@
         "permissions"
       ],
       "order": 1,
-      "updated": "2026-11-10",
+      "updated": "2026-11-13",
       "headings": [
+        {
+          "level": 2,
+          "text": "Sans application Meta : poster à la main",
+          "anchor": "sans-application-meta--poster-à-la-main"
+        },
+        {
+          "level": 2,
+          "text": "L'assistant de PlanneRs (le plus simple)",
+          "anchor": "lassistant-de-planners-le-plus-simple"
+        },
         {
           "level": 2,
           "text": "Avant de commencer",

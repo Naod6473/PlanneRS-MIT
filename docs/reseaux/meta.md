@@ -2,14 +2,34 @@
 title: Application Meta et jetons
 description: Créer une application Meta et obtenir un jeton de Page sans expiration, commun à Instagram et à la Page Facebook, avec les bonnes autorisations.
 category: Réseaux sociaux
-tags: [meta, facebook, instagram, application, jeton, token, page access token, graph api explorer, autorisations, permissions]
+tags: [meta, assistant, sans app, à la main, facebook, instagram, application, jeton, token, page access token, graph api explorer, autorisations, permissions]
 order: 1
-updated: 2026-11-10
+updated: 2026-11-13
 ---
 
 # Application Meta et jetons
 
 Instagram et la Page Facebook passent par la même API (Graph API de Meta) et peuvent partager **un seul jeton** : le jeton de la Page reliée au compte Instagram. Bien obtenu, il **n'expire jamais**.
+
+## Sans application Meta : poster à la main
+
+Créer une application Meta est la partie la plus longue. Si tu ne veux pas le faire, tu peux quand même tout **planifier, rédiger et valider** dans PlanneRs, puis poster toi-même :
+
+1. **Réglages › Comptes** › **Instagram** › **Configurer**, puis à la première étape **Poster Instagram et Facebook à la main**.
+2. À l'heure prévue, PlanneRs t'envoie un rappel. Le texte est prêt à copier et les médias à enregistrer : tu postes depuis l'app Instagram ou Facebook, puis tu marques le post comme publié.
+
+Tu pourras connecter l'API plus tard sans rien perdre. Voir aussi [Poster à la main](../utilisation/aujourdhui.md#poster-à-la-main).
+
+## L'assistant de PlanneRs (le plus simple)
+
+**Réglages › Comptes** › **Instagram** › **Configurer** ouvre un assistant pas à pas. Tu crées l'application (étapes 1 et 2 ci-dessous), tu génères un jeton dans l'Explorateur, et tu le colles : PlanneRs fait le reste.
+
+- Il **vérifie les autorisations** et dit lesquelles manquent.
+- Il **retrouve ta Page**, son jeton et ton compte Instagram relié : plus besoin de chercher les identifiants.
+- Si tu donnes l'**identifiant et la clé secrète** de l'application (Paramètres de l'app › Général), il échange le jeton contre un jeton long, d'où un **jeton de Page sans expiration**. La clé secrète ne sert qu'à cet échange : elle **n'est pas enregistrée**.
+- Il connecte Instagram et la Page Facebook (relais) d'un coup. Sans compte Instagram relié, seule la Page est connectée.
+
+Les étapes manuelles ci-dessous restent utiles pour comprendre ou si tu préfères tout faire toi-même.
 
 ## Avant de commencer
 

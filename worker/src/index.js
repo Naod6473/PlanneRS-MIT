@@ -36,6 +36,7 @@ import * as rewriter from "./rewrite.js";
 import * as agent from "./agent.js";
 import * as pepites from "./pepites.js";
 import * as maversion from "./maversion.js";
+import * as metasetup from "./metasetup.js";
 import Recette from "../../web/js/recette.js";
 import { aiClient } from "./ai.js";
 import * as igHistory from "./history.js";
@@ -352,6 +353,16 @@ async function api(request, env, path, url, auth) {
     if (p.status !== "published") return err((p.failure && p.failure.why) || "Toujours en échec", 502);
     return json({ ok: true, post: p });
   }
+  // Assistant Meta : trouver la Page et le compte Instagram à partir du jeton de l'Explorateur, puis connecter.
+  if (path === "meta/setup" && m === "POST") {
+    let found;
+    try { found = await metasetup.inspect(env, body || {}); } catch (e) { return err(e.why ? e.message + " " + e.why : e.message, 400); }
+    if (!(body && body.pageId)) return json(metasetup.publicView(found));
+    const pg = found.pages.find((x) => x.id === String(body.pageId));
+    if (!pg || !pg.token) return err("Page introuvable avec ce jeton : coche-la dans la fenêtre Facebook en générant le jeton.", 404);
+    const res = pg.igId ? await connectAccount(env, "instagram", { token: pg.token, accountId: pg.igId, pageId: pg.id }) : await connectAccount(env, "facebook", { token: pg.token, pageId: pg.id });
+    return json(Object.assign({ ok: res.info.status !== "error", long: found.long, ig: !!pg.igId }, res), res.info.status !== "error" ? 200 : 400);
+  }
   if ((r = path.match(/^connect\/([a-z0-9]+)$/))) {
     const id = r[1];
     const ad = ADAPTERS[id] || channels[id] || STORAGE[id];
@@ -360,25 +371,8 @@ async function api(request, env, path, url, auth) {
     if (!ad) return err("Ce connecteur n'est pas encore disponible.", 404);
     const cred = {};
     for (const f of ad.fields) { const v = body && body[f.key]; if (v) cred[f.key] = String(v).trim(); }
-    if (id === "gdrivewrite" && !cred.rootFolderId) cred.rootFolderId = await defaultRoot(env);
-    let info;
-    try {
-      const detail = ad.test ? await ad.test(env, cred, null) : "Enregistré";
-      info = { status: "ok", account: detail, detail: "Connecté le " + localNow().replace("T", " à ") };
-    } catch (e) { info = { status: e.pending ? "pending" : "error", account: e.pending ? "En attente de l'autorisation " + (id === "tiktok" ? "TikTok" : "Google") : "", detail: e.why || e.message }; }
-    if (channels[id] && info.status === "ok") {
-      try { await channels[id].send(env, cred, { event: "test", title: "PlanneRs", text: "Notifications activées." }); info.account = "Message de test envoyé"; }
-      catch (e) { info = { status: "error", account: "", detail: e.message }; }
-    }
-    await db.setAccount(env, id, info, cred);
-    let relay = null;
-    if (id === "instagram" && info.status === "ok" && cred.pageId) {
-      try { relay = { status: "ok", account: await facebook.test(env, { token: cred.token, pageId: cred.pageId }), detail: "Utilise la connexion Instagram" }; }
-      catch (e) { relay = { status: "error", account: "", detail: "Relais Facebook : " + (e.why || e.message) }; }
-      await db.setAccount(env, "facebook", relay, null);
-    }
-    if (relay) info.relay = relay;
-    return json({ ok: info.status !== "error", info }, info.status !== "error" ? 200 : 400);
+    const res = await connectAccount(env, id, cred);
+    return json({ ok: res.info.status !== "error", info: res.info }, res.info.status !== "error" ? 200 : 400);
   }
   if ((r = path.match(/^connect\/([a-z0-9]+)\/test$/)) && m === "POST") {
     const id = r[1], ad = ADAPTERS[id] || STORAGE[id];
@@ -529,6 +523,30 @@ async function api(request, env, path, url, auth) {
   if (path === "stats" && m === "GET") return json((await db.getKV(env, "stats")) || {});
   if (path === "stats/refresh" && m === "POST") return json(await stats(env));
   return err("Introuvable", 404);
+}
+
+// Enregistre une connexion après l'avoir testée (et le relais Facebook pour Instagram).
+async function connectAccount(env, id, cred) {
+  const ad = ADAPTERS[id] || channels[id] || STORAGE[id];
+  if (id === "gdrivewrite" && !cred.rootFolderId) cred.rootFolderId = await defaultRoot(env);
+  let info;
+  try {
+    const detail = ad.test ? await ad.test(env, cred, null) : "Enregistré";
+    info = { status: "ok", account: detail, detail: "Connecté le " + localNow().replace("T", " à ") };
+  } catch (e) { info = { status: e.pending ? "pending" : "error", account: e.pending ? "En attente de l'autorisation " + (id === "tiktok" ? "TikTok" : "Google") : "", detail: e.why || e.message }; }
+  if (channels[id] && info.status === "ok") {
+    try { await channels[id].send(env, cred, { event: "test", title: "PlanneRs", text: "Notifications activées." }); info.account = "Message de test envoyé"; }
+    catch (e) { info = { status: "error", account: "", detail: e.message }; }
+  }
+  await db.setAccount(env, id, info, cred);
+  let relay = null;
+  if (id === "instagram" && info.status === "ok" && cred.pageId) {
+    try { relay = { status: "ok", account: await facebook.test(env, { token: cred.token, pageId: cred.pageId }), detail: "Utilise la connexion Instagram" }; }
+    catch (e) { relay = { status: "error", account: "", detail: "Relais Facebook : " + (e.why || e.message) }; }
+    await db.setAccount(env, "facebook", relay, null);
+  }
+  if (relay) info.relay = relay;
+  return { info };
 }
 
 async function robot(env) {

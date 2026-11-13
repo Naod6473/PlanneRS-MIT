@@ -236,3 +236,20 @@ test("ma version : pépite, recette, ta sauce, puis envoi à La Fabrique et carn
     await page.close();
   }
 });
+
+test("assistant Meta : trouver la Page, connecter, ou passer « à la main »", { skip }, async () => {
+  const { page, errors } = await open();
+  await page.evaluate(() => { delete Store.state.accounts.instagram; App.wizard("instagram", 0); });
+  await page.locator('[data-wz="manual"]').click();
+  await page.waitForTimeout(300);
+  assert.deepEqual(await page.evaluate(() => ["instagram", "facebook"].every((n) => Store.state.settings.rules.manualNets.includes(n))), true);
+  await page.evaluate(() => App.wizard("instagram", 99));
+  await page.fill('#wzm input[name="userToken"]', "EAAtest");
+  await page.click('[data-wz="find"]');
+  await page.locator('input[name="wzpg"]:checked').waitFor();
+  await page.click('[data-wz="metaconnect"]');
+  await page.waitForTimeout(300);
+  assert.equal(await page.evaluate(() => Store.state.accounts.instagram.status), "ok");
+  assert.deepEqual(errors, []);
+  await page.close();
+});

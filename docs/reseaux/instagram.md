@@ -14,7 +14,7 @@ updated: 2026-11-10
 | Publie | Reels, carrousels (jusqu'à 10 éléments), images, stories (image ou vidéo) |
 | Ne publie pas | Stickers de story (sondage, quiz, lien), musique de la bibliothèque Instagram, collaborations |
 | Compte | Professionnel (Créateur ou Entreprise) relié à une Page Facebook |
-| Jeton | Jeton de Page sans expiration : voir [Application Meta et jetons](meta.md) |
+| Jeton | Jeton de Page sans expiration : l'assistant de **Réglages › Comptes** le trouve pour toi, voir [Application Meta et jetons](meta.md#lassistant-de-planners-le-plus-simple) |
 | Limite | 100 publications par API sur 24 h |
 
 ## Champs dans PlanneRs
