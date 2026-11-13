@@ -671,6 +671,46 @@
       ]
     },
     {
+      "path": "utilisation/revue-en-pile.md",
+      "title": "Revue en pile",
+      "description": "Relire ce qui attend ton OK une carte à la fois. À droite c'est validé, à gauche ça part en retouche avec un mot pour l'équipe, vers le haut c'est pour plus tard.",
+      "category": "Utilisation",
+      "tags": [
+        "revue",
+        "validation",
+        "glisser",
+        "swipe",
+        "retouche",
+        "fabrique",
+        "date",
+        "légende"
+      ],
+      "order": "3.6",
+      "updated": "2026-11-13",
+      "headings": [
+        {
+          "level": 2,
+          "text": "Sur la carte",
+          "anchor": "sur-la-carte"
+        },
+        {
+          "level": 2,
+          "text": "Les gestes",
+          "anchor": "les-gestes"
+        },
+        {
+          "level": 2,
+          "text": "Ce que devient une retouche",
+          "anchor": "ce-que-devient-une-retouche"
+        },
+        {
+          "level": 2,
+          "text": "Plus d'options (bouton …)",
+          "anchor": "plus-doptions-bouton-"
+        }
+      ]
+    },
+    {
       "path": "utilisation/stats.md",
       "title": "Stats",
       "description": "Les statistiques Instagram et Facebook dans PlanneRs, avec les chiffres affichés, leur fréquence de mise à jour et les autorisations nécessaires.",

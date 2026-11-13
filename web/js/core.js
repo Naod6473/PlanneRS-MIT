@@ -277,6 +277,42 @@
     return { steps, done, total: steps.length, current, ready: done === steps.length, shots, duration, tooLong: isVideoFmt(p.format) && duration > ((p.prod && p.prod.maxSec) || 30), video: (p.media || []).find((m) => m.type === "video" || /\.(mp4|mov|webm)(\?|$)/i.test(m.url || m.name || "")) || null };
   }
 
+  // Revue en pile : ce qui attend un « c'est bon » (légende pas validée, ou vidéo de La Fabrique pas relue).
+  // Une vidéo renvoyée en retouche n'y revient qu'après un nouveau travail sur une étape.
+  function needsFix(p) {
+    const r = p.prod && p.prod.review; if (!r || !r.at) return false;
+    const steps = (p.prod && p.prod.steps) || {};
+    return !Object.keys(steps).some((k) => k !== "check" && steps[k] && steps[k].at && steps[k].at > r.at);
+  }
+  function reviewPile(posts) {
+    return (posts || []).filter((p) => !p.parent && !p.ignored && p.status !== "published" && p.status !== "failed" &&
+      (String(p.caption || "").trim() || (p.media || []).some((m) => m.role !== "guide")) &&
+      (!p.captionValidated || (inFabrique(p) && !prodOf(p).ready)) && !needsFix(p))
+      .sort((a, b) => (at(a) || "9999").localeCompare(at(b) || "9999"));
+  }
+  // Note sur 10 et points de contrôle d'une carte : ce qui bloque (impossible de valider), ce qui gêne, ce qui va.
+  const FIX_HINTS = [[/longue|long|durée/i, "Trop long"], [/courte/i, "Trop court"], [/hashtag|caractères|légende/i, "Légende à revoir"], [/média|vidéo|image|lourd/i, "Image ou vidéo"]];
+  function reviewOf(p, settings) {
+    const out = [];
+    const all = checks(Object.assign({}, p, { captionValidated: true, manual: false }), settings).concat(mediaChecks(p))
+      .filter((c) => c.level !== "ok" && !/Pas encore de date/.test(c.text));
+    const cap = String(p.caption || "").trim(), text = p.format !== "story";
+    if (text && !cap) all.unshift({ level: "block", text: "Légende vide : écris-la avant de valider." });
+    const pr = prodOf(p);
+    if (pr.tooLong) all.push({ level: "warn", text: "Storyboard plus long que prévu." });
+    if (text && cap) out.push({ level: "ok", text: "Légende écrite" });
+    const n = hashtags(p.caption);
+    if (n) out.push({ level: "ok", text: n + " hashtag" + (n > 1 ? "s" : "") });
+    const v = pr.video;
+    if (v) out.push({ level: "ok", text: v.dur ? "Vidéo " + Math.round(v.dur) + " s" : "Vidéo" });
+    else if ((p.media || []).length) out.push({ level: "ok", text: "Média" });
+    const blocks = all.filter((c) => c.level === "block"), warns = all.filter((c) => c.level !== "block");
+    const score = Math.max(0, Math.min(10, Math.round(10 - blocks.length * 4 - warns.length * 1.5)));
+    const hints = [];
+    warns.concat(blocks).forEach((c) => { const h = FIX_HINTS.find(([re]) => re.test(c.text)); if (h && !hints.includes(h[1])) hints.push(h[1]); });
+    return { score, blocked: blocks.length > 0, issues: blocks.concat(warns), good: out, hints };
+  }
+
   // Équipe d'agents : un rôle par métier, avec ses consignes et qui le tient (Claude par MCP, clé API, ou toi).
   // Seuls les rôles d'écriture (script, légende) peuvent tourner tout seuls avec la clé API.
   const CREW = [
@@ -308,6 +344,6 @@
   function nowStamp(d) { d = d || new Date(); return ymd(d) + "T" + pad(d.getHours()) + ":" + pad(d.getMinutes()); }
 
   const api = { STATUS, FORMATS, STAGES, STEPS, step, alertOf, pad, ymd, parseYmd, addDays, mondayOf, toMin, at, longDate, shortDay, MONTHS, DAYS, setLang,
-    displayStatus, missed, willSend, hashtags, checks, mediaChecks, slotOf, nowStamp, fold, seriesOf, matchQuery, parseCsv, toCsv, manualNets, autoNets, pendingManual, prefillUrl, titleFor, capFor, TEXT_MAX, utm, textOut, PROD_STEPS, inFabrique, prodOf, CREW, CREW_WHO, crewOf, crewWork };
+    displayStatus, missed, willSend, hashtags, checks, mediaChecks, slotOf, nowStamp, fold, seriesOf, matchQuery, parseCsv, toCsv, manualNets, autoNets, pendingManual, prefillUrl, titleFor, capFor, TEXT_MAX, utm, textOut, PROD_STEPS, inFabrique, prodOf, CREW, CREW_WHO, crewOf, crewWork, reviewPile, reviewOf, needsFix };
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.Core = api;
 })(typeof self !== "undefined" ? self : this);

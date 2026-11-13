@@ -187,3 +187,26 @@ test("stats : cartes par compte et par période", { skip }, async () => {
     await page.close();
   }
 });
+
+test("revue en pile : à droite on valide, à gauche on renvoie en retouche, puis on annule", { skip }, async () => {
+  const { page, errors } = await open({ mobile: true });
+  const [a, b] = await page.evaluate(() => Core.reviewPile(Store.state.posts).filter((p) => !Core.reviewOf(p, Store.state.settings).blocked).slice(0, 2).map((p) => p.id));
+  assert.ok(a && b, "deux cartes validables dans la démo");
+  await page.evaluate((ids) => App.openReview(ids), [a, b]);
+  await page.keyboard.press("ArrowRight");
+  await page.waitForTimeout(500);
+  assert.equal(await page.evaluate((i) => Store.post(i).captionValidated, a), true);
+  await page.keyboard.press("ArrowLeft");
+  await page.locator('[data-plr="Trop long"]').click();
+  await page.locator("#pl-txt").fill("Coupe la fin");
+  await page.locator('[data-pl="send"]').click();
+  await page.waitForTimeout(500);
+  assert.equal(await page.evaluate((i) => Core.needsFix(Store.post(i)), b), true);
+  assert.match(await page.evaluate((i) => Store.post(i).comments.slice(-1)[0].text, b), /Trop long[\s\S]*Coupe la fin/);
+  assert.match(await page.locator(".pl-end h2").innerText(), /Pile terminée/);
+  await page.keyboard.press("z");
+  await page.waitForTimeout(300);
+  assert.equal(await page.evaluate((i) => Core.needsFix(Store.post(i)), b), false);
+  assert.deepEqual(errors, []);
+  await page.close();
+});

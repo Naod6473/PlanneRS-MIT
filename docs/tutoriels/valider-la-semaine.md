@@ -19,12 +19,14 @@ Sur **Aujourd'hui**, la carte **Légendes à valider** compte les posts des 14 p
 
 ## 2. Relire un par un
 
-**Relire et valider** les présente un par un. Le texte est modifiable sur place.
+**Relire et valider** ouvre la [revue en pile](../utilisation/revue-en-pile.md) : une carte à la fois.
 
-![Relire et valider, un post à la fois](../img/tutos/valider-2-relire.jpg)
+![La revue en pile, une carte à la fois](../img/tutos/valider-2-relire.jpg)
 
-- **Valider et suivante** (touche **V**) : le post passe en **Programmé**.
-- **Plus tard** (touche **→**) : passe au suivant sans valider.
+- **C'est bon** (glisser à droite, ou touche **→**) : la légende est validée et le post passe en **Programmé**.
+- **On retouche** (glisser à gauche, ou touche **←**) : coche ce qui ne va pas, laisse un mot pour l'équipe.
+- **Plus tard** (glisser vers le haut, ou touche **↑**) : la carte passe en fin de pile.
+- **La date** sur la carte (touche **D**) : choisis le jour et le créneau en deux touches. **Z** annule le dernier geste.
 - **Tout valider** : valide d'un coup ce qui passe les contrôles (média présent, hashtags dans la limite…), après une confirmation. « Annuler » dans le message du bas défait l'opération.
 
 Sur téléphone, glisse simplement une carte **à droite** pour la valider (voir [Poster à la main](poster-a-la-main.md#2-sur-téléphone)).

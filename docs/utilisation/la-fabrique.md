@@ -38,6 +38,7 @@ Un clic sur une carte ouvre sa fiche :
 - **la vidéo finie**, à regarder directement (il faut une adresse publique https) ;
 - **l'avancement** : un clic sur une étape la fait passer de « À faire » à « En cours », puis « Fait » (ton nom est noté) ;
 - **le storyboard**, plan par plan : durée, texte à l'écran, voix, image, son, et la durée totale (en rouge au-delà de 30 secondes pour un Reel) ;
+- **Revue en pile** (en haut de La Fabrique) fait défiler les vidéos à relire une par une : à droite c'est validé, à gauche elle part en retouche avec ton mot (voir [Revue en pile](revue-en-pile.md)).
 - **Vidéo finie et relue** coche toutes les étapes. Si la légende n'est pas encore validée, PlanneRs propose de la relire : une vidéo prête ne part pas sans légende validée.
 
 ## Avec une IA

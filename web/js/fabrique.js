@@ -15,7 +15,8 @@
   function bar(pr) {
     return '<span class="fbar-steps" aria-hidden="true">' + pr.steps.map((x) => '<i class="s-' + x.state + '"></i>').join("") + "</span>";
   }
-  function who(pr) {
+  function who(pr, p) {
+    if (p && C.needsFix(p)) return '<span class="fwho fix">' + icon("pen") + "À retoucher</span>";
     if (pr.ready) return '<span class="fwho ok">' + icon("check") + "Prête à valider</span>";
     const c = pr.current;
     if (c.state === "doing") return '<span class="fwho doing"><span class="pulse" aria-hidden="true"></span>' + esc(c.by || "Quelqu'un") + " · " + esc(c.label) + "</span>";
@@ -26,7 +27,7 @@
     return '<button class="fcard" data-fab="' + esc(p.id) + '"><span class="pic' + (cov ? "" : " noimg") + '">' + (cov ? '<img src="' + safeUrl(cov) + '" alt="" loading="lazy">' : '<span class="ph">' + icon("film") + "</span>") +
       (p.date ? '<span class="tm">' + esc(C.shortDay(p.date)) + " " + esc(p.time || "") + "</span>" : '<span class="tm">' + "Sans date" + "</span>") + "</span>" +
       '<span class="ttl" data-noi18n>' + esc(p.title) + '</span><span class="meta">' + brands(p.networks) + '<span class="fmt">' + esc(C.FORMATS[p.format] || "") + (pr.duration ? " · " + fmtDur(pr.duration) : "") + "</span></span>" +
-      bar(pr) + who(pr) + "</button>";
+      bar(pr) + who(pr, p) + "</button>";
   }
 
   // Équipe d'agents : un rôle par métier, ses consignes, qui le tient et ce qu'il a fait.
@@ -83,7 +84,7 @@
     return {
       title: "La Fabrique",
       sub: "Tes vidéos, de l'idée à la vidéo finie",
-      tools: tabs() + '<span class="grow"></span>' + ('<label class="btn" title="Une vidéo finie à relire : elle part dans ton stockage et devient un Reel dans La Fabrique">' + icon("cloud") + '<span class="lbl">Déposer des vidéos</span><input type="file" accept="video/*" multiple hidden data-fabdrop aria-label="Déposer des vidéos"></label>') + (A.hasStudio ? '<button class="btn" data-cutvideo aria-label="Couper une vidéo (blancs et euh)">' + icon("film") + '<span class="lbl">Couper une vidéo</span></button>' : "") + '<button class="btn primary" data-new aria-label="Nouveau post">' + icon("plus") + '<span class="lbl">Nouveau post</span></button>',
+      tools: tabs() + '<span class="grow"></span>' + ('<label class="btn" title="Une vidéo finie à relire : elle part dans ton stockage et devient un Reel dans La Fabrique">' + icon("cloud") + '<span class="lbl">Déposer des vidéos</span><input type="file" accept="video/*" multiple hidden data-fabdrop aria-label="Déposer des vidéos"></label>') + (all.length ? '<button class="btn" data-review aria-label="Revue en pile">' + icon("eye") + '<span class="lbl">Revue en pile</span></button>' : "") + (A.hasStudio ? '<button class="btn" data-cutvideo aria-label="Couper une vidéo (blancs et euh)">' + icon("film") + '<span class="lbl">Couper une vidéo</span></button>' : "") + '<button class="btn primary" data-new aria-label="Nouveau post">' + icon("plus") + '<span class="lbl">Nouveau post</span></button>',
       html: all.length ? '<section class="pband" aria-labelledby="h-fab"><div class="pband-h"><h2 id="h-fab" data-noi18n>' + esc(phrase) + "</h2>" + (f ? '<span class="muted"><button class="lk" data-fabst="">' + icon("x") + "Tout afficher</button></span>" : "") + "</div>" +
         '<div class="pkpis" role="group" aria-label="Filtrer par étape">' + kpis + "</div></section>" +
         '<div class="wcols fcols' + (f ? " one" : "") + '" role="group" aria-label="Vidéos par étape">' + cols + "</div>" +

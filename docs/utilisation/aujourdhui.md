@@ -55,7 +55,7 @@ Ce qui demande ton attention, du plus urgent au moins urgent :
   - « Déjà posté » : tu l'as publié ailleurs, tu colles le lien et il passe en Publié ;
   - « Ignorer » : il va dans le volet « Ignorées », d'où « Remettre » le fait revenir.
 - **Légendes à valider** :
-  - « Relire et valider » les présente une par une, légende modifiable (V valide, → passe à la suivante) ;
+  - « Relire et valider » ouvre la [revue en pile](revue-en-pile.md) : une carte à la fois. À droite tu valides, à gauche tu renvoies en retouche avec un mot ; la date et la légende se changent sur place ;
   - « Tout valider » les valide d'un coup après une confirmation qui les liste. Les posts qui ont un problème bloquant (média manquant, trop de hashtags…) sont laissés de côté. « Annuler » dans le message qui suit retire la validation.
 - **Posts à la main du jour**, **contenus d'actualité qui vont se périmer** (date limite dans moins de 3 jours).
 

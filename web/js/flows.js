@@ -717,59 +717,7 @@
     });
   };
 
-  A.openReview = function () {
-    if (A.denyValidate()) return;
-    const list = A.todoList().review.map((p) => p.id);
-    if (!list.length) { U.toast("Aucune légende à valider"); return; }
-    let i = 0, ok = 0;
-    A.lastFocus = document.activeElement;
-    const draw = () => {
-      if (i >= list.length) {
-        layer().innerHTML = '<div class="review" role="dialog" aria-modal="true" aria-label="Validation terminée"><div class="rv-body" style="place-content:center"><div style="text-align:center"><h2>' + ok + " légende" + (ok > 1 ? "s validées" : " validée") + "</h2><p class=\"muted\">Elles partiront à l'heure prévue.</p><button class=\"btn primary\" data-rv=\"close\" autofocus>Terminer</button></div></div></div>";
-        layer().querySelector("[data-rv]").focus(); return;
-      }
-      const p = A.eff(S.post(list[i]));
-      const checks = C.checks(Object.assign({}, p, { captionValidated: true }), S.state.settings).filter((c) => c.level !== "ok");
-      layer().innerHTML = '<div class="review" role="dialog" aria-modal="true" aria-label="Valider les légendes"><div class="rv-top"><b>Valider les légendes</b><span class="muted">' + (i + 1) + " sur " + list.length + '</span><div class="bar"><i style="width:' + Math.round(i / list.length * 100) + '%"></i></div><span style="flex:1"></span><span class="muted desk kbdhint" style="font-size:12px">V valider · → plus tard · Échap fermer</span>' + (list.length - i > 1 ? '<button class="btn sm" data-rv="all">' + icon("check") + "Tout valider (" + (list.length - i) + ")</button>" : "") + '<button class="iconbtn" data-rv="close" aria-label="Fermer">' + icon("x") + "</button></div>" +
-        '<div class="rv-body' + (p.thumb ? "" : " solo") + '">' + (p.thumb ? '<div class="phone" aria-hidden="true"><div class="ph-media"><img src="' + safeUrl(p.thumb) + '" alt=""></div><div class="ph-cap" id="rv-prev">' + esc(p.caption) + "</div></div>" : '<span id="rv-prev" hidden></span>') +
-        '<div><div class="meta">' + brands(p.networks, "lg") + "<span>" + esc(C.FORMATS[p.format]) + " · " + esc(C.longDate(p.date)) + " · " + p.time + "</span></div><h2 style=\"margin:8px 0 12px\">" + esc(p.title) + "</h2>" +
-        '<label for="rv-cap" style="font-weight:600;font-size:13px">Légende (modifiable)</label><textarea id="rv-cap" class="caption" style="min-height:240px">' + esc(p.caption) + "</textarea>" +
-        '<div class="cmeta"><span id="rv-n">' + p.caption.length + " caractères · " + C.hashtags(p.caption) + " hashtags</span></div>" +
-        (checks.length ? '<ul class="checks" style="margin-top:10px">' + checks.map((c) => '<li class="' + c.level + '">' + icon(c.level === "block" ? "x" : "alert") + "<span>" + esc(c.text) + "</span></li>").join("") + "</ul>" : "") +
-        '</div></div><div class="rv-foot"><button class="btn" data-rv="prev"' + (i ? "" : " disabled") + ">" + icon("left") + 'Précédente</button><button class="btn" data-rv="skip">Plus tard</button><button class="btn primary" data-rv="ok">' + icon("check") + "Valider et suivante</button></div></div>";
-      const ta = layer().querySelector("#rv-cap");
-      ta.addEventListener("input", () => { layer().querySelector("#rv-prev").textContent = ta.value; layer().querySelector("#rv-n").textContent = ta.value.length + " caractères · " + C.hashtags(ta.value) + " hashtags"; });
-      layer().querySelector('[data-rv="ok"]').focus();
-    };
-    const act = async (a) => {
-      if (a === "close") { A.closeLayer(); A.render(); document.removeEventListener("keydown", key); return; }
-      if (a === "prev") { i = Math.max(0, i - 1); return draw(); }
-      if (a === "skip") { i++; return draw(); }
-      if (a === "all") {
-        const p = S.post(list[i]); const ta = layer().querySelector("#rv-cap");
-        if (ta && ta.value !== p.caption) { p.caption = ta.value; await S.savePosts([p]); }
-        document.removeEventListener("keydown", key); A.closeLayer(); A.validateAll(list.slice(i)); return;
-      }
-      if (a === "ok") {
-        const p = S.post(list[i]); const ta = layer().querySelector("#rv-cap");
-        if (ta) p.caption = ta.value;
-        p.captionValidated = true; ok++;
-        await S.savePosts([p]); await S.log({ level: "change", text: "Légende validée : " + p.title, postId: p.id });
-        i++; draw();
-      }
-    };
-    const key = (e) => {
-      if (!layer().querySelector(".review")) { document.removeEventListener("keydown", key); return; }
-      const inText = e.target.tagName === "TEXTAREA";
-      if (e.key === "Escape") act("close");
-      else if ((e.key === "Enter" && (e.ctrlKey || e.metaKey)) || (!inText && (e.key === "v" || e.key === "V"))) { e.preventDefault(); act(i >= list.length ? "close" : "ok"); }
-      else if (!inText && e.key === "ArrowRight") act("skip");
-      else if (!inText && e.key === "ArrowLeft") act("prev");
-    };
-    document.addEventListener("keydown", key);
-    layer().onclick = (e) => { const b = e.target.closest("[data-rv]"); if (b) act(b.dataset.rv); };
-    draw();
-  };
+
 
   // ------------------------------------------------------------ Équipe
   A.me = () => S.state.me || "";
@@ -993,7 +941,7 @@
     layer().innerHTML = '<div class="scrim" data-close></div><div class="palette" role="dialog" aria-modal="true" aria-label="Rechercher"><input id="q" placeholder="Rechercher un post, un numéro, une vue…" autocomplete="off" aria-label="Rechercher" role="combobox" aria-expanded="true" aria-controls="qr" aria-autocomplete="list"><div class="res" id="qr" role="listbox" aria-label="Résultats"></div></div>';
     const q = layer().querySelector("#q"), r = layer().querySelector("#qr");
     const views = [["#today", "Aujourd'hui"], ["#calendar", "Calendrier"], ["#contents", "Contenus"], ["#stats", "Stats"], ["#activity", "Activité"], ["#settings", "Réglages"]];
-    const acts = [["new", "Nouveau post", "plus", () => A.newPost()], ["review", "Valider les légendes", "eye", () => A.openReview()], ["valall", "Tout valider", "check", () => A.validateAll()], ["tour", "Revoir la visite guidée", "today", () => A.tour()], ["idea", "Proposer une idée", "bulb", () => A.quick("idea")], ["hole", "Remplir le prochain jour vide", "calendar", () => A.quick("hole")]];
+    const acts = [["new", "Nouveau post", "plus", () => A.newPost()], ["review", "Revue en pile", "eye", () => A.openReview()], ["valall", "Tout valider", "check", () => A.validateAll()], ["tour", "Revoir la visite guidée", "today", () => A.tour()], ["idea", "Proposer une idée", "bulb", () => A.quick("idea")], ["hole", "Remplir le prochain jour vide", "calendar", () => A.quick("hole")]];
     let sel = 0;
     const draw = () => {
       const v = q.value.trim().toLowerCase();
