@@ -118,6 +118,8 @@
     const mo = new MutationObserver(() => { if (!L.innerHTML) { URL.revokeObjectURL(url); mo.disconnect(); } }); mo.observe(L, { childList: true });
   }
   A.shareSuccess = share;
+  A.shareImage = shareImage;
+  A.SITE = SITE;
 
   // ------------------------------------------------------------ Bilan du mois en image (1080 × 1350, format portrait d'Instagram)
   async function reportImage(month) {

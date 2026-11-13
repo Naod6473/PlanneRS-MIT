@@ -475,6 +475,7 @@
   A.quick = function (kind, file) {
     if (kind === "new") return A.newPost();
     if (kind === "week") return A.openWeekFlow();
+    if (kind === "weekimg") return A.shareWeek(A.calMode && A.week && location.hash === "#calendar" ? A.week : null);
     if (kind === "folder") { const u = A.rootFolderUrl(); if (u) window.open(u, "_blank", "noopener"); else U.toast("Aucun dossier Drive relié (Réglages › Stockage)"); return; }
     if (kind === "hole") {
       const k = A.kpiData(), t = C.ymd(new Date());

@@ -1126,6 +1126,8 @@ window.I18N_EN = {
 "# idées ajoutées": "# ideas added",
 "# idée ajoutée": "# idea added",
 "Semaine prête.": "Week ready.",
+"Ma semaine en image": "My week as an image",
+"Partager ma semaine en image": "Share my week as an image",
 "Republier": "Repost",
 "Programmer la republication": "Schedule the repost",
 "Dans 1 semaine": "In 1 week",
