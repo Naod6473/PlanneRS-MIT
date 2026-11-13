@@ -88,17 +88,21 @@
     const d = data(), g = d.groups.find((x) => key.startsWith(x.g + ":")), l = g && g.levels.find((y) => y.key === key);
     if (!l || !l.got) return;
     const cv = await image(g, l);
-    const blob = await new Promise((ok) => cv.toBlob(ok, "image/png"));
-    const file = new File([blob], "succes-" + g.g + "-" + l.n + ".png", { type: "image/png" }), url = URL.createObjectURL(blob);
     const text = "🎉 " + C.achText(g, l.n) + " ! Merci à vous 🙏\nOrganisé avec PlanneRs, l'outil libre pour planifier ses réseaux : " + SITE;
+    return shareImage(cv, "succes-" + g.g + "-" + l.n + ".png", text, "Partager ce succès", C.achText(g, l.n));
+  }
+  // Fenêtre de partage commune : l'image, le texte modifiable, le menu du téléphone, X, Facebook, LinkedIn.
+  async function shareImage(cv, name, text, title, alt) {
+    const blob = await new Promise((ok) => cv.toBlob(ok, "image/png"));
+    const file = new File([blob], name, { type: "image/png" }), url = URL.createObjectURL(blob);
     const canFile = !!(navigator.canShare && navigator.canShare({ files: [file] }));
-    A.openLayer('<div class="sh-top"><b>Partager ce succès</b><span style="flex:1"></span><button class="iconbtn" data-close aria-label="Fermer">' + icon("x") + "</button></div>" +
-      '<div class="sh-body ach-share"><img src="' + url + '" alt="' + esc(C.achText(g, l.n)) + '" width="1080" height="1080">' +
+    A.openLayer('<div class="sh-top"><b>' + esc(title) + '</b><span style="flex:1"></span><button class="iconbtn" data-close aria-label="Fermer">' + icon("x") + "</button></div>" +
+      '<div class="sh-body ach-share"><img src="' + url + '" alt="' + esc(alt) + '" width="' + cv.width + '" height="' + cv.height + '">' +
       '<label>Texte<textarea id="ach-txt" rows="4">' + esc(text) + "</textarea></label>" +
       '<p class="muted small" style="margin:0">X, Facebook et LinkedIn reçoivent le texte et le lien ; pour mettre l\'image, télécharge-la puis ajoute-la à ton post. Rien ne part sans toi.</p></div>' +
       '<div class="sh-foot">' + (canFile ? '<button class="btn primary" data-achgo="share">' + icon("send") + "Partager</button>" : "") +
       '<a class="btn' + (canFile ? "" : " primary") + '" href="' + url + '" download="' + esc(file.name) + '">' + icon("download") + "Télécharger l'image</a>" +
-      '<button class="btn" data-achgo="x">X</button><button class="btn" data-achgo="fb">Facebook</button><button class="btn" data-achgo="li">LinkedIn</button><button class="btn quiet" data-achgo="copy">' + icon("copy") + "Copier le texte</button></div>", "Partager ce succès");
+      '<button class="btn" data-achgo="x">X</button><button class="btn" data-achgo="fb">Facebook</button><button class="btn" data-achgo="li">LinkedIn</button><button class="btn quiet" data-achgo="copy">' + icon("copy") + "Copier le texte</button></div>", title);
     const L = document.getElementById("layer");
     L.querySelector(".sheet").classList.add("wide");
     const txt = () => L.querySelector("#ach-txt").value;
@@ -114,6 +118,41 @@
     const mo = new MutationObserver(() => { if (!L.innerHTML) { URL.revokeObjectURL(url); mo.disconnect(); } }); mo.observe(L, { childList: true });
   }
   A.shareSuccess = share;
+
+  // ------------------------------------------------------------ Bilan du mois en image (1080 × 1350, format portrait d'Instagram)
+  async function reportImage(month) {
+    try { await document.fonts.ready; } catch (e) { /* rien */ }
+    const r = A.reportData(month), W = 1080, H = 1350, cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+    const x = cv.getContext("2d"), font = getComputedStyle(document.body).fontFamily, color = "#7C3AED";
+    const grad = x.createLinearGradient(0, 0, W, H); grad.addColorStop(0, color); grad.addColorStop(1, shade(color, 0.5));
+    x.fillStyle = grad; x.fillRect(0, 0, W, H);
+    x.fillStyle = "#FFFFFF"; x.textAlign = "center"; x.textBaseline = "middle";
+    const who = ((stats().instagram || {}).account || {}).username, ws = ((S.state.settings || {}).workspace || {}).name;
+    x.globalAlpha = 0.9; x.font = "600 40px " + font; x.fillText(who ? "@" + who : ws || "", W / 2, 90); x.globalAlpha = 1;
+    const en = window.I18N && I18N.lang === "en", T = (fr, e) => (en ? e : fr);
+    x.font = "800 84px " + font; x.fillText(T("Mon mois de ", "My month: ") + C.MONTHS[+month.slice(5, 7) - 1], W / 2, 200);
+    const sign = (v) => (v > 0 ? "+" : "") + short(v);
+    const tiles = [[short(r.pub.length), r.pub.length > 1 ? T("publications", "posts") : T("publication", "post")], [r.days + " / " + r.nDays, T("jours actifs", "active days")]];
+    if (r.views != null) tiles.push([short(r.views), T("vues", "views")]);
+    if (r.igGain != null) tiles.push([sign(r.igGain), T("abonnés", "followers")]); else if (r.likes + r.comments) tiles.push([short(r.likes + r.comments), T("réactions", "reactions")]);
+    tiles.slice(0, 4).forEach(([v, l], i) => {
+      const cx = i % 2 ? 790 : 290, cy = 420 + Math.floor(i / 2) * 270;
+      x.fillStyle = "rgba(255,255,255,.14)"; x.beginPath(); x.roundRect(cx - 230, cy - 110, 460, 220, 36); x.fill();
+      x.fillStyle = "#FFFFFF"; let fs = 104; x.font = "800 " + fs + "px " + font; while (x.measureText(v).width > 400 && fs > 50) { fs -= 6; x.font = "800 " + fs + "px " + font; }
+      x.fillText(v, cx, cy - 22); x.globalAlpha = 0.9; x.font = "600 38px " + font; x.fillText(l, cx, cy + 62); x.globalAlpha = 1;
+    });
+    if (r.best[0]) {
+      x.font = "700 36px " + font; x.globalAlpha = 0.85; x.fillText(T("Le post du mois", "Post of the month"), W / 2, 950); x.globalAlpha = 1;
+      x.font = "800 52px " + font; lines(x, "« " + r.best[0].p.title + " »", 920).slice(0, 2).forEach((t, i) => x.fillText(t, W / 2, 1020 + i * 62));
+    }
+    x.globalAlpha = 0.85; x.font = "700 30px " + font; x.fillText(T("Fait avec PlanneRs", "Made with PlanneRs"), W / 2, 1290); x.globalAlpha = 1;
+    return cv;
+  }
+  A.shareReport = async function (month) {
+    const r = A.reportData(month), label = C.MONTHS[+month.slice(5, 7) - 1];
+    const text = "📅 Mon mois de " + label + " : " + r.pub.length + " publication" + (r.pub.length > 1 ? "s" : "") + (r.views ? ", " + short(r.views) + " vues" : "") + (r.igGain > 0 ? ", +" + r.igGain + " abonnés" : "") + ". Merci à vous 🙏\nOrganisé avec PlanneRs, l'outil libre pour planifier ses réseaux : " + SITE;
+    return shareImage(await reportImage(month), "bilan-" + month + ".png", text, "Partager mon mois", "Bilan de " + label);
+  };
   document.addEventListener("click", (e) => { const b = e.target.closest("[data-ach]"); if (b && !b.disabled) { A.lastFocus = b; share(b.dataset.ach); } });
 
   // Nouveau palier depuis la dernière visite : un message pour le fêter (la première fois, on note sans rien dire).

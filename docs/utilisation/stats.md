@@ -38,7 +38,7 @@ Une carte jours × heures compare chaque moment de publication à ta moyenne (vu
 
 ## Bilan du mois
 
-Le bouton **Bilan du mois** (en haut de Stats) résume un mois : nombre de publications et jours couverts, abonnés gagnés sur Instagram et Facebook, vues, likes et commentaires, répartition par réseau et par format, et les 5 meilleurs posts. Les flèches changent de mois. **Copier le résumé** donne un texte à coller dans un message ; **Imprimer ou PDF** ouvre l'impression du navigateur (choisis « Enregistrer en PDF ») pour l'envoyer à un client.
+Le bouton **Bilan du mois** (en haut de Stats) résume un mois : nombre de publications et jours couverts, abonnés gagnés sur Instagram et Facebook, vues, likes et commentaires, répartition par réseau et par format, et les 5 meilleurs posts. Les flèches changent de mois. **Copier le résumé** donne un texte à coller dans un message ; **Imprimer ou PDF** ouvre l'impression du navigateur (choisis « Enregistrer en PDF ») pour l'envoyer à un client. **Partager en image** fabrique une image du mois (1080 × 1350, le format portrait d'Instagram) : publications, jours actifs, vues, abonnés gagnés et le post du mois, avec un texte prêt à poster. Sur téléphone, **Partager** l'envoie dans l'app de ton choix ; rien ne se publie tout seul.
 
 ## Mise à jour
 

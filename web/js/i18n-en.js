@@ -1080,6 +1080,8 @@ window.I18N_EN = {
 "Reprise intemporelle": "Evergreen repost",
 "Les reprises intemporelles sont des copies de posts déjà publiés il y a plus de 2 mois : leur texte sera à relire et valider.": "Evergreen reposts are copies of posts published more than 2 months ago: their text will need review and approval.",
 "Contenu intemporel : le reproposer tout seul pour remplir les trous (tous les 2 mois au plus)": "Evergreen content: suggest it again to fill gaps (at most every 2 months)",
+"Partager en image": "Share as image",
+"Partager mon mois": "Share my month",
 "Republier": "Repost",
 "Programmer la republication": "Schedule the repost",
 "Dans 1 semaine": "In 1 week",

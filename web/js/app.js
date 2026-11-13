@@ -254,6 +254,7 @@
     if ((b = g("[data-setup-hide]"))) { S.state.settings.setupHidden = true; await S.saveSettings(S.state.settings); A.render(); U.toast("« Bien démarrer » masqué", { label: "Annuler", fn: async () => { S.state.settings.setupHidden = false; await S.saveSettings(S.state.settings); A.render(); } }); return; }
     if ((b = g("[data-href]"))) { window.open(b.dataset.href, "_blank", "noopener"); return; }
     if ((b = g("[data-settab]"))) { if (b.dataset.settab === "slots" && !S.state.settings.slotsSet) { S.state.settings.slotsSet = true; S.saveSettings(S.state.settings); } A.setTab = b.dataset.settab; A.setQ = ""; if (route() !== "settings") location.hash = "#settings"; else A.render(); return; }
+    if ((b = g("[data-report-share]"))) { A.lastFocus = b; A.shareReport(b.dataset.reportShare); return; }
     if ((b = g("[data-rewiz]"))) { A.wizard(b.dataset.rewiz, 99); return; }
     if ((b = g("[data-conn]"))) { A.openConn(b.dataset.conn); return; }
     if ((b = g("[data-pend]"))) {
