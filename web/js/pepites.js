@@ -74,7 +74,7 @@
   });
   document.addEventListener("click", async (e) => {
     const del = e.target.closest("[data-pep-del]"), ref = e.target.closest("[data-pep-refresh]"), mix = e.target.closest("[data-pep-remix]"), tab = e.target.closest("[data-stattab]");
-    if (tab) { A.statTab = tab.dataset.stattab === "pep" ? "pep" : ""; A.render(); return; }
+    if (tab) { A.statTab = ["pep", "ach"].includes(tab.dataset.stattab) ? tab.dataset.stattab : ""; A.render(); return; }
     if (del) { const l = rivals(); l.splice(+del.dataset.pepDel, 1); await saveRivals(l); A.render(); return; }
     if (ref) {
       if (S.mode !== "api") { U.toast("Mode démo : pépites d'exemple"); return; }

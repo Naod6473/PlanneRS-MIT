@@ -546,6 +546,25 @@ table.list tr.clk:hover td{background:var(--panel2)}
 .phone .ph-media{aspect-ratio:4/5;border-radius:10px;background:var(--panel2);overflow:hidden;display:grid;place-items:center;color:var(--ink3)}
 .phone .ph-media img{width:100%;height:100%;object-fit:cover}
 .phone .ph-cap{font-size:12px;white-space:pre-wrap;margin-top:8px;max-height:150px;overflow:auto}
+/* ---------- Succès ---------- */
+.ach-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,360px),1fr));gap:14px;margin-top:14px}
+.ach-g{display:flex;flex-direction:column;gap:14px;border-top:4px solid var(--ach)}
+.ach-main{display:flex;gap:14px;align-items:center}
+.ach-big{border:0;background:transparent;padding:0;cursor:pointer;flex:none;transition:transform .2s cubic-bezier(.34,1.56,.64,1)}
+.ach-big:hover{transform:rotate(-6deg) scale(1.05)}span.ach-big{cursor:default}
+.ach-b text{font-family:var(--f)}
+.ach-txt{display:flex;flex-direction:column;gap:4px;min-width:0;align-items:flex-start}
+.ach-txt .eyebrow{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)}
+.ach-txt b{font-size:16px}
+.ach-next{display:flex;flex-direction:column;gap:4px;width:100%}
+.ach-bar{height:6px;border-radius:6px;background:var(--line);overflow:hidden;width:100%}.ach-bar i{display:block;height:100%;background:var(--ach)}
+.ach-lvs{display:flex;flex-wrap:wrap;gap:6px}
+.ach-lv{border:0;background:transparent;padding:0;cursor:pointer;opacity:.95;transition:transform .2s cubic-bezier(.34,1.56,.64,1)}
+.ach-lv:disabled{cursor:default;opacity:.7}.ach-lv.got:hover{transform:scale(1.12) rotate(-8deg)}
+.ach-share img{width:100%;height:auto;border-radius:14px;box-shadow:var(--card-sh)}
+.ach-share label{display:flex;flex-direction:column;gap:6px;font-weight:600;font-size:13px}
+.ach-share textarea{border:1px solid var(--line2);border-radius:10px;padding:8px 10px;background:var(--panel);font-weight:400}
+
 /* ---------- Recherche, toasts ---------- */
 .palette{position:fixed;left:50%;top:12vh;transform:translateX(-50%);width:min(560px,94vw);z-index:50;background:var(--panel);border:1px solid var(--line2);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
 .palette input{width:100%;padding:14px 16px;border:0;border-bottom:1px solid var(--line);background:transparent;font-size:16px;outline:none}

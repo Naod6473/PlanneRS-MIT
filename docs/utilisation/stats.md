@@ -9,6 +9,8 @@ updated: 2026-11-11
 
 # Stats
 
+L'écran a trois onglets : **Mes chiffres** (cette page), **[Succès](succes.md)** (tes paliers à partager) et **[Pépites](pepites.md)** (les comptes que tu suis).
+
 ## Ce qui est affiché
 
 À gauche, les **comptes** connectés (Instagram, Page Facebook, chaîne YouTube) : clique sur l'un d'eux. En haut, la **période** : 7, 30 ou 90 jours. Chaque carte donne le total de la période, l'écart avec la période d'avant (▲ en vert, ▼ en rouge, survole pour voir l'ancien chiffre) et la courbe jour par jour.

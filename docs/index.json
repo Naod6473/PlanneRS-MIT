@@ -794,6 +794,30 @@
       ]
     },
     {
+      "path": "utilisation/succes.md",
+      "title": "Succès",
+      "description": "Tes paliers de vues, d'abonnés, de régularité, de publications et de réactions, à fêter et à partager en image. Rien à débloquer.",
+      "category": "Utilisation",
+      "tags": [
+        "succès",
+        "paliers",
+        "gamification",
+        "partager",
+        "vues",
+        "abonnés",
+        "régularité"
+      ],
+      "order": "4.6",
+      "updated": "2026-11-13",
+      "headings": [
+        {
+          "level": 2,
+          "text": "Partager",
+          "anchor": "partager"
+        }
+      ]
+    },
+    {
       "path": "utilisation/activite-et-reglages.md",
       "title": "Activité et réglages",
       "description": "Le journal d'activité, l'état des comptes et du robot, puis chaque rubrique des réglages (comptes, stockage, créneaux, règles, notifications, espace).",

@@ -313,6 +313,49 @@
     return { score, blocked: blocks.length > 0, issues: blocks.concat(warns), good: out, hints };
   }
 
+  // Succès : des paliers atteints (vues, abonnés, régularité, publications, réactions), rien à débloquer,
+  // juste de quoi fêter et partager. Tout est recalculé à partir des posts et des statistiques relevées.
+  const ACH = [
+    { g: "views", title: "Vues", unit: "vues sur une publication", one: "vue sur une publication", steps: [100, 500, 1000, 5000, 10000, 100000], color: "#6D28D9" },
+    { g: "followers", title: "Abonnés", unit: "abonnés", one: "abonné", steps: [100, 500, 1000, 5000, 10000, 50000], color: "#DB2777" },
+    { g: "streak", title: "Régularité", unit: "semaines d'affilée avec une publication", steps: [2, 4, 8, 12, 26, 52], color: "#EA580C" },
+    { g: "posts", title: "Publications", unit: "publications", one: "publication", steps: [1, 10, 25, 50, 100, 250, 500], color: "#0E9F6E" },
+    { g: "likes", title: "Réactions", unit: "j'aime et commentaires sur une publication", steps: [50, 100, 500, 1000, 5000], color: "#2563EB" },
+  ];
+  const weekOf = (d) => { const x = parseYmd(d); return addDays(d, -((x.getDay() + 6) % 7)); };
+  function achievements(posts, stats, now) {
+    const t = String(now || nowStamp()).slice(0, 10);
+    const st = stats || {}, pub = (posts || []).filter((p) => !p.parent && p.status === "published" && p.date).sort((a, b) => (at(a) || a.date).localeCompare(at(b) || b.date));
+    const media = [].concat(...["instagram", "facebook", "youtube", "tiktok"].map((n) => ((st[n] || {}).media || []).map((m) => Object.assign({ net: n }, m))));
+    const best = (f) => media.reduce((b, m) => (f(m) > (b ? f(b) : -1) ? m : b), null);
+    const bv = best((m) => +m.views || 0), bl = best((m) => (+m.likes || 0) + (+m.comments || 0));
+    const fol = Math.max(0, ...["instagram", "facebook", "youtube"].map((n) => +(((st[n] || {}).account || {}).followers) || 0));
+    // Semaines avec au moins une publication : meilleure série, et série en cours (cette semaine ou la précédente)
+    const weeks = [...new Set(pub.map((p) => weekOf(p.date)))].sort();
+    let run = 0, bestRun = 0, bestEnd = "", prev = "";
+    weeks.forEach((w) => { run = prev && addDays(prev, 7) === w ? run + 1 : 1; if (run > bestRun) { bestRun = run; bestEnd = w; } prev = w; });
+    const tw = weekOf(t), last = weeks[weeks.length - 1];
+    const current = last === tw || last === addDays(tw, -7) ? run : 0;
+    const val = { views: bv ? +bv.views || 0 : 0, likes: bl ? (+bl.likes || 0) + (+bl.comments || 0) : 0, followers: fol, posts: pub.length, streak: bestRun };
+    const when = {
+      views: (n) => (bv && val.views >= n ? String(bv.at || "").slice(0, 10) : ""),
+      likes: (n) => (bl && val.likes >= n ? String(bl.at || "").slice(0, 10) : ""),
+      followers: (n) => { const h = (st.history || []).find((x) => Math.max(+x.ig || 0, +x.fb || 0) >= n); return h ? h.d : fol >= n ? t : ""; },
+      posts: (n) => (pub[n - 1] ? pub[n - 1].date : ""),
+      streak: (n) => (bestRun >= n ? addDays(bestEnd, -7 * (bestRun - n)) : ""),
+    };
+    const groups = ACH.map((a) => {
+      const v = val[a.g], levels = a.steps.map((n) => ({ key: a.g + ":" + n, n, got: v >= n, at: v >= n ? when[a.g](n) : "" }));
+      const next = levels.find((l) => !l.got) || null, prevN = levels.filter((l) => l.got).slice(-1)[0];
+      const top = a.g === "views" ? bv : a.g === "likes" ? bl : null;
+      return { g: a.g, title: a.title, unit: a.unit, one: a.one || a.unit, color: a.color, value: v, levels, next, top: prevN || null,
+        progress: next ? Math.max(0, Math.min(1, v / next.n)) : 1,
+        current: a.g === "streak" ? current : undefined, from: top ? { url: top.url || "", caption: String(top.caption || "").slice(0, 80), net: top.net } : null };
+    });
+    return { groups, unlocked: [].concat(...groups.map((g) => g.levels.filter((l) => l.got).map((l) => l.key))), total: ACH.reduce((n, a) => n + a.steps.length, 0) };
+  }
+  function achText(g, n) { return n.toLocaleString("fr-FR").replace(/\u202f|\u00a0/g, " ") + " " + (n > 1 ? g.unit : g.one); }
+
   // Équipe d'agents : un rôle par métier, avec ses consignes et qui le tient (Claude par MCP, clé API, ou toi).
   // Seuls les rôles d'écriture (script, légende) peuvent tourner tout seuls avec la clé API.
   const CREW = [
@@ -344,6 +387,6 @@
   function nowStamp(d) { d = d || new Date(); return ymd(d) + "T" + pad(d.getHours()) + ":" + pad(d.getMinutes()); }
 
   const api = { STATUS, FORMATS, STAGES, STEPS, step, alertOf, pad, ymd, parseYmd, addDays, mondayOf, toMin, at, longDate, shortDay, MONTHS, DAYS, setLang,
-    displayStatus, missed, willSend, hashtags, checks, mediaChecks, slotOf, nowStamp, fold, seriesOf, matchQuery, parseCsv, toCsv, manualNets, autoNets, pendingManual, prefillUrl, titleFor, capFor, TEXT_MAX, utm, textOut, PROD_STEPS, inFabrique, prodOf, CREW, CREW_WHO, crewOf, crewWork, reviewPile, reviewOf, needsFix };
+    displayStatus, missed, willSend, hashtags, checks, mediaChecks, slotOf, nowStamp, fold, seriesOf, matchQuery, parseCsv, toCsv, manualNets, autoNets, pendingManual, prefillUrl, titleFor, capFor, TEXT_MAX, utm, textOut, PROD_STEPS, inFabrique, prodOf, CREW, CREW_WHO, crewOf, crewWork, reviewPile, reviewOf, needsFix, achievements, achText };
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.Core = api;
 })(typeof self !== "undefined" ? self : this);
