@@ -99,3 +99,22 @@ test("Worker : version à ta sauce, seconde tentative si trop proche de l'origin
   const pr = versionPrompt(r, { subject: "les mots de passe", angle: "qa", format: "carousel" }, {});
   assert.match(pr, /Question de ta communauté/); assert.match(pr, /carrousel/); assert.match(pr, /Scénariste|script/);
 });
+
+test("même sujet : le sujet repris ne compte pas, le contenu collé est comparé, Claude reçoit le contenu", () => {
+  const r = R.guessRecipe(SRC);
+  assert.equal(R.sourceSubject(r), "3 erreurs qui ratent ta baguette");
+  const subject = "3 erreurs qui ratent ta baguette";
+  const sauce = { same: true, subject, material: "Première erreur : une eau trop chaude qui tue la levure. Deuxième erreur : pas assez de repos." };
+  const v = { title: subject + " : vrai ou faux ?", hook: "Ta baguette est plate ? Voilà pourquoi.", shots: [{ dur: 5, screen: subject, voice: "L'eau brûlante, c'est fini : vise 25 degrés pour garder la levure en vie." }], caption: "Le repos change tout." };
+  assert.ok(R.checkOrig(r, sauce, v) >= R.ORIG_MIN, String(R.checkOrig(r, sauce, v)));
+  assert.ok(R.checkOrig(r, Object.assign({}, sauce, { same: false }), v) < R.checkOrig(r, sauce, v));
+  const copied = Object.assign({}, v, { shots: [{ dur: 5, screen: "x", voice: sauce.material }] });
+  assert.ok(R.checkOrig(r, sauce, copied) < R.ORIG_MIN);
+  const p = R.postOf(v, r, sauce, {});
+  assert.equal(p.remix.same, true);
+  assert.match(p.note, /Même sujet[\s\S]*Contenu de l'original/);
+  const d = R.draftVersion(r, { same: true, angle: "top" });
+  assert.match(d.title, /baguette/);
+  const pr = versionPrompt(r, sauce, {});
+  assert.match(pr, /Même sujet que l'original/); assert.match(pr, /<contenu_original>[\s\S]*eau trop chaude/);
+});

@@ -17,13 +17,23 @@
   const uid = (p) => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
   // Part du texte qui ne reprend pas l'original : on compte les suites de 3 mots déjà présentes dans la source.
-  function originality(source, text) {
+  // ignore : texte dont les suites de mots ne comptent pas (le sujet repris tel quel, en mode « même sujet »).
+  function originality(source, text, ignore) {
     const s = words(source), t = words(text);
     if (t.length < 3 || s.length < 3) return 100;
     const grams = (w) => { const out = []; for (let i = 0; i + 2 < w.length; i++) out.push(w[i] + " " + w[i + 1] + " " + w[i + 2]); return out; };
-    const have = new Set(grams(s)), mine = grams(t);
+    const skip = new Set(grams(words(ignore))), have = new Set(grams(s)), mine = grams(t).filter((g) => !skip.has(g));
+    if (!mine.length) return 100;
     const shared = mine.filter((g) => have.has(g)).length;
     return Math.max(0, Math.min(100, Math.round(100 * (1 - shared / mine.length))));
+  }
+  // Sujet de l'original : le titre (tes succès), sinon la première ligne du texte, sans hashtags.
+  const sourceSubject = (recipe) => { const f = (recipe && recipe.from) || {}; return clip(f.title || String(f.text || "").split("\n")[0].replace(/[#@][\p{L}\p{N}_.]+/gu, "").replace(/\([^)]*\)/g, "").replace(/\s+/g, " ").trim(), 120); };
+  // Note d'originalité d'une version : comparée au texte d'origine ET au contenu collé (transcription, notes).
+  const MAT_MAX = 6000;
+  function checkOrig(recipe, sauce, version) {
+    sauce = sauce || {};
+    return originality([((recipe && recipe.from) || {}).text || "", clip(sauce.material, MAT_MAX)].join("\n"), versionText(version), sauce.same ? sauce.subject : "");
   }
   // Tout le texte d'une version : titre, accroche, plans, légende.
   const versionText = (v) => [v && v.title, v && v.hook, ...((v && v.shots) || []).map((x) => [x.screen, x.voice].join(" ")), v && v.caption].filter(Boolean).join("\n");
@@ -92,7 +102,7 @@
   const ENDS = { "Question au public": "Et toi, tu en penses quoi ? Dis-le en commentaire !", "Appel à commenter": "Dis-moi en commentaire ce que tu veux voir la prochaine fois !" };
   function draftVersion(recipe, sauce) {
     sauce = sauce || {};
-    const s = clip(sauce.subject || (recipe.from && recipe.from.title) || "ton sujet", 120).trim() || "ton sujet";
+    const s = clip(sauce.subject || (sauce.same ? sourceSubject(recipe) : "") || (recipe.from && recipe.from.title) || "ton sujet", 120).trim() || "ton sujet";
     const angle = T[sauce.angle] ? sauce.angle : "top", t = T[angle], fmt = sauce.format === "carousel" ? "carousel" : "reel";
     const max = Math.max(10, Math.min(90, +sauce.maxSec || 30));
     const parts = (recipe.structure && recipe.structure.length ? recipe.structure : structureFor("", fmt)).slice(0, 8);
@@ -158,7 +168,7 @@
   // Post de La Fabrique créé à partir d'une version : storyboard signé, recette et lien d'origine en note.
   function postOf(version, recipe, sauce, opts) {
     opts = opts || {};
-    const f = recipe.from || {}, orig = originality(f.text, versionText(version));
+    const f = recipe.from || {}, orig = checkOrig(recipe, sauce, version), mat = clip(sauce && sauce.material, MAT_MAX).trim();
     if (orig < ORIG_MIN) throw new Error("Trop proche de l'original (" + orig + " % original, " + ORIG_MIN + " % au moins) : change d'angle ou réécris les plans.");
     const now = opts.now || "", by = opts.by || "PlanneRs · modèle";
     return {
@@ -166,12 +176,13 @@
       date: null, time: null, caption: version.caption || "", captionValidated: false, media: [], status: "draft", stage: "idea",
       note: ["Ma version · recette « " + recipe.name + " »" + (f.url ? "\nInspiration : " + f.url : "") + (f.handle ? " (@" + f.handle + (f.score ? ", ×" + String(f.score).replace(".", ",") : "") + ")" : ""),
         "Accroche : " + (recipe.hook && recipe.hook.type) + " · Ressort : " + recipe.spring + " · Fin : " + recipe.ending,
-        "Angle : " + (ANGLES[version.angle] || version.angle) + " · Originalité : " + orig + " %"].join("\n"),
+        "Angle : " + (ANGLES[version.angle] || version.angle) + (sauce && sauce.same ? " · Même sujet que l'original" : "") + " · Originalité : " + orig + " %",
+        mat ? "\nContenu de l'original (à reformuler, ne pas recopier) :\n" + mat.slice(0, 3000) : ""].filter(Boolean).join("\n").slice(0, 6000),
       prod: { maxSec: version.format === "carousel" ? undefined : Math.max(10, Math.min(90, +(sauce && sauce.maxSec) || 30)), shots: version.shots, steps: { script: { state: version.draft ? "doing" : "done", by, at: now, note: clip((version.draft ? "Modèle à compléter (les [crochets]) : " : "Ma version : ") + (version.hook || version.title), 200) } } },
-      remix: { recipeId: recipe.id, recipeName: recipe.name, angle: version.angle, originality: orig, sourceUrl: f.url || "", sourceScore: f.score || 0, at: now },
+      remix: { recipeId: recipe.id, recipeName: recipe.name, angle: version.angle, same: !!(sauce && sauce.same), originality: orig, sourceUrl: f.url || "", sourceScore: f.score || 0, at: now },
     };
   }
 
-  const api = { ANGLES, FORMATS, ORIG_MIN, MAX_RECIPES, originality, versionText, guessRecipe, cleanRecipe, draftVersion, fitDurations, cleanVersion, mixRecipes, keep, ranking, ownTops, sortBook, postOf, median };
+  const api = { MAT_MAX, sourceSubject, checkOrig, ANGLES, FORMATS, ORIG_MIN, MAX_RECIPES, originality, versionText, guessRecipe, cleanRecipe, draftVersion, fitDurations, cleanVersion, mixRecipes, keep, ranking, ownTops, sortBook, postOf, median };
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.Recette = api;
 })(typeof self !== "undefined" ? self : this);

@@ -1,6 +1,6 @@
 ---
 title: Ma version
-description: Reprendre la recette d'une publication qui a marché (la tienne ou celle d'un compte suivi), jamais son contenu, et la refaire à ta sauce, avec une note d'originalité, un carnet de recettes et la boucle de tes résultats.
+description: Reprendre une publication qui a marché (la tienne ou celle d'un compte suivi), sur le même sujet ou un autre, et la refaire à ta sauce, sans image ni phrase recopiée, avec une note d'originalité, un carnet de recettes et la boucle de tes résultats.
 category: Utilisation
 tags: [ma version, recette, inspiration, remix, originalité, carnet, pépites, storyboard]
 order: 4.55
@@ -9,7 +9,7 @@ updated: 2026-11-13
 
 # Ma version
 
-Une publication marche très bien, chez un compte que tu suis ou chez toi. **Ma version** en garde la recette, pas le contenu, et la refait à ta sauce. Ce n'est pas un bouton « cloner » : le texte, les images et l'idée exacte de l'original ne sont jamais repris.
+Une publication marche très bien, chez un compte que tu suis ou chez toi. **Ma version** en garde la recette et la refait à ta sauce : sur le même sujet, avec ses informations réécrites à ta façon, ou sur un autre sujet. Ce n'est pas un bouton « cloner » : aucune image ni phrase de l'original n'est reprise telle quelle.
 
 On l'ouvre de trois endroits :
 
@@ -35,7 +35,9 @@ Avec la clé de l'API Claude (secret `ANTHROPIC_API_KEY`, voir [Assistants IA](.
 
 ## 2. Ta sauce
 
-- **Ton sujet** : ce dont tu veux parler.
+- **Le sujet** : **Le même que l'original** (par défaut pour une pépite) ou **Un autre sujet**.
+  - Même sujet : le sujet est prérempli, et tu peux coller dans **Ce que dit l'original** la transcription de la vidéo ou tes notes. Claude reprend les informations et les idées, réécrites avec tes mots, dans ton angle et ton ton ; les chiffres pas sûrs sont marqués [à vérifier]. Sans rien coller, il part du texte de la publication.
+  - Autre sujet : tu écris ton sujet, seule la recette est gardée.
 - **L'angle**, pour réarranger la recette : Mythe ou réalité, Avant / après, Top 3 perso, Question de ta communauté.
 - **Le format** : Reel ou carrousel (une recette de Reel peut devenir un carrousel, et l'inverse).
 - **La durée max** : 15, 30, 45 ou 60 secondes.
@@ -46,7 +48,7 @@ Sont appliqués tout seuls : les consignes du Scénariste de [l'Équipe](la-fabr
 
 **Préparer ma version** écrit un storyboard plan par plan (texte à l'écran, voix) et une légende. Chaque case se retouche directement dans l'atelier. **Autre angle** propose la même recette avec l'angle suivant.
 
-La **note d'originalité** compte la part de ta version qui ne reprend pas l'original (par suites de trois mots). Sous **80 %**, **Envoyer à La Fabrique** est bloqué : réécris les cases trop proches, ou change d'angle.
+La **note d'originalité** compte la part de ta version qui ne reprend pas l'original mot pour mot (par suites de trois mots), en comparant au texte de la publication et à ce que tu as collé. Le sujet repris lui-même ne compte pas. Sous **80 %**, **Envoyer à La Fabrique** est bloqué : réécris les cases trop proches, ou change d'angle.
 
 Sans clé API, la version part d'un modèle avec des [crochets] à remplir : l'étape Script reste « en cours » dans La Fabrique tant que tu ne l'as pas complétée.
 
@@ -54,7 +56,7 @@ Sans clé API, la version part d'un modèle avec des [crochets] à remplir : l'�
 
 - le storyboard, signé « Claude · Scénariste » quand Claude l'a écrit ;
 - la légende proposée, à relire et valider comme d'habitude ;
-- en note privée : la recette, l'angle, la note d'originalité et le lien d'origine.
+- en note privée : la recette, l'angle, la note d'originalité, le lien d'origine et, en mode même sujet, le contenu collé (pour mémoire).
 
 La recette est gardée dans ton carnet au passage.
 

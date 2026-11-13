@@ -523,7 +523,7 @@ async function api(request, env, path, url, auth) {
     const st = Object.assign({}, DEFAULT_SETTINGS, (await db.getKV(env, "settings")) || {});
     let version = null, why = "";
     if (env.ANTHROPIC_API_KEY) { try { version = await maversion.makeVersion(aiClient(env), recipe, sauce, st); } catch (e) { why = e.message; } }
-    if (!version) { version = Recette.draftVersion(recipe, sauce); version.originality = Recette.originality((recipe.from || {}).text, Recette.versionText(version)); }
+    if (!version) { version = Recette.draftVersion(recipe, sauce); version.originality = Recette.checkOrig(recipe, sauce, version); }
     return json({ version, ai: !version.draft, why });
   }
   if (path === "stats" && m === "GET") return json((await db.getKV(env, "stats")) || {});

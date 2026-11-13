@@ -30,11 +30,11 @@
   A.openVersion = async function (src) {
     const st = S.state.settings || {};
     M = { src, recipe: src.recipe || null, ai: false, why: "", version: null, busy: !src.recipe, saved: !!(src.recipe && book().some((r) => r.id === src.recipe.id)), focus: document.activeElement,
-      sauce: { subject: "", angle: "myth", format: "reel", maxSec: (st.crew && st.crew.maxSec) || 30 } };
+      sauce: { same: !!src.item, material: "", subject: "", angle: "myth", format: "reel", maxSec: (st.crew && st.crew.maxSec) || 30 } };
     let el = document.getElementById("mv");
     if (!el) { el = document.createElement("div"); el.id = "mv"; el.className = "mv"; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", "Ma version"); document.body.appendChild(el); }
     el.hidden = false; document.body.style.overflow = "hidden";
-    if (M.recipe) M.sauce.format = M.recipe.format || "reel";
+    if (M.recipe) { M.sauce.format = M.recipe.format || "reel"; if (M.sauce.same) M.sauce.subject = R.sourceSubject(M.recipe); }
     draw();
     if (!M.recipe) {
       const one = M;
@@ -45,6 +45,7 @@
           one.recipe = r.recipe; one.ai = r.ai; one.why = r.why || "";
         }
         one.sauce.format = one.recipe.format || "reel";
+        if (one.sauce.same && !one.sauce.subject) one.sauce.subject = R.sourceSubject(one.recipe);
       } catch (e) { one.error = e.message; }
       one.busy = false;
       if (M === one) draw();
@@ -78,7 +79,7 @@
       '<span class="muted small">' + esc(it ? (it.kind || "") + " · " + it.metric + " " + it.unit : M.recipe && M.recipe.mix ? "Mélange de deux recettes" : M.src.type === "post" ? "Publié" + (p.date ? " le " + C.shortDay(p.date) : "") : "") + "</span></div>" +
       (score && M.src.type !== "post" ? '<span class="mv-x">' + xs(score) + "</span>" : "") + "</div>" +
       (text ? '<p class="mv-quote" data-noi18n>« ' + esc(String(text).split("\n")[0].slice(0, 160)) + " »</p>" : "") +
-      '<span class="muted small">' + (M.src.type === "post" ? "On garde ce qui a marché chez toi, sur un nouveau sujet." : "Le lien d'origine reste en note privée. Rien de son texte ni de ses images n'est repris.") + "</span></div>";
+      '<span class="muted small">' + (M.src.type === "post" ? "On garde ce qui a marché chez toi, sur un nouveau sujet." : "Le lien d'origine reste en note privée. Aucune image ni phrase de l'original n'est reprise telle quelle.") + "</span></div>";
   }
   function recipeCard() {
     if (M.busy) return '<div class="mv-card mv-grow"><h2 class="mv-h">La recette</h2><div class="mv-wait"><span class="mv-spin" aria-hidden="true"></span>' + (S.mode === "api" ? "Claude lit la recette…" : "Lecture de la recette…") + "</div></div>";
@@ -95,11 +96,14 @@
       '<span class="grow"></span><button class="btn' + (M.saved ? " mv-saved" : "") + '" data-mv-keep aria-pressed="' + M.saved + '">' + icon(M.saved ? "check" : "bookmark") + (M.saved ? "Gardée dans ton carnet" : "Garder dans mon carnet") + "</button></div>";
   }
   function sauce() {
-    const s = M.sauce, seg = (name, list, cur) => '<div class="mv-seg" role="group" aria-label="' + esc(name) + '">' + list.map(([k, l]) => '<button data-mv-' + (name === "Format" ? "fmt" : "max") + '="' + k + '" aria-pressed="' + (String(cur) === String(k)) + '">' + esc(l) + "</button>").join("") + "</div>";
+    const s = M.sauce, seg = (name, list, cur) => '<div class="mv-seg" role="group" aria-label="' + esc(name) + '">' + list.map(([k, l]) => '<button data-mv-' + (name === "Format" ? "fmt" : name === "Sujet" ? "same" : "max") + '="' + k + '" aria-pressed="' + (String(cur) === String(k)) + '">' + esc(l) + "</button>").join("") + "</div>";
     const st = S.state.settings || {}, crew = C.crewOf(st).find((r) => r.key === "script");
     const applied = ["les consignes du " + crew.name + " de l'Équipe" + (crew.custom ? "" : " (par défaut)"), st.workspace && st.workspace.name ? "ton compte « " + st.workspace.name + " »" : "", (st.rules && st.rules.maxHashtags ? st.rules.maxHashtags + " hashtags au plus" : ""), "la durée max choisie"].filter(Boolean);
     return '<section class="mv-card mv-sauce"><div class="mv-row"><h2 class="mv-h">Ta sauce</h2><span class="mv-step s2">2</span></div>' +
-      '<label class="mv-field">Ton sujet<input id="mv-subject" data-noi18n value="' + esc(s.subject) + '" placeholder="Ex. : les mots de passe au bureau" maxlength="120"></label>' +
+      '<div class="mv-col"><span class="mv-lbl">Sujet</span>' + seg("Sujet", [["same", "Le même que l'original"], ["new", "Un autre sujet"]], s.same ? "same" : "new") + "</div>" +
+      '<label class="mv-field">' + (s.same ? "Le sujet repris" : "Ton sujet") + '<input id="mv-subject" data-noi18n value="' + esc(s.subject) + '" placeholder="' + (s.same ? "Le sujet de l'original" : "Ex. : les mots de passe au bureau") + '" maxlength="120"></label>' +
+      (s.same ? '<label class="mv-field"><span>Ce que dit l\'original <span class="muted small">(facultatif)</span></span><textarea id="mv-material" data-noi18n rows="4" maxlength="' + R.MAT_MAX + '" placeholder="Colle la transcription ou tes notes : les infos sont reprises, avec tes mots.">' + esc(s.material) + "</textarea>" +
+        '<span class="muted small mv-note">On reprend le sujet et les infos, réécrits à ta façon. Pas d\'image ni de phrase de l\'original : la note d\'originalité compare aussi ce texte.</span></label>' : "") +
       '<div class="mv-col"><span class="mv-lbl">Réarranger avec l\'angle</span><div class="mv-chips">' + ORDER.map((k) => '<button class="mv-chip" data-mv-angle="' + k + '" aria-pressed="' + (s.angle === k) + '">' + esc(R.ANGLES[k]) + "</button>").join("") + "</div></div>" +
       '<div class="mv-col"><span class="mv-lbl">Format</span>' + seg("Format", [["reel", "Reel"], ["carousel", "Carrousel"]], s.format) + "</div>" +
       (s.format === "reel" ? '<div class="mv-col"><span class="mv-lbl">Durée max</span>' + seg("Durée max", [[15, "15 s"], [30, "30 s"], [45, "45 s"], [60, "60 s"]], s.maxSec) + "</div>" : "") +
@@ -123,7 +127,7 @@
       '<button class="btn primary" data-mv-send' + (ok ? "" : ' disabled aria-describedby="mv-low"') + ">" + icon("send") + "Envoyer à La Fabrique</button></div>" +
       (ok ? "" : '<div class="banner warn" id="mv-low">Trop proche de l\'original : ' + o + " % original, " + R.ORIG_MIN + " % au moins. Réécris les cases en gris, ou change d'angle.</div>") + "</section>";
   }
-  function orig() { return M && M.version ? R.originality(((M.recipe || {}).from || {}).text, R.versionText(M.version)) : 100; }
+  function orig() { return M && M.version ? R.checkOrig(M.recipe, M.sauce, M.version) : 100; }
   function draw() {
     const el = document.getElementById("mv"); if (!el || !M) return;
     const steps = '<ol class="mv-steps"><li class="s1"><span>1</span>La recette</li><li class="s2"><span>2</span>Ta sauce</li><li class="s3"><span>3</span>Ta version</li></ol>';
@@ -192,6 +196,7 @@
     if (g("[data-mv-close]")) { close(); return; }
     if ((b = g("[data-mv-angle]"))) { M.sauce.angle = b.dataset.mvAngle; draw(); return; }
     if ((b = g("[data-mv-fmt]"))) { M.sauce.format = b.dataset.mvFmt; draw(); return; }
+    if ((b = g("[data-mv-same]"))) { const same = b.dataset.mvSame === "same"; if (same !== M.sauce.same) { M.sauce.same = same; M.sauce.subject = same ? R.sourceSubject(M.recipe) : ""; } draw(); return; }
     if ((b = g("[data-mv-max]"))) { M.sauce.maxSec = +b.dataset.mvMax; draw(); return; }
     if (g("[data-mv-make]")) { make(); return; }
     if (g("[data-mv-other]")) { M.sauce.angle = ORDER[(ORDER.indexOf(M.sauce.angle) + 1) % ORDER.length]; make(); return; }
@@ -201,6 +206,7 @@
   document.addEventListener("input", (e) => {
     if (!M) return;
     if (e.target.id === "mv-subject") { M.sauce.subject = e.target.value; return; }
+    if (e.target.id === "mv-material") { M.sauce.material = e.target.value; return; }
     const ed = e.target.closest && e.target.closest("[data-mv-edit]");
     if (!ed || !M.version) return;
     const k = ed.dataset.mvEdit, txt = ed.innerText.trim();
@@ -218,7 +224,7 @@
   A.versionHtml = function () {
     const rk = rank(), list = R.sortBook(book(), rk), tops = R.ownTops(rows()).filter((r) => !r.post.remix).slice(0, 6);
     const pep = ((S.mode === "demo" ? A.pepDemo : S.state.pepites) || {}).top || [];
-    const intro = '<section class="panel mv-intro"><div><h2>Ma version</h2><p class="muted">Garde la recette d\'une publication qui a marché (accroche, structure, format, ressort, fin), jamais son contenu, et refais-la à ta sauce. Sous 80 % d\'originalité, l\'envoi est bloqué.</p></div>' +
+    const intro = '<section class="panel mv-intro"><div><h2>Ma version</h2><p class="muted">Garde la recette d\'une publication qui a marché (accroche, structure, format, ressort, fin) et refais-la à ta sauce : sur le même sujet, avec ses infos réécrites à ta façon, ou sur un autre. Sous 80 % d\'originalité, l\'envoi est bloqué.</p></div>' +
       '<div class="mv-srcs"><button class="btn" data-stattab="pep">' + icon("spark") + "Pépites des comptes suivis" + (pep.length ? " (" + pep.length + ")" : "") + "</button></div></section>";
     const recipeCardHtml = (r) => {
       const s = rk.byRecipe[r.id], f = r.from || {};

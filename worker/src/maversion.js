@@ -6,7 +6,7 @@ import R from "../../web/js/recette.js";
 import { MODEL, textOf } from "./rewrite.js";
 import { jsonOf } from "./agent.js";
 
-export const SYSTEM = "Tu aides un créateur de contenu à reprendre la recette d'une publication qui a marché, jamais son contenu. La recette, c'est la forme : type d'accroche, structure dans le temps, format, ressort émotionnel, façon de finir. Tu ne recopies ni phrase, ni image, ni idée exacte. Tu n'inventes ni chiffre ni source : si une information manque, tu l'écris entre crochets [à vérifier]. Tu écris en français.";
+export const SYSTEM = "Tu aides un créateur de contenu à reprendre la recette d'une publication qui a marché, jamais son contenu. La recette, c'est la forme : type d'accroche, structure dans le temps, format, ressort émotionnel, façon de finir. Tu ne recopies ni phrase ni image. Si le créateur garde le même sujet, tu peux reprendre les informations et les idées de l'original, toujours reformulées avec ses mots et dans son angle ; sinon tu changes de sujet. Tu n'inventes ni chiffre ni source : si une information manque, tu l'écris entre crochets [à vérifier]. Tu écris en français.";
 
 const ask = async (client, content, max) => textOf(await client.beta.messages.create({
   model: MODEL, max_tokens: max || 4000, betas: ["server-side-fallback-2026-07-01"], fallbacks: "default", output_config: { effort: "low" },
@@ -32,7 +32,9 @@ export function versionPrompt(recipe, sauce, settings, tooClose) {
   const max = Math.max(10, Math.min(90, +sauce.maxSec || 30));
   return [
     brand ? "Mon compte : " + brand + "." : "", crew && crew.brief ? "Mes consignes de script : " + crew.brief : "",
-    "Mon sujet : " + (sauce.subject || "[à choisir]") + ".", "Angle : " + (R.ANGLES[sauce.angle] || R.ANGLES.top) + ".",
+    sauce.same ? "Même sujet que l'original : " + (sauce.subject || R.sourceSubject(recipe)) + ". Reprends les informations et les idées utiles de l'original, mais avec tes mots, dans l'ordre de mon angle et dans mon ton : aucune phrase recopiée. Vérifie les chiffres ; s'ils ne sont pas sûrs, écris [à vérifier]." : "Mon sujet : " + (sauce.subject || "[à choisir]") + ".",
+    sauce.same && String(sauce.material || (recipe.from || {}).text || "").trim() ? "\n<contenu_original>\n" + String(sauce.material || (recipe.from || {}).text).slice(0, R.MAT_MAX) + "\n</contenu_original>\n" : "",
+    "Angle : " + (R.ANGLES[sauce.angle] || R.ANGLES.top) + ".",
     sauce.format === "carousel" ? "Format : carrousel (un plan par slide, dur 0)." : "Format : Reel de " + max + " secondes au plus.",
     "", "Recette à suivre (la forme seulement) :", JSON.stringify({ name: recipe.name, hook: recipe.hook, structure: recipe.structure, spring: recipe.spring, ending: recipe.ending }),
     tooClose ? "\nTa première version reprenait trop de mots de l'original (" + tooClose + " % original) : réécris tout avec tes propres mots, sur mon sujet." : "",
@@ -42,12 +44,11 @@ export function versionPrompt(recipe, sauce, settings, tooClose) {
 }
 // Version de Claude ; si elle reprend trop l'original, une seconde tentative avec la note d'originalité.
 export async function makeVersion(client, recipe, sauce, settings) {
-  const src = (recipe.from && recipe.from.text) || "";
   let v = R.cleanVersion(jsonOf(await ask(client, versionPrompt(recipe, sauce, settings), 8000)), sauce);
-  let orig = R.originality(src, R.versionText(v));
+  let orig = R.checkOrig(recipe, sauce, v);
   if (orig < R.ORIG_MIN) {
     v = R.cleanVersion(jsonOf(await ask(client, versionPrompt(recipe, sauce, settings, orig), 8000)), sauce);
-    orig = R.originality(src, R.versionText(v));
+    orig = R.checkOrig(recipe, sauce, v);
   }
   if (v.format === "reel") R.fitDurations(v.shots, Math.max(10, Math.min(90, +sauce.maxSec || 30)));
   return Object.assign(v, { originality: orig });
