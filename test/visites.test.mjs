@@ -48,3 +48,12 @@ test("visites : un autre site ne peut pas envoyer", async () => {
   const ok = await collect(new Request("https://info.example.org/t", { method: "POST", body, headers: { origin: "https://info.example.org" } }), env);
   assert.equal(ok.status, 204);
 });
+
+test("visites : trop d'envois depuis la même adresse sont refusés", async () => {
+  const { allow } = await import("../worker/src/visites.js");
+  const t0 = 1_800_000_000_000;
+  let ok = 0; for (let i = 0; i < 40; i++) if (allow("1.2.3.4", t0)) ok++;
+  assert.equal(ok, 30);
+  assert.equal(allow("5.6.7.8", t0), true, "une autre adresse passe");
+  assert.equal(allow("1.2.3.4", t0 + 60000), true, "la minute suivante repasse");
+});

@@ -3,6 +3,26 @@
    Réception publique sur /t (le site et la démo peuvent être hébergés ailleurs), lecture protégée par Access (api/visites). */
 
 const MAX_BODY = 16000, MAX_EVENTS = 40, KEEP_DAYS = 180;
+// Anti-abus : par adresse (en mémoire, jamais stockée) 30 envois par minute, et au plus 50 000 lignes par jour au total.
+const PER_MIN = 30, PER_DAY = 50000;
+const hits = new Map();
+let dayCount = { day: "", n: 0, checked: 0 };
+export function allow(key, nowMs) {
+  const k = String(key || "?"), slot = Math.floor(nowMs / 60000);
+  if (hits.size > 5000) hits.clear();
+  const h = hits.get(k);
+  if (!h || h.slot !== slot) { hits.set(k, { slot, n: 1 }); return true; }
+  return ++h.n <= PER_MIN;
+}
+async function dayFull(env, day, add, nowMs) {
+  if (dayCount.day !== day || nowMs - dayCount.checked > 60000) {
+    const r = await env.DB.prepare("SELECT COUNT(*) AS n FROM visites WHERE day = ?").bind(day).first();
+    dayCount = { day, n: (r && r.n) || 0, checked: nowMs };
+  }
+  if (dayCount.n + add > PER_DAY) return true;
+  dayCount.n += add;
+  return false;
+}
 const TYPES = new Set(["view", "leave", "click", "section", "video", "screen", "action", "lang", "calc", "swipe", "error"]);
 const clip = (v, n) => (v == null ? null : String(v).replace(/[\u0000-\u001f]/g, " ").slice(0, n));
 
@@ -38,11 +58,13 @@ export async function collect(request, env) {
   // Seules les pages servies par l'instance (site public, démo) peuvent envoyer : un autre site est refusé.
   const origin = request.headers.get("origin");
   if (origin) { let h = ""; try { h = new URL(origin).hostname; } catch {} const ok = [env.PUBLIC_HOST, new URL(request.url).hostname].concat(String(env.STATS_ORIGINS || "").split(",").map((x) => x.trim())).filter(Boolean); if (!ok.includes(h)) return new Response(null, { status: 403, headers: CORS }); }
+  if (!allow(request.headers.get("cf-connecting-ip"), Date.now())) return new Response(null, { status: 429, headers: CORS });
   const txt = await request.text();
   if (txt.length > MAX_BODY) return new Response(null, { status: 413, headers: CORS });
   let body; try { body = JSON.parse(txt); } catch { return new Response(null, { status: 400, headers: CORS }); }
   const rows = clean(body, request.cf, new Date());
   if (rows.length && env.DB) {
+    if (await dayFull(env, rows[0].day, rows.length, Date.now())) return new Response(null, { status: 429, headers: CORS });
     const q = "INSERT INTO visites (at, day, sid, src, page, type, label, value, ref, country, device, lang) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)";
     await env.DB.batch(rows.map((r) => env.DB.prepare(q).bind(r.at, r.day, r.sid, r.src, r.page, r.type, r.label, r.value, r.ref, r.country, r.device, r.lang)));
   }
