@@ -620,6 +620,7 @@
   hashNote();
   // Lien d'un rappel « à poster à la main » : #poster-<id> ouvre directement la marche à suivre.
   A.posterHash = function () {
+    if (location.hash === "#metapick") { history.replaceState(null, "", "#settings"); A.render(); A.wizard("instagram", 99, { pending: true }); return true; }
     const m = /^#poster-(.+)$/.exec(location.hash); if (!m) return false;
     const id = decodeURIComponent(m[1]);
     history.replaceState(null, "", "#today"); A.render();

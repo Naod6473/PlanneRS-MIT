@@ -18,6 +18,11 @@
       { t: "Créer l'application Meta", a: ["Clique « Créer une application ».", "Cas d'usage : « Autre », puis type « Entreprise ».", "Laisse-la en mode Développement : aucune vérification n'est nécessaire pour tes propres comptes."], go: ["Ouvrir Mes applications", "https://developers.facebook.com/apps/"] },
       { t: "Générer un jeton", a: ["À droite, « Application Meta » : choisis ton application.", "« Autorisations » : ajoute les droits ci-dessous.", "Clique « Generate Access Token » et coche ta Page et ton compte Instagram.", "Copie le jeton (le long texte en haut) : PlanneRs fait le reste."], go: ["Ouvrir l'Explorateur", "https://developers.facebook.com/tools/explorer/"], copy: [["Droits", "pages_show_list,pages_read_engagement,pages_manage_posts,instagram_basic,instagram_content_publish,instagram_manage_insights,instagram_manage_comments"]] },
     ], fix: [[/token|jeton|OAuth|190/i, 3, "Le jeton est refusé ou expiré : génère-en un nouveau dans l'Explorateur."], [/permission|autoris|#10|#200/i, 3, "Il manque un droit : refais la génération du jeton en ajoutant tous les droits."], [/client_secret|client_id|validating client/i, 4, "L'identifiant ou le code secret de l'application est refusé : recopie-les depuis Paramètres › Général de l'application."]] },
+    threads: { name: "Threads", login: "threads", steps: [
+      { t: "Créer l'app Threads", a: ["Clique « Créer une application ».", "Cas d'usage : « Accéder à l'API Threads ».", "Tu peux réutiliser l'app d'Instagram si elle a déjà ce cas d'usage."], go: ["Ouvrir Mes applications", "https://developers.facebook.com/apps/"] },
+      { t: "Droits et adresse de retour", a: ["Cas d'usage › « Accéder à l'API Threads » › « Personnaliser ».", "Autorisations : threads_basic et threads_content_publish.", "Paramètres : colle l'adresse ci-dessous dans « URL de rappel de redirection », « URL de rappel de désinstallation » et « URL de rappel de suppression »."], copy: [["Adresse de retour", "{o}/api/oauth/threads/callback"]] },
+      { t: "Te déclarer testeur", a: ["« Rôles de l'app » › « Rôles » › « Ajouter des personnes » › « Testeur Threads » : ton nom d'utilisateur Threads.", "Dans Threads : Paramètres › Compte › Autorisations du site web › Invitations : accepte."], go: ["Ouvrir les invitations Threads", "https://www.threads.net/settings/account"] },
+    ], fix: [[/redirect|redirection/i, 1, "L'adresse de retour ne correspond pas : recopie-la dans les paramètres Threads de l'app."], [/tester|testeur|not.*allowed|autoris/i, 2, "Ton compte n'est pas encore testeur : accepte l'invitation dans Threads."], [/client_secret|client_id|identifiant/i, 3, "L'identifiant ou la clé de l'app Threads est refusé : prends ceux de la page Paramètres du cas d'usage Threads (pas ceux de l'app Meta)."]] },
     youtube: { name: "YouTube (Shorts)", oauth: "api/oauth/google/start?for=youtube", steps: [
       { t: "Créer un projet Google Cloud", a: ["En haut, sélectionne un projet ou clique « Nouveau projet ».", "Si tu as déjà un client Google pour le Drive, garde ce projet."], go: ["Ouvrir Google Cloud", "https://console.cloud.google.com/projectcreate"] },
       { t: "Activer l'API YouTube", a: ["Vérifie que le bon projet est sélectionné en haut.", "Clique « Activer »."], go: ["Ouvrir YouTube Data API v3", "https://console.cloud.google.com/apis/library/youtube.googleapis.com"] },
@@ -50,9 +55,16 @@
     let i = Math.max(0, Math.min(at == null ? getStep(id) : at, n - 1));
     const fields = (S.state.adapters || {})[id] || [];
     const a = (S.state.accounts || {})[id];
-    const M = { token: "", appId: "", appSecret: "", pages: null, pick: "" }; // assistant Meta : rien n'est gardé après fermeture
+    const M = { token: "", appId: "", appSecret: "", pages: null, pick: "", how: "token", pending: !!(msg && msg.pending) }; // assistant Meta : rien n'est gardé après fermeture
     function metaStep() {
-      if (!M.pages) return '<h3 class="wz-t">Coller le jeton</h3><form class="form" id="wzm" onsubmit="return false">' +
+      const how = '<div class="seg wz-how" role="group" aria-label="Méthode"><button data-wz-how="token" aria-pressed="' + (M.how === "token") + '">Coller le jeton</button><button data-wz-how="login" aria-pressed="' + (M.how === "login") + '">Se connecter avec Facebook</button></div>';
+      if (!M.pages && M.pending) return '<h3 class="wz-t">Choisir le compte</h3><p class="muted">Recherche de tes Pages…</p>';
+      if (!M.pages && M.how === "login") return '<h3 class="wz-t">Se connecter avec Facebook</h3>' + how +
+        '<ol class="wz-a"><li>Dans ton application Meta : « Ajouter un produit » › « Connexion Facebook » (ou « Facebook Login for Business »).</li><li>Ses paramètres › « URI de redirection OAuth valides » : colle l\'adresse ci-dessous, puis enregistre.</li><li>Paramètres de l\'app › Général : copie l\'identifiant et la clé secrète ici.</li></ol>' +
+        '<form class="form" id="wzl" onsubmit="return false"><label class="wz-copy">Adresse de retour<span class="row"><input readonly value="' + esc(origin() + "/api/oauth/meta/callback") + '" data-noi18n style="flex:1"><button class="btn" data-copyval="' + esc(origin() + "/api/oauth/meta/callback") + '">' + icon("copy") + "Copier</button></span></label>" +
+        '<label>Identifiant de l\'application<input name="appId" inputmode="numeric" autocomplete="off" required pattern="\\d{5,20}" value="' + esc(M.appId) + '"></label><label>Clé secrète<input name="appSecret" type="password" autocomplete="off" required value="' + esc(M.appSecret) + '"></label></form>' +
+        '<p class="muted" style="font-size:12px;margin:0">La fenêtre de Facebook s\'ouvre : accepte et coche ta Page et ton compte Instagram. Tu reviens ici pour choisir la Page. La clé n\'est gardée que 15 minutes, chiffrée, le temps du retour.</p>';
+      if (!M.pages) return '<h3 class="wz-t">Coller le jeton</h3>' + how + '<form class="form" id="wzm" onsubmit="return false">' +
         '<label>Jeton de l\'Explorateur<input name="userToken" type="password" autocomplete="off" required value="' + esc(M.token) + '"></label>' +
         '<details class="wz-more"' + (M.appId ? " open" : "") + '><summary>Pour un jeton qui n\'expire jamais (conseillé)</summary><p class="muted small">Dans ton application Meta › Paramètres de l\'app › Général : l\'identifiant et la clé secrète. La clé ne sert qu\'à allonger le jeton : elle n\'est pas enregistrée.</p>' +
         '<label>Identifiant de l\'application<input name="appId" inputmode="numeric" autocomplete="off" value="' + esc(M.appId) + '"></label><label>Clé secrète<input name="appSecret" type="password" autocomplete="off" value="' + esc(M.appSecret) + '"></label>' +
@@ -72,7 +84,11 @@
       setStep(id, i);
       const last = i === n - 1, st = w.steps[i];
       const dots = Array.from({ length: n }, (_, k) => '<button class="wz-dot' + (k === i ? " on" : k < i ? " done" : "") + '" data-wz-go="' + k + '" aria-label="Étape ' + (k + 1) + '"></button>').join("");
-      const body = last && w.meta ? metaStep()
+      const loginStep = () => '<h3 class="wz-t">Se connecter</h3><form class="form" id="wzl" onsubmit="return false"><p class="muted">Cas d\'usage Threads › Paramètres : l\'identifiant et la clé secrète de l\'app Threads.</p>' +
+        '<label>Identifiant de l\'app Threads<input name="appId" inputmode="numeric" autocomplete="off" required pattern="\\d{5,20}"></label><label>Clé secrète de l\'app Threads<input name="appSecret" type="password" autocomplete="off" required></label></form>' +
+        '<p class="muted" style="font-size:12px;margin:0">La fenêtre de Threads s\'ouvre : accepte, et tu reviens ici connecté. Jeton renouvelé tout seul ; la clé n\'est gardée que 15 minutes, chiffrée, le temps du retour.</p>';
+      const body = last && w.login ? loginStep()
+        : last && w.meta ? metaStep()
         : last
         ? (a && a.status === "pending" && w.oauth
           ? '<h3 class="wz-t">Autoriser l\'accès</h3><ol class="wz-a"><li>Clique le bouton ci-dessous.</li><li>Choisis le bon compte et accepte tous les droits demandés.</li><li>Tu reviens ici, connecté.</li></ol>'
@@ -84,17 +100,22 @@
       A.openLayer('<div class="sh-top">' + brand(id, "lg") + "<b>" + esc(w.name) + '</b><span class="muted">Étape ' + (i + 1) + " sur " + n + '</span><span style="flex:1"></span><button class="iconbtn" data-close aria-label="Fermer">' + icon("x") + "</button></div>" +
         '<div class="sh-body wz"><div class="wz-dots">' + dots + "</div>" + (note ? '<div class="wz-note">' + esc(note) + "</div>" : "") + body + "</div>" +
         '<div class="sh-foot">' + (i > 0 ? '<button class="btn" data-wz="prev">' + icon("left") + "Précédent</button>" : "") + '<span style="flex:1"></span>' +
-        (last && w.meta ? (M.pages ? '<button class="btn primary big" data-wz="metaconnect">' + icon("check") + "Connecter ce compte</button>" : '<button class="btn primary big" data-wz="find">' + icon("search") + "Trouver mes comptes</button>") : last ? (a && a.status === "pending" && w.oauth ? '<a class="btn primary big" href="' + w.oauth + '">' + icon("open") + "Autoriser l'accès</a>" : '<button class="btn primary big" data-wz="connect">' + icon("check") + "Vérifier et connecter</button>") : '<button class="btn primary" data-wz="next">C\'est fait, suivant' + icon("right") + "</button>") + "</div>", w.name);
+        (last && (w.login || (w.meta && !M.pages && M.how === "login")) ? '<button class="btn primary big" data-wz="login">' + icon("open") + (w.login === "threads" ? "Se connecter avec Threads" : "Se connecter avec Facebook") + "</button>"
+        : last && w.meta && !M.pages && M.pending ? ""
+        : last && w.meta ? (M.pages ? '<button class="btn primary big" data-wz="metaconnect">' + icon("check") + "Connecter ce compte</button>" : '<button class="btn primary big" data-wz="find">' + icon("search") + "Trouver mes comptes</button>") : last ? (a && a.status === "pending" && w.oauth ? '<a class="btn primary big" href="' + w.oauth + '">' + icon("open") + "Autoriser l'accès</a>" : '<button class="btn primary big" data-wz="connect">' + icon("check") + "Vérifier et connecter</button>") : '<button class="btn primary" data-wz="next">C\'est fait, suivant' + icon("right") + "</button>") + "</div>", w.name);
       layer().querySelector(".sheet").addEventListener("click", onClick);
     }
     function explain(m) {
       const f = (w.fix || []).find(([re]) => re.test(m));
       return f ? { step: f[1], note: f[2] + " (" + m.slice(0, 160) + ")" } : null;
     }
-    draw(msg && (explain(msg) || {}).note);
+    draw(typeof msg === "string" ? (explain(msg) || {}).note : undefined);
+    // Retour de « Se connecter avec Facebook » : les Pages trouvées attendent côté serveur (15 minutes).
+    if (M.pending && S.mode === "api") S.call("POST", "meta/setup", { pending: true }).then((r) => { M.pages = r; M.pick = (r.pages.find((p) => p.igId) || r.pages[0] || {}).id || ""; draw(); }).catch((err) => { M.pending = false; draw("Échec : " + err.message); });
     async function onClick(e) {
       const root = layer();
       const g = e.target.closest("[data-wz-go]"); if (g) { i = +g.dataset.wzGo; draw(); return; }
+      const h = e.target.closest("[data-wz-how]"); if (h) { M.how = h.dataset.wzHow; draw(); return; }
       const b = e.target.closest("[data-wz]"); if (!b) return;
       if (b.dataset.wz === "prev") { i--; draw(); return; }
       if (b.dataset.wz === "next") { i++; draw(); return; }
@@ -104,7 +125,19 @@
         await S.saveSettings(Object.assign({}, st, { rules: r }));
         U.toast("Instagram et Facebook : à poster à la main. Rappel à l'heure prévue, texte prêt à coller."); A.closeLayer(); A.render(); return;
       }
-      if (b.dataset.wz === "metaback") { M.pages = null; draw(); return; }
+      if (b.dataset.wz === "metaback") { M.pages = null; M.pending = false; draw(); return; }
+      if (b.dataset.wz === "login") {
+        const f = root.querySelector("#wzl"); if (!f || !f.reportValidity()) return;
+        const v = Object.fromEntries(new FormData(f).entries()); M.appId = v.appId; M.appSecret = v.appSecret;
+        if (S.mode !== "api") {
+          if (w.login) { S.state.accounts[id] = { status: "ok", account: "@mon.compte (démo)", detail: "Connexion simulée (démo)" }; S.persist(); setStep(id, 0); U.toast("Démo : connexion simulée"); A.closeLayer(); A.render(); return; }
+          M.pages = { long: true, missing: [], optionalMissing: [], pages: [{ id: "1", name: "Ma Page (démo)", igId: "2", igUser: "mon.compte" }] }; M.pick = "1"; M.pending = true; draw(); return;
+        }
+        b.disabled = true;
+        try { const r = await S.call("POST", w.login === "threads" ? "threads/login" : "meta/login", { appId: v.appId, appSecret: v.appSecret }); location.href = r.url; }
+        catch (err) { b.disabled = false; draw("Échec : " + err.message); }
+        return;
+      }
       if (b.dataset.wz === "find") {
         const f = root.querySelector("#wzm"); if (!f || !f.reportValidity()) return;
         Object.assign(M, Object.fromEntries(new FormData(f).entries())); M.token = M.userToken || "";
@@ -120,7 +153,7 @@
         if (S.mode !== "api") { S.state.accounts.instagram = { status: "ok", account: "@mon.compte (démo)", detail: "Connexion simulée (démo)" }; S.persist(); setStep(id, 0); U.toast("Démo : connexion simulée"); A.closeLayer(); A.render(); return; }
         b.disabled = true; U.toast("Vérification…");
         try {
-          const r = await S.call("POST", "meta/setup", { userToken: M.token, appId: M.appId, appSecret: M.appSecret, pageId: M.pick });
+          const r = await S.call("POST", "meta/setup", M.pending ? { pending: true, pageId: M.pick } : { userToken: M.token, appId: M.appId, appSecret: M.appSecret, pageId: M.pick });
           if (r.ig) S.state.accounts.instagram = r.info; else S.state.accounts.facebook = r.info;
           if (r.info.relay) S.state.accounts.facebook = r.info.relay;
           setStep(id, 0); U.toast("Connecté : " + (r.info.account || w.name) + (r.long ? "" : " (jeton court : refais l'assistant avec la clé de l'application)")); A.closeLayer(); A.render();

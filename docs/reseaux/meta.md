@@ -29,6 +29,17 @@ Tu pourras connecter l'API plus tard sans rien perdre. Voir aussi [Poster à la 
 - Si tu donnes l'**identifiant et la clé secrète** de l'application (Paramètres de l'app › Général), il échange le jeton contre un jeton long, d'où un **jeton de Page sans expiration**. La clé secrète ne sert qu'à cet échange : elle **n'est pas enregistrée**.
 - Il connecte Instagram et la Page Facebook (relais) d'un coup. Sans compte Instagram relié, seule la Page est connectée.
 
+### Ou : « Se connecter avec Facebook »
+
+À la dernière étape, choisis **Se connecter avec Facebook** plutôt que de coller un jeton :
+
+1. Dans ton application : **Ajouter un produit** › **Connexion Facebook** (ou **Facebook Login for Business**).
+2. Dans ses paramètres, **URI de redirection OAuth valides** : colle l'adresse donnée par l'assistant (`https://ton-domaine/api/oauth/meta/callback`).
+3. Colle l'identifiant et la clé secrète de l'application, puis **Se connecter avec Facebook**. La fenêtre de Facebook s'ouvre : accepte en cochant ta Page et ton compte Instagram.
+4. De retour dans PlanneRs, choisis la Page : le jeton n'expire jamais.
+
+La clé secrète et les jetons trouvés ne sont gardés que 15 minutes, chiffrés, le temps de choisir la Page.
+
 Les étapes manuelles ci-dessous restent utiles pour comprendre ou si tu préfères tout faire toi-même.
 
 ## Avant de commencer

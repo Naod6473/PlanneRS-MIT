@@ -1060,6 +1060,11 @@
           "anchor": "lassistant-de-planners-le-plus-simple"
         },
         {
+          "level": 3,
+          "text": "Ou : « Se connecter avec Facebook »",
+          "anchor": "ou---se-connecter-avec-facebook-"
+        },
+        {
           "level": 2,
           "text": "Avant de commencer",
           "anchor": "avant-de-commencer"
@@ -1199,10 +1204,13 @@
     {
       "path": "reseaux/threads.md",
       "title": "Threads",
-      "description": "Connecter un compte Threads pour publier texte, images, vidéos et carrousels, avec un jeton de 60 jours à renouveler.",
+      "description": "Connecter un compte Threads en se connectant avec Threads (assistant), pour publier texte, images, vidéos et carrousels ; jeton renouvelé tout seul.",
       "category": "Réseaux sociaux",
       "tags": [
         "threads",
+        "connexion",
+        "assistant",
+        "oauth",
         "meta",
         "publication",
         "jeton",
@@ -1210,12 +1218,17 @@
         "carrousel"
       ],
       "order": 4,
-      "updated": "2026-11-10",
+      "updated": "2026-11-13",
       "headings": [
         {
           "level": 2,
-          "text": "Obtenir le jeton",
-          "anchor": "obtenir-le-jeton"
+          "text": "Le plus simple : l'assistant",
+          "anchor": "le-plus-simple--lassistant"
+        },
+        {
+          "level": 2,
+          "text": "À la main : obtenir le jeton",
+          "anchor": "à-la-main--obtenir-le-jeton"
         },
         {
           "level": 2,

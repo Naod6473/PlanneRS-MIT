@@ -1529,3 +1529,4 @@ input:user-invalid,textarea:user-invalid,select:user-invalid{border-color:var(--
 .wz-ok,.wz-warn{display:flex;align-items:center;gap:6px;margin:0;font-size:13px;font-weight:600}
 .wz-ok{color:var(--pub)}.wz-warn{color:var(--main)}
 .share-pick { display: grid; gap: 8px; margin: 12px 0; }
+.wz-how{display:flex;margin:4px 0 8px}.wz-how button{flex:1;white-space:normal}

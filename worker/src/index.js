@@ -354,13 +354,32 @@ async function api(request, env, path, url, auth) {
     return json({ ok: true, post: p });
   }
   // Assistant Meta : trouver la Page et le compte Instagram à partir du jeton de l'Explorateur, puis connecter.
+  if (path === "meta/login" && m === "POST") {
+    try { return json({ url: await metasetup.loginStart(env, db, url.origin, body || {}), redirect: metasetup.redirectUri(url.origin) }); } catch (e) { return err(e.message, 400); }
+  }
+  if (path === "oauth/meta/callback" && m === "GET") {
+    try { await metasetup.loginCallback(env, db, url.origin, url.searchParams); return Response.redirect(url.origin + "/#metapick", 302); }
+    catch (e) { return Response.redirect(url.origin + "/#settings/" + encodeURIComponent(e.why ? "Échec : " + e.why : e.message), 302); }
+  }
+  if (path === "threads/login" && m === "POST") {
+    try { return json({ url: await metasetup.threadsStart(env, db, url.origin, body || {}), redirect: metasetup.threadsRedirect(url.origin) }); } catch (e) { return err(e.message, 400); }
+  }
+  if (path === "oauth/threads/callback" && m === "GET") {
+    const back = (msg) => Response.redirect(url.origin + "/#settings/" + encodeURIComponent(msg), 302);
+    try {
+      const t = await metasetup.threadsCallback(env, db, url.origin, url.searchParams);
+      const res = await connectAccount(env, "threads", { token: t.token, userId: t.userId });
+      return back(res.info.status === "error" ? "Échec : " + res.info.detail : "Threads connecté" + (res.info.account ? " : " + res.info.account.replace(/^Connecté à /, "") : ""));
+    } catch (e) { return back(e.message); }
+  }
   if (path === "meta/setup" && m === "POST") {
     let found;
-    try { found = await metasetup.inspect(env, body || {}); } catch (e) { return err(e.why ? e.message + " " + e.why : e.message, 400); }
+    try { found = body && body.pending ? await metasetup.pending(env, db) : await metasetup.inspect(env, body || {}); } catch (e) { return err(e.why ? e.message + " " + e.why : e.message, 400); }
     if (!(body && body.pageId)) return json(metasetup.publicView(found));
     const pg = found.pages.find((x) => x.id === String(body.pageId));
     if (!pg || !pg.token) return err("Page introuvable avec ce jeton : coche-la dans la fenêtre Facebook en générant le jeton.", 404);
     const res = pg.igId ? await connectAccount(env, "instagram", { token: pg.token, accountId: pg.igId, pageId: pg.id }) : await connectAccount(env, "facebook", { token: pg.token, pageId: pg.id });
+    if (body.pending && res.info.status !== "error") await db.putKV(env, "oauth-meta", null);
     return json(Object.assign({ ok: res.info.status !== "error", long: found.long, ig: !!pg.igId }, res), res.info.status !== "error" ? 200 : 400);
   }
   if ((r = path.match(/^connect\/([a-z0-9]+)$/))) {
