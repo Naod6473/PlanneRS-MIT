@@ -210,3 +210,29 @@ test("revue en pile : à droite on valide, à gauche on renvoie en retouche, pui
   assert.deepEqual(errors, []);
   await page.close();
 });
+
+test("ma version : pépite, recette, ta sauce, puis envoi à La Fabrique et carnet", { skip }, async () => {
+  for (const mobile of [false, true]) {
+    const { page, errors } = await open({ mobile });
+    await go(page, "#stats");
+    await page.click('[data-stattab="pep"]');
+    await page.locator("[data-pep-remix]").first().click();
+    await page.locator(".mv-name").waitFor();
+    await page.fill("#mv-subject", "les mots de passe au bureau");
+    await page.click('[data-mv-angle="qa"]');
+    await page.click("[data-mv-make]");
+    await page.locator("[data-mv-send]").waitFor();
+    assert.ok(+(await page.locator("#mv-pct").innerText()).replace(/\D/g, "") >= 80);
+    const w = await page.evaluate(() => document.getElementById("mv").scrollWidth - document.getElementById("mv").clientWidth);
+    assert.ok(w <= 0, "pas de débordement horizontal");
+    await page.click("[data-mv-send]");
+    await page.waitForTimeout(400);
+    const p = await page.evaluate(() => { const x = Store.state.posts.find((q) => q.remix); return x && { inF: Core.inFabrique(x), shots: x.prod.shots.length, note: x.note, book: Store.state.settings.recipes.length }; });
+    assert.ok(p && p.inF && p.shots >= 3 && p.book === 1);
+    assert.match(p.note, /Inspiration : https:/);
+    await page.click('[data-stattab="mv"]');
+    assert.equal(await page.locator(".mv-rc").count(), 1);
+    assert.deepEqual(errors, []);
+    await page.close();
+  }
+});

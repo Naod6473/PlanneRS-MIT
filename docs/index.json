@@ -794,6 +794,51 @@
       ]
     },
     {
+      "path": "utilisation/ma-version.md",
+      "title": "Ma version",
+      "description": "Reprendre la recette d'une publication qui a marché (la tienne ou celle d'un compte suivi), jamais son contenu, et la refaire à ta sauce, avec une note d'originalité, un carnet de recettes et la boucle de tes résultats.",
+      "category": "Utilisation",
+      "tags": [
+        "ma version",
+        "recette",
+        "inspiration",
+        "remix",
+        "originalité",
+        "carnet",
+        "pépites",
+        "storyboard"
+      ],
+      "order": "4.55",
+      "updated": "2026-11-13",
+      "headings": [
+        {
+          "level": 2,
+          "text": "1. La recette",
+          "anchor": "1-la-recette"
+        },
+        {
+          "level": 2,
+          "text": "2. Ta sauce",
+          "anchor": "2-ta-sauce"
+        },
+        {
+          "level": 2,
+          "text": "3. Ta version",
+          "anchor": "3-ta-version"
+        },
+        {
+          "level": 2,
+          "text": "Le carnet et le mélange",
+          "anchor": "le-carnet-et-le-mélange"
+        },
+        {
+          "level": 2,
+          "text": "La boucle",
+          "anchor": "la-boucle"
+        }
+      ]
+    },
+    {
       "path": "utilisation/succes.md",
       "title": "Succès",
       "description": "Tes paliers de vues, d'abonnés, de régularité, de publications et de réactions, à fêter et à partager en image. Rien à débloquer.",

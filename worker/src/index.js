@@ -35,6 +35,8 @@ import * as links from "./links.js";
 import * as rewriter from "./rewrite.js";
 import * as agent from "./agent.js";
 import * as pepites from "./pepites.js";
+import * as maversion from "./maversion.js";
+import Recette from "../../web/js/recette.js";
 import { aiClient } from "./ai.js";
 import * as igHistory from "./history.js";
 import * as igComments from "./comments.js";
@@ -497,6 +499,32 @@ async function api(request, env, path, url, auth) {
     await db.savePosts(env, [p]);
     await db.addLog(env, { at: now, level: "change", text: "Pépite de @" + item.handle + " transformée en idée : " + p.title + (me ? " (par " + me + ")" : ""), postId: p.id });
     return json({ post: p, recipe: !!recipe, why });
+  }
+  // Ma version : la recette d'une pépite ou d'un de tes succès, puis ta version (Claude avec la clé API, sinon un modèle).
+  if (path === "maversion/recipe" && m === "POST") {
+    const s0 = (body && body.source) || {}, id = String(s0.id || "");
+    let src = null;
+    if (s0.type === "post") {
+      const p = await db.getPost(env, id);
+      if (p) src = { type: "post", id: p.id, title: p.title, kind: p.format, score: +s0.score || 0, url: ((p.results || {}).instagram || {}).url || "",
+        caption: [p.caption || "", ...((p.prod && p.prod.shots) || []).map((x) => x.voice || "")].filter(Boolean).join("\n") };
+    } else {
+      const pp = (await db.getKV(env, "pepites")) || {}, it = (pp.accounts || []).flatMap((a) => a.items || []).find((x) => x.id === id);
+      if (it) src = Object.assign({ type: "pepite" }, it);
+    }
+    if (!src) return err("Source introuvable : actualise la liste.", 404);
+    let recipe = null, why = "";
+    if (env.ANTHROPIC_API_KEY) { try { recipe = await maversion.extractRecipe(aiClient(env), src); } catch (e) { why = e.message; } }
+    return json({ recipe: recipe || Recette.guessRecipe(src), ai: !!recipe, why });
+  }
+  if (path === "maversion/version" && m === "POST") {
+    const recipe = body && body.recipe, sauce = (body && body.sauce) || {};
+    if (!recipe || !Array.isArray(recipe.structure)) return err("Recette manquante.");
+    const st = Object.assign({}, DEFAULT_SETTINGS, (await db.getKV(env, "settings")) || {});
+    let version = null, why = "";
+    if (env.ANTHROPIC_API_KEY) { try { version = await maversion.makeVersion(aiClient(env), recipe, sauce, st); } catch (e) { why = e.message; } }
+    if (!version) { version = Recette.draftVersion(recipe, sauce); version.originality = Recette.originality((recipe.from || {}).text, Recette.versionText(version)); }
+    return json({ version, ai: !version.draft, why });
   }
   if (path === "stats" && m === "GET") return json((await db.getKV(env, "stats")) || {});
   if (path === "stats/refresh" && m === "POST") return json(await stats(env));

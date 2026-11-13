@@ -723,9 +723,10 @@
   };
 
   // Stats : tes chiffres, ou les Pépites (comptes suivis).
-  const statTabs = () => '<div class="seg" role="group" aria-label="Affichage"><button data-stattab="" aria-pressed="' + !A.statTab + '">Mes chiffres</button><button data-stattab="ach" aria-pressed="' + (A.statTab === "ach") + '">Succès</button><button data-stattab="pep" aria-pressed="' + (A.statTab === "pep") + '">Pépites</button></div><span class="grow"></span>';
+  const statTabs = () => '<div class="seg" role="group" aria-label="Affichage"><button data-stattab="" aria-pressed="' + !A.statTab + '">Mes chiffres</button><button data-stattab="ach" aria-pressed="' + (A.statTab === "ach") + '">Succès</button><button data-stattab="pep" aria-pressed="' + (A.statTab === "pep") + '">Pépites</button><button data-stattab="mv" aria-pressed="' + (A.statTab === "mv") + '">Ma version</button></div><span class="grow"></span>';
   A.views.stats = function () {
     if (A.statTab === "ach" && A.successHtml) return { title: "Stats", sub: "Tes paliers, à fêter et à partager", tools: statTabs(), html: A.successHtml() };
+    if (A.statTab === "mv" && A.versionHtml) return { title: "Stats", sub: "Reprends la recette, pas la vidéo", tools: statTabs(), html: A.versionHtml() };
     if (A.statTab === "pep" && A.pepitesHtml) return { title: "Stats", sub: "Ce qui marche chez les comptes que tu suis", tools: statTabs() + A.pepitesTools(), html: A.pepitesHtml() };
     const v = statsMine();
     v.tools = statTabs() + v.tools;

@@ -9,7 +9,7 @@ updated: 2026-11-11
 
 # Stats
 
-L'écran a trois onglets : **Mes chiffres** (cette page), **[Succès](succes.md)** (tes paliers à partager) et **[Pépites](pepites.md)** (les comptes que tu suis).
+L'écran a quatre onglets : **Mes chiffres** (cette page), **[Succès](succes.md)** (tes paliers à partager), **[Pépites](pepites.md)** (les comptes que tu suis) et **[Ma version](ma-version.md)** (reprendre la recette de ce qui a marché).
 
 ## Ce qui est affiché
 

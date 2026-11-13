@@ -23,14 +23,6 @@ Choisis le réseau, écris le nom du compte (`@boulangerie` ou son lien), puis *
 
 ## Faire ma version
 
-Sur une pépite, **Faire ma version** crée une idée dans Contenus, sans date, avec le lien d'origine dans la note.
-
-Si ton instance a la clé de l'API Claude (secret `ANTHROPIC_API_KEY`, voir [Assistants IA](../reference/assistants-ia.md)), Claude écrit aussi dans la note :
-
-- **pourquoi ça marche** (accroche, structure, format, émotion) ;
-- **ta version** : un titre, une accroche, le déroulé, sur ton sujet et dans ton ton (il reprend les consignes du Scénariste de [l'équipe](la-fabrique.md)) ;
-- **à éviter** : ce qui ferait copie.
-
-On reprend une recette, jamais le texte, les images ou l'idée exacte d'un autre compte.
+Sur une pépite, **Faire ma version** ouvre l'atelier [Ma version](ma-version.md) : PlanneRs garde la recette de la publication (accroche, structure, format, ressort, fin) et tu la refais à ta sauce, sur ton sujet. On reprend une recette, jamais le texte, les images ou l'idée exacte d'un autre compte.
 
 Avec le lien MCP, un assistant lit la même liste avec l'outil `planners_pepites`.

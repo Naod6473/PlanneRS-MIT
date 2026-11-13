@@ -1,5 +1,5 @@
 /* PlanneRs : Pépites. Les publications des comptes que tu suis (5 au plus) qui marchent bien mieux
-   que d'habitude, et « Faire ma version » : une idée inspirée de la recette, jamais une copie.
+   que d'habitude, et « Faire ma version », qui ouvre l'atelier (maversion.js) : la recette, jamais une copie.
    Onglet de l'écran Stats. Le relevé se fait côté Worker (worker/src/pepites.js), chaque matin. */
 (function () {
   "use strict";
@@ -73,30 +73,14 @@
     A.render(); U.toast("@" + r.handle + " suivi. Les pépites arrivent au prochain relevé, ou avec « Actualiser ».");
   });
   document.addEventListener("click", async (e) => {
-    const del = e.target.closest("[data-pep-del]"), ref = e.target.closest("[data-pep-refresh]"), mix = e.target.closest("[data-pep-remix]"), tab = e.target.closest("[data-stattab]");
-    if (tab) { A.statTab = ["pep", "ach"].includes(tab.dataset.stattab) ? tab.dataset.stattab : ""; A.render(); return; }
+    const del = e.target.closest("[data-pep-del]"), ref = e.target.closest("[data-pep-refresh]"), tab = e.target.closest("[data-stattab]");
+    if (tab) { A.statTab = ["pep", "ach", "mv"].includes(tab.dataset.stattab) ? tab.dataset.stattab : ""; A.render(); return; }
     if (del) { const l = rivals(); l.splice(+del.dataset.pepDel, 1); await saveRivals(l); A.render(); return; }
     if (ref) {
       if (S.mode !== "api") { U.toast("Mode démo : pépites d'exemple"); return; }
       ref.disabled = true; U.toast("Relevé des comptes suivis…");
       try { S.state.pepites = await S.call("POST", "pepites/refresh"); U.toast("Pépites à jour"); } catch (x) { U.toast("Relevé impossible : " + x.message); }
       A.render(); return;
-    }
-    if (mix) {
-      const id = mix.dataset.pepRemix, item = (data().top || []).find((x) => x.id === id);
-      if (!item) return;
-      if (S.mode !== "api") {
-        const p = { id: "pp" + Date.now().toString(36), title: "Ma version : " + item.caption.split(/[(:]/)[0].trim(), format: item.kind === "carousel" ? "carousel" : "reel", networks: ["instagram"], date: null, time: null, caption: "", captionValidated: false, manual: false, media: [], stage: "idea", status: "draft",
-          note: "Inspiration : " + item.url + "\n@" + item.handle + " · " + xs(item.score) + " sa moyenne\n\n(Mode démo : sur ton instance, Claude écrit ici pourquoi ça marche et ta version, avec la clé API.)" };
-        await S.savePosts([p]); U.toast("Idée créée dans Contenus", { label: "Ouvrir", fn: () => A.openPost(p.id) }); return;
-      }
-      mix.disabled = true; U.toast("Claude prépare ta version…");
-      try {
-        const r = await S.call("POST", "pepites/remix", { id });
-        const i = S.state.posts.findIndex((x) => x.id === r.post.id); if (i >= 0) S.state.posts[i] = r.post; else S.state.posts.push(r.post);
-        A.render();
-        U.toast(r.recipe ? "Idée créée avec la recette de Claude" : "Idée créée avec le lien d'origine" + (r.why ? " (Claude : " + r.why + ")" : ""), { label: "Ouvrir", fn: () => A.openPost(r.post.id) });
-      } catch (x) { U.toast("Impossible : " + x.message); mix.disabled = false; }
     }
   });
 })();
