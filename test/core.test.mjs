@@ -36,3 +36,19 @@ test("créneaux et dates", () => {
   assert.equal(Core.mondayOf("2026-11-15"), "2026-11-09");
   assert.equal(Core.addDays("2026-11-30", 1), "2026-12-01");
 });
+
+test("contenus intemporels : publiés il y a plus de 2 mois, pas repris récemment, jamais l'actu", () => {
+  const posts = [
+    { id: "a", title: "A", evergreen: true, status: "published", date: "2026-08-01" },
+    { id: "b", title: "B", evergreen: true, status: "published", date: "2026-07-01" },
+    { id: "c", title: "C", evergreen: true, status: "published", date: "2026-07-01", expires: "2026-07-05" },
+    { id: "d", title: "D", status: "published", date: "2026-06-01" },
+    { id: "e", title: "E", evergreen: true, status: "published", date: "2026-10-20" },
+    { id: "k1", title: "B (reprise)", repostOf: "b", status: "published", date: "2026-10-01" },
+  ];
+  assert.deepEqual(Core.evergreen(posts, "2026-11-13").map((p) => p.id), ["a"]);
+  assert.deepEqual(Core.evergreen(posts, "2026-12-15").map((p) => p.id), ["a", "b"]);
+  const c = Core.repostOf(Object.assign({ url: "x", results: {} }, posts[0]), "2026-11-20", "12:30", "k2");
+  assert.equal(c.title, "A (reprise)"); assert.equal(c.repostOf, "a"); assert.equal(c.captionValidated, false);
+  assert.ok(!("url" in c) && !("evergreen" in c));
+});

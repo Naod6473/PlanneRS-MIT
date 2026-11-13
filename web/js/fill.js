@@ -30,14 +30,18 @@
   A.fillWeek = function () {
     if (!A.week) A.week = C.mondayOf(C.ymd(new Date()));
     const ready = S.state.posts.filter((p) => !p.date && p.status === "ready" && !p.parent);
-    if (!ready.length) { U.toast("Aucun post dans « Prêts à programmer »"); return; }
+    const green = C.evergreen(S.state.posts, C.ymd(new Date()));
+    if (!ready.length && !green.length) { U.toast("Aucun post dans « Prêts à programmer »"); return; }
     const free = A.freeSlots(A.week);
     if (!free.length) { U.toast("Plus de créneau libre cette semaine : passe à la semaine suivante"); return; }
-    const plan = ready.slice(0, free.length).map((p, i) => ({ p, s: free[i] })).sort((x, y) => (x.s.date + x.s.time).localeCompare(y.s.date + y.s.time));
+    // D'abord les posts prêts ; les créneaux qui restent reçoivent une reprise d'un contenu intemporel (2 au plus par semaine).
+    const extra = green.slice(0, Math.min(2, Math.max(0, free.length - ready.length))).map((p) => Object.assign({ green: true }, p));
+    const plan = ready.concat(extra).slice(0, free.length).map((p, i) => ({ p, s: free[i] })).sort((x, y) => (x.s.date + x.s.time).localeCompare(y.s.date + y.s.time));
     A.openLayer('<div class="sh-top"><b>Remplir la semaine</b><span style="flex:1"></span><button class="iconbtn" data-close aria-label="Fermer">' + icon("x") + "</button></div>" +
       '<div class="sh-body"><p style="margin:0">' + plan.length + " post" + (plan.length > 1 ? "s" : "") + " dans les créneaux libres" + (A.bestTimes && A.bestTimes() ? ", les meilleurs horaires d'abord" : "") + ". Décoche ceux à garder de côté.</p>" +
       '<div class="fill-list">' + plan.map((x, i) => '<label class="fill-row"><input type="checkbox" data-fill-i="' + i + '" checked><span class="mono">' + esc(C.shortDay(x.s.date)) + " · " + x.s.time + "</span><b data-noi18n>" + esc(x.p.title) + "</b>" +
-        (x.p.captionValidated ? "" : '<span class="st st-manual">Texte à valider</span>') + "</label>").join("") + "</div>" +
+        (x.p.green ? '<span class="st st-scheduled">' + icon("undo") + "Reprise intemporelle</span>" : x.p.captionValidated ? "" : '<span class="st st-manual">Texte à valider</span>') + "</label>").join("") + "</div>" +
+      (extra.length ? '<p class="muted" style="margin:0;font-size:13px">Les reprises intemporelles sont des copies de posts déjà publiés il y a plus de 2 mois : leur texte sera à relire et valider.</p>' : "") +
       (ready.length > plan.length ? '<p class="muted" style="margin:0;font-size:13px">' + (ready.length - plan.length) + " post(s) restent en attente : plus de créneau libre cette semaine.</p>" : "") +
       '<p class="muted" style="margin:0;font-size:13px">Un post dont le texte n\'est pas validé est daté, mais ne partira qu\'après validation.</p></div>' +
       '<div class="sh-foot"><button class="btn primary" id="fill-ok">' + icon("check") + "Programmer</button><button class=\"btn\" data-close>Annuler</button></div>", "Remplir la semaine");
@@ -45,11 +49,16 @@
     L.querySelector("#fill-ok").addEventListener("click", async () => {
       const pick = plan.filter((x, i) => L.querySelector('[data-fill-i="' + i + '"]').checked);
       if (!pick.length) { A.closeLayer(); return; }
-      pick.forEach(({ p, s }) => { p.date = s.date; p.time = s.time; p.status = "scheduled"; if (p.captionValidated) p.stage = "scheduled"; });
+      const copies = [];
+      pick.forEach((x, i) => {
+        const { p, s } = x;
+        if (p.green) { const c = C.repostOf(S.post(p.id), s.date, s.time, "k" + Date.now().toString(36) + i); copies.push(c); x.p = c; return; }
+        p.date = s.date; p.time = s.time; p.status = "scheduled"; if (p.captionValidated) p.stage = "scheduled";
+      });
       await S.savePosts(pick.map((x) => x.p));
       await S.log({ level: "change", text: "Semaine remplie : " + pick.length + " post(s) programmé(s) (" + pick.map((x) => x.p.title).join(", ") + ")" });
       A.closeLayer(); A.render();
-      U.toast(pick.length + " post(s) programmé(s)", { label: "Annuler", fn: async () => { pick.forEach(({ p }) => { p.date = null; p.time = null; p.status = "ready"; p.stage = "ready"; }); await S.savePosts(pick.map((x) => x.p)); A.render(); U.toast("Annulé"); } });
+      U.toast(pick.length + " post(s) programmé(s)", { label: "Annuler", fn: async () => { for (const c of copies) await S.deletePost(c.id); const back = pick.filter((x) => !copies.includes(x.p)); back.forEach(({ p }) => { p.date = null; p.time = null; p.status = "ready"; p.stage = "ready"; }); await S.savePosts(back.map((x) => x.p)); A.render(); U.toast("Annulé"); } });
     });
   };
 })();

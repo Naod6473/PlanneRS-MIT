@@ -125,6 +125,8 @@ Ouvre un post publié et clique sur **Republier**. Choisis quand : **Demain**, *
 
 Coche **Le texte est bon tel quel** pour que la copie parte à l'heure prévue sans autre étape. Sinon, la légende est à revalider : c'est l'occasion de la rafraîchir.
 
+**Contenu intemporel** : coche-le dans cette fenêtre pour un post qui ne vieillit pas (un tuto, une explication de base). Ensuite, **Remplir la semaine** le repropose tout seul dans les créneaux libres qui restent, au plus 2 reprises par semaine et pas plus d'une fois tous les 2 mois pour un même post. Chaque reprise est une copie dont le texte est à relire et valider. Un contenu d'actualité (avec une date de péremption) ne peut pas être intemporel.
+
 La carte **À republier** de [Stats](stats.md) propose les posts de plus de 45 jours qui ont fait plus de vues que ta moyenne, avec un bouton **Republier** sur chacun.
 
 ### Répéter un post

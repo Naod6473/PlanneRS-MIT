@@ -276,3 +276,22 @@ test("lien partagé depuis le téléphone : au choix ma version ou une idée", {
   assert.deepEqual(errors, []);
   await page.close();
 });
+
+test("remplir la semaine : une reprise d'un contenu intemporel dans un créneau libre", { skip }, async () => {
+  const { page, errors } = await open();
+  const n0 = await page.evaluate(() => {
+    const p = Store.state.posts.find((x) => !x.parent && x.status === "published");
+    p.evergreen = true; p.date = Core.addDays(Core.ymd(new Date()), -90); delete p.expires;
+    Store.state.posts.filter((x) => x.repostOf === p.id).forEach((x) => { x.date = Core.addDays(Core.ymd(new Date()), -200); });
+    Store.state.posts.filter((x) => !x.date && x.status === "ready").forEach((x) => { x.status = "draft"; });
+    App.week = Core.mondayOf(Core.addDays(Core.ymd(new Date()), 7)); App.fillWeek();
+    return Store.state.posts.length;
+  });
+  assert.match(await page.locator(".fill-list").innerText(), /Reprise intemporelle/);
+  await page.click("#fill-ok");
+  await page.waitForTimeout(300);
+  assert.equal(await page.evaluate(() => Store.state.posts.filter((x) => x.repostOf && x.stage === "caption" && x.date >= Core.ymd(new Date())).length >= 1), true);
+  assert.ok((await page.evaluate(() => Store.state.posts.length)) > n0);
+  assert.deepEqual(errors, []);
+  await page.close();
+});

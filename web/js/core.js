@@ -395,7 +395,25 @@
 
   function nowStamp(d) { d = d || new Date(); return ymd(d) + "T" + pad(d.getHours()) + ":" + pad(d.getMinutes()); }
 
-  const api = { STATUS, FORMATS, STAGES, STEPS, step, alertOf, pad, ymd, parseYmd, addDays, mondayOf, toMin, at, longDate, shortDay, MONTHS, DAYS, setLang,
+  // Contenus intemporels à reprendre : publiés, marqués « intemporel », sans date de péremption,
+  // et pas repris (ni publiés) depuis `gap` jours. Les plus anciennement repris d'abord.
+  function evergreen(posts, today, gap) {
+    gap = gap || 60;
+    const top = (posts || []).filter((p) => !p.parent), last = {};
+    top.forEach((p) => { const k = p.repostOf; if (k && p.date && (!last[k] || p.date > last[k])) last[k] = p.date; });
+    const limit = addDays(today, -gap);
+    return top.filter((p) => p.evergreen && p.status === "published" && !p.repostOf && !p.expires && p.date && p.date <= limit && !(last[p.id] && last[p.id] > limit))
+      .sort((a, b) => (last[a.id] || a.date).localeCompare(last[b.id] || b.date));
+  }
+  // Copie d'un post pour le republier : nouveaux identifiant et date, légende à revalider.
+  function repostOf(p, date, time, id) {
+    const c = JSON.parse(JSON.stringify(p));
+    c.id = id; c.date = date; c.time = time; c.status = "scheduled"; c.stage = "caption"; c.captionValidated = false;
+    c.title = String(p.title || "").replace(/ \(reprise\)$/, "") + " (reprise)"; c.repostOf = p.id; delete c.evergreen;
+    ["results", "failure", "url", "job", "ignored", "needsAttention", "reminded", "attempts", "comments", "ref", "tries", "plugs"].forEach((k) => delete c[k]);
+    return c;
+  }
+  const api = { evergreen, repostOf, STATUS, FORMATS, STAGES, STEPS, step, alertOf, pad, ymd, parseYmd, addDays, mondayOf, toMin, at, longDate, shortDay, MONTHS, DAYS, setLang,
     displayStatus, missed, willSend, hashtags, checks, mediaChecks, slotOf, nowStamp, fold, seriesOf, matchQuery, parseCsv, toCsv, manualNets, autoNets, pendingManual, prefillUrl, titleFor, capFor, TEXT_MAX, utm, textOut, PROD_STEPS, inFabrique, prodOf, CREW, CREW_WHO, crewOf, crewWork, reviewPile, reviewOf, needsFix, achievements, achText };
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.Core = api;
 })(typeof self !== "undefined" ? self : this);

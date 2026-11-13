@@ -807,6 +807,7 @@
       '<div class="rc-quick" role="group" aria-label="Quand">' + quick.map(([l, d]) => '<button type="button" class="chip" data-rcq="' + d + '" aria-pressed="' + (d === d0) + '">' + l + "</button>").join("") + "</div>" +
       '<div class="form"><label>Jour<input type="date" id="rc-date" min="' + t + '" value="' + d0 + '"></label>' +
       '<label>Créneau<select id="rc-time">' + slots.map((s) => '<option value="' + s.time + '"' + (s.time === p.time ? " selected" : "") + ">" + s.time + " · " + esc(s.label) + "</option>").join("") + (p.time && !slots.some((s) => s.time === p.time) ? '<option value="' + p.time + '" selected>' + p.time + "</option>" : "") + "</select></label>" +
+      '<label class="toggle"><input type="checkbox" id="rc-green"' + (p.evergreen ? " checked" : "") + (p.expires ? " disabled" : "") + '> Contenu intemporel : le reproposer tout seul pour remplir les trous (tous les 2 mois au plus)</label>' +
       (canVal ? '<label class="toggle"><input type="checkbox" id="rc-val"> Le texte est bon tel quel (validé, il partira à l\'heure prévue)</label>' : "") +
       '</div><p class="muted" style="margin:0;font-size:13px">Sinon, la légende sera à relire et à valider : c\'est l\'occasion de la rafraîchir.</p></div>' +
       '<div class="sh-foot"><button class="btn primary" id="rc-ok">' + icon("undo") + "Programmer la republication</button><button class=\"btn\" data-close>Annuler</button></div>", "Republier");
@@ -817,11 +818,12 @@
       const d = L.querySelector("#rc-date").value;
       if (!d || d < t) { U.toast("Choisis une date à venir"); return; }
       const val = !!(L.querySelector("#rc-val") && L.querySelector("#rc-val").checked);
-      const c = JSON.parse(JSON.stringify(p));
-      c.id = "k" + Date.now().toString(36); c.date = d; c.time = L.querySelector("#rc-time").value || p.time || "12:00";
-      c.status = "scheduled"; c.stage = val ? "scheduled" : "caption"; c.captionValidated = val; c.title = p.title.replace(/ \(reprise\)$/, "") + " (reprise)"; c.repostOf = p.id;
-      ["results", "failure", "url", "job", "ignored", "needsAttention", "reminded", "attempts", "comments", "ref", "tries", "plugs"].forEach((k) => delete c[k]);
-      await S.savePosts([c]);
+      const orig = p.repostOf ? S.post(p.repostOf) || p : p, green = L.querySelector("#rc-green").checked;
+      const c = C.repostOf(p, d, L.querySelector("#rc-time").value || p.time || "12:00", "k" + Date.now().toString(36));
+      if (p.repostOf) c.repostOf = p.repostOf;
+      if (val) { c.stage = "scheduled"; c.captionValidated = true; }
+      const ch = [c]; if (!!orig.evergreen !== green) { orig.evergreen = green || undefined; ch.push(orig); }
+      await S.savePosts(ch);
       await S.log({ level: "change", text: "Republication de « " + p.title + " » programmée le " + C.longDate(d) + " à " + c.time + (val ? "" : " (légende à valider)"), postId: c.id });
       A.closeLayer(); A.render();
       U.toast(val ? "Republication programmée" : "Republication programmée, légende à valider", { label: "Annuler", fn: async () => { await S.deletePost(c.id); A.render(); U.toast("Republication supprimée"); } });
