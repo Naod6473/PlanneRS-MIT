@@ -78,7 +78,7 @@
       '<div class="seg cp-tabs" role="group" aria-label="Vue"><button type="button" data-cpview="edit" aria-pressed="true">Écrire</button><button type="button" data-cpview="pv" aria-pressed="false">Aperçu</button></div>' +
       '<button class="iconbtn" data-close aria-label="Fermer">' + icon("x") + "</button></div>" +
       '<div class="cp-main"><section class="cp-edit">' +
-        '<div class="cp-nets" role="group" aria-label="Réseaux">' + nets0.map((n) => '<button type="button" class="cp-net" data-cpnet="' + n + '" aria-pressed="' + d.networks.includes(n) + '" title="' + esc(T(n)) + '">' + brand(n, "lg") + "</button>").join("") +
+        '<div class="cp-nets" role="group" aria-label="Réseaux">' + nets0.map((n) => '<button type="button" class="cp-net n-' + n + '" data-cpnet="' + n + '" aria-pressed="' + d.networks.includes(n) + '" title="' + esc(T(n)) + '" style="--bc:' + (((window.BRANDS || {})[n] || {}).color || "var(--ink3)") + '">' + brand(n, "lg") + '<span class="lbl">' + esc(T(n)) + "</span></button>").join("") +
           (sets.length ? '<span class="cp-sets">' + sets.map((g, i) => '<button type="button" class="chip sm" data-cpset="' + i + '">' + esc(g.name) + "</button>").join("") + "</span>" : "") + "</div>" +
         '<div class="cp-box"><div class="cp-capt" role="tablist" aria-label="Texte par réseau"></div>' +
           '<textarea id="cp-text" class="cp-text" placeholder="Écris ton texte ici…" aria-label="Texte du post"></textarea>' +

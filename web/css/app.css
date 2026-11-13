@@ -1026,10 +1026,16 @@ table.list tr.sel td{background:var(--rev-bg)}
 .cp-pvbox{width:100%;display:flex;flex-direction:column;align-items:center;gap:8px}
 .cp-pvbox .nppost{width:min(100%,420px)}
 .cp-nets{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.cp-net{border:2px solid transparent;border-radius:12px;padding:3px;background:none;cursor:pointer;line-height:0;transition:opacity .12s,filter .12s}
-.cp-net[aria-pressed="true"]{border-color:var(--focus)}
-.cp-net[aria-pressed="false"]{opacity:.45;filter:grayscale(1)}
-.cp-net:hover{opacity:1}
+/* Réseaux du post : ronds de couleur ; un réseau choisi se déplie en pilule avec son nom. */
+.cp-net{display:inline-flex;align-items:center;height:40px;min-width:40px;padding:0;border:0;border-radius:999px;background:var(--bc);color:#fff;cursor:pointer;font-family:inherit;font-size:14px;font-weight:600;line-height:1;box-shadow:inset 0 0 0 1px rgba(255,255,255,.14);opacity:.55;transition:opacity .15s,transform .15s,box-shadow .15s}
+.cp-net.n-instagram{background:radial-gradient(circle at 30% 107%,#fdf497 0%,#fd5949 45%,#d6249f 60%,#285AEB 90%)}
+.cp-net .brand.lg{width:40px;height:40px;border-radius:999px;background:none!important}.cp-net .brand.lg svg{width:18px;height:18px}
+.cp-net .lbl{max-width:0;overflow:hidden;white-space:nowrap;opacity:0;transition:max-width .25s ease,opacity .2s,padding .25s ease}
+.cp-net[aria-pressed="true"]{opacity:1}
+.cp-net[aria-pressed="true"] .lbl{max-width:160px;opacity:1;padding-right:16px;margin-left:-6px}
+.cp-net:hover{opacity:1;transform:translateY(-1px)}
+.cp-net:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.cp-net,.cp-net .lbl{transition:none}}
 .cp-sets{display:inline-flex;gap:6px;margin-left:6px;flex-wrap:wrap}
 .cp-box{border:1px solid var(--line2);border-radius:12px;background:var(--panel);display:flex;flex-direction:column}
 .cp-box:focus-within{border-color:var(--focus)}
