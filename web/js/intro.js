@@ -1,8 +1,9 @@
-/* PlanneRs : animation d'ouverture (une fois par session), environ 3,5 secondes.
-   Un paquet de cartes aux vraies couleurs des réseaux se pose dans un coin, sur fond noir. À chaque temps, la carte
-   du dessus passe derrière le paquet et grandit jusqu'à remplir l'écran de sa couleur, pendant qu'un mot monte
-   en bas à gauche : « Planifie. Valide. Publie. ». La dernière carte est celle de PlanneRs : elle grandit à son tour,
+/* PlanneRs : animation d'ouverture (une fois par session), environ 4,2 secondes.
+   Sur fond noir, les cartes aux vraies couleurs des réseaux se posent côte à côte, puis se rejoignent en un seul paquet.
+   À chaque temps, la carte du dessus passe derrière le paquet et grandit jusqu'à remplir l'écran de sa couleur, pendant
+   qu'un mot monte : « Planifie. Valide. Publie. ». La dernière carte est celle de PlanneRs : elle grandit à son tour,
    devient le fond de l'appli, et son logo va se poser sur celui de la barre latérale.
+   Écran large : le paquet en haut à droite, les mots en bas à gauche. Écran en hauteur (téléphone) : tout est centré.
    Tout passe par transform et opacity. Un clic ou une touche l'écourte. */
 (function () {
   "use strict";
@@ -20,10 +21,11 @@
   try { sessionStorage.setItem("planners-intro", "1"); } catch (e) {}
 
   // Le déroulé, en millisecondes.
-  const DEAL = 45;                 // écart entre deux cartes quand le paquet se pose
-  const BEATS = [440, 1180, 1920]; // les trois temps : une carte remplit l'écran, un mot arrive
-  const END = 2640, TUCK = 120;    // la carte de PlanneRs se ramasse un instant, puis devient l'appli
-  const GROW = 480, FADE = 220;    // durée d'un remplissage d'écran, puis du fondu final vers l'appli
+  const LAY = 80;                    // écart entre deux cartes quand elles se posent côte à côte
+  const JOIN = 560, PACK = 460;      // elles se rejoignent en un seul paquet : départ, durée du trajet
+  const BEATS = [1200, 1940, 2680];  // les trois temps : une carte remplit l'écran, un mot arrive
+  const END = 3400, TUCK = 120;      // la carte de PlanneRs se ramasse un instant, puis devient l'appli
+  const GROW = 480, FADE = 220;      // durée d'un remplissage d'écran, puis du fondu final vers l'appli
   const TOTAL = END + TUCK + GROW + FADE;
   const OUT = "cubic-bezier(.16,1,.3,1)", INOUT = "cubic-bezier(.7,0,.2,1)";
 
@@ -33,7 +35,7 @@
     const deck = box.querySelector(".in-deck"), hero = box.querySelector(".hero");
     const plate = hero.firstElementChild, logo = hero.lastElementChild;
 
-    // Les cartes : la couleur officielle de chaque réseau, à plat, et son logo en blanc. Celle de PlanneRs est dessous.
+    // Les cartes : la couleur officielle de chaque réseau, à plat, et son logo en blanc. Celle de PlanneRs vient en dernier.
     const NETS = [
       ["youtube", "#FF0000"],
       ["facebook", "#0866FF"],
@@ -50,9 +52,10 @@
     cards.push(hero);
     cards.forEach((c, i) => { c.style.zIndex = String(30 - i); });
 
-    // Les mots, empilés en bas à gauche : chaque nouveau monte du bord et pousse les précédents d'une ligne.
+    // Les mots, empilés : chaque nouveau monte du bas du bloc et pousse les précédents d'une ligne.
     const WORDS = en ? ["Plan.", "Approve.", "Post."] : ["Planifie.", "Valide.", "Publie."];
     const LEAD = en ? 1 : 0.92; // interligne, plus large en anglais pour les jambages de « Approve. »
+    const AIR = 0.3;            // écran en hauteur : l'espace entre la carte et les mots, en lignes
     const words = document.createElement("div"), col = document.createElement("div"), base = document.createElement("i");
     words.className = "in-words";
     col.className = "in-col";
@@ -61,26 +64,49 @@
     words.appendChild(col);
     box.appendChild(words);
 
-    // Mesures, en une seule passe de mise en page, avant toute animation.
+    // Mesures et mise en place, avant toute animation.
     const W = box.clientWidth, H = box.clientHeight;
-    const slot = deck.getBoundingClientRect(), from = logo.getBoundingClientRect();
+    const isMid = () => getComputedStyle(box).getPropertyValue("--mid").trim() === "1";
+    const mid = isMid(); // écran en hauteur : composition centrée (c'est la feuille de style qui le dit)
+    let slot = deck.getBoundingClientRect();
     const mark = document.querySelector(".side .logo-mark"), to = mark ? mark.getBoundingClientRect() : null;
+    const name = box.querySelector(".in-name");
     const rad = parseFloat(getComputedStyle(plate).borderTopLeftRadius) || 0;
     const cs = getComputedStyle(words), left = parseFloat(cs.left) || 24, bottom = parseFloat(cs.bottom) || 24;
     const step = Math.round(slot.width * 0.07); // décalage entre deux cartes du paquet
+    const gap = left * 0.6, deckH = slot.height + 3 * step;
+    const head = (name ? name.getBoundingClientRect().bottom : 0) + gap; // la place que prend le nom, en haut
     words.style.fontSize = "100px";
     const em = words.getBoundingClientRect().width / 100; // largeur du mot le plus long, en em
-    // Le texte le plus grand possible : sous le paquet (écran haut) ou à côté (écran large).
-    const gap = left * 0.6, deckLeft = slot.left - 3 * step, deckBottom = slot.bottom + 3 * step;
-    const under = Math.min((W - 2 * left) / em, (H - bottom - deckBottom - gap) / (3 * LEAD));
-    const beside = Math.min((deckLeft - gap - left) / em, (H - bottom - slot.top) / (3 * LEAD));
+    // Le texte le plus grand possible : sous le paquet (écran haut, ou en hauteur : centré avec lui) ou à côté (écran large).
+    const under = Math.min((W - 2 * left) / em, mid ? (H - 2 * head - slot.height) / ((3 + AIR) * LEAD) : (H - bottom - slot.top - deckH - gap) / (3 * LEAD));
+    const beside = mid ? 0 : Math.min((slot.left - 3 * step - gap - left) / em, (H - bottom - slot.top) / (3 * LEAD));
     const size = Math.floor(Math.max(24, Math.min(Math.max(under, beside), H * 0.2, 200)));
     const line = Math.round(size * LEAD); // un nombre entier de pixels par ligne : le texte reste net à l'arrêt
     words.style.fontSize = size + "px";
     words.style.lineHeight = line + "px";
-    // La ligne de base du dernier mot se pose exactement sur la marge du bas, quelle que soit la police du système.
-    const sink = Math.round(words.getBoundingClientRect().bottom - base.getBoundingClientRect().bottom);
-    words.style.marginBottom = -sink + "px";
+    // La ligne de base du dernier mot se pose exactement sur la marge du bas (ou sur le bas du bloc centré), quelle que soit la police du système.
+    const wr = words.getBoundingClientRect(), sink = Math.round(wr.bottom - base.getBoundingClientRect().bottom);
+    if (mid) {
+      // Écran en hauteur : la carte et les trois lignes forment un seul bloc, centré dans l'écran et accroché par le haut.
+      const block = slot.height + Math.round(line * AIR) + 3 * line, top = Math.round((H - block) / 2);
+      deck.style.right = "auto";
+      deck.style.left = Math.round((W - slot.width) / 2) + "px";
+      deck.style.top = top + "px";
+      words.style.left = Math.round((W - wr.width) / 2) + "px";
+      words.style.bottom = "auto";
+      words.style.top = Math.round(top + block + sink - wr.height) + "px";
+      slot = deck.getBoundingClientRect();
+    } else words.style.marginBottom = -sink + "px";
+    const from = logo.getBoundingClientRect();
+    // Au départ, les cartes sont posées côte à côte au milieu de l'écran : sur un rang s'il tient, sinon en carré
+    // (et un peu réduites si même le carré ne tient pas).
+    const g = Math.round(slot.width * 0.12);
+    const room = (n) => Math.max(0.4, Math.min(1, (W - 2 * left) / (n * slot.width + (n - 1) * g), (H - 2 * head) / (4 / n * slot.height + (4 / n - 1) * g)));
+    const cols = room(4) >= room(2) ? 4 : 2, sc = room(cols), px = sc * (slot.width + g), py = sc * (slot.height + g);
+    const x0 = Math.round((W - cols * px + sc * g) / 2) - slot.left - (1 - sc) * slot.width / 2;
+    const y0 = Math.round((H - 4 / cols * py + sc * g) / 2) - slot.top - (1 - sc) * slot.height / 2;
+    const spot = (i, s) => "translate(" + (x0 + (i % cols) * px).toFixed(1) + "px," + (y0 + Math.floor(i / cols) * py).toFixed(1) + "px) scale(" + (sc * s).toFixed(3) + ")";
 
     const anims = [];
     const run = (el, frames, opts) => { const a = el.animate(frames, Object.assign({ fill: "forwards", easing: OUT }, opts)); anims.push(a); return a; };
@@ -102,11 +128,11 @@
       box.style.animation = "none";
       setTimeout(done, TOTAL + 600);
 
-      // 1. Le paquet se pose, carte par carte, celle de PlanneRs d'abord.
-      cards.forEach((c, i) => run(c, [
-        { opacity: 1, transform: "translate(" + -i * step + "px," + (i * step - deckBottom) + "px)" },
-        { opacity: 1, transform: at(i) },
-      ], { duration: 340, delay: (cards.length - 1 - i) * DEAL, fill: "both" }));
+      // 1. Les cartes se posent côte à côte, une par une, puis se rejoignent en un seul paquet, celle de PlanneRs dessous.
+      cards.forEach((c, i) => {
+        run(c, [{ opacity: 1, transform: spot(i, 1.12) }, { opacity: 1, transform: spot(i, 1) }], { duration: 280, delay: i * LAY });
+        run(c, [{ transform: spot(i, 1) }, { transform: at(i) + " scale(1)" }], { duration: PACK, delay: JOIN + (cards.length - 1 - i) * 35, easing: INOUT });
+      });
 
       // 2. Trois temps : la carte du dessus passe derrière et remplit l'écran, le paquet avance d'un cran, un mot monte.
       BEATS.forEach((t, i) => {
@@ -134,7 +160,7 @@
       run(box, [{ opacity: 1 }, { opacity: 0 }], { duration: FADE, delay: END + TUCK + GROW, easing: "linear" }).onfinish = done;
     };
 
-    // Un clic ou une touche : on fige l'image et on passe à l'appli. Pareil si la fenêtre change nettement de taille.
+    // Un clic ou une touche : on fige l'image et on passe à l'appli. Pareil si la fenêtre change nettement de taille ou de sens.
     skip = () => {
       if (leaving) return;
       leaving = true;
@@ -142,7 +168,7 @@
       box.style.pointerEvents = "none";
       box.animate([{ opacity: getComputedStyle(box).opacity }, { opacity: 0 }], { duration: 180, fill: "forwards" }).onfinish = done;
     };
-    resize = () => { if (Math.abs(box.clientWidth - W) > W / 10 || Math.abs(box.clientHeight - H) > H / 10) skip(); };
+    resize = () => { if (Math.abs(box.clientWidth - W) > W / 10 || Math.abs(box.clientHeight - H) > H / 10 || isMid() !== mid) skip(); };
     box.addEventListener("click", skip);
     addEventListener("keydown", skip, true);
     addEventListener("resize", resize);

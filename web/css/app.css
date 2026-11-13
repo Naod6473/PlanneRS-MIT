@@ -1541,8 +1541,8 @@ input:user-invalid,textarea:user-invalid,select:user-invalid{border-color:var(--
 .share-pick { display: grid; gap: 8px; margin: 12px 0; }
 .wz-how{display:flex;margin:4px 0 8px}.wz-how button{flex:1;white-space:normal}
 
-/* Animation d'ouverture : un paquet de cartes aux couleurs des réseaux ; chaque carte grandit et remplit l'écran, la dernière devient l'appli (js/intro.js). */
-#intro{position:fixed;inset:0;z-index:100;overflow:hidden;cursor:pointer;background:#000;color:#000;font:800 16px/1 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;--m:clamp(24px,7.5vmin,88px);--cw:clamp(128px,25vmin,224px);animation:intro-safety 0s linear 4s forwards}
+/* Animation d'ouverture : les cartes aux couleurs des réseaux se rejoignent en un paquet ; chacune grandit et remplit l'écran, la dernière devient l'appli (js/intro.js). */
+#intro{position:fixed;inset:0;z-index:100;overflow:hidden;cursor:pointer;background:#000;color:#000;font:800 16px/1 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;--m:clamp(24px,7.5vmin,88px);--cw:clamp(128px,25vmin,224px);--mid:0;animation:intro-safety 0s linear 4s forwards}
 .no-intro #intro{display:none}
 .i18n-wait #intro{visibility:visible}
 .in-name{position:absolute;left:calc(var(--m) + env(safe-area-inset-left,0px));top:calc(var(--m) + env(safe-area-inset-top,0px));z-index:10;margin-top:-.14em;color:#fff;font-size:clamp(16px,2.7vmin,22px);letter-spacing:-.02em}
@@ -1555,6 +1555,8 @@ input:user-invalid,textarea:user-invalid,select:user-invalid{border-color:var(--
 .in-col{will-change:transform}
 .in-col span{display:block;opacity:0}
 .in-col i{display:inline-block}
+/* Écran en hauteur (téléphone) : tout est centré. js/intro.js lit --mid, puis place le paquet et les mots. */
+@media (max-aspect-ratio:5/6){#intro{--mid:1}.in-name{left:0;right:0;text-align:center}.in-words{margin-left:0;text-align:center}}
 @keyframes intro-safety{to{visibility:hidden;pointer-events:none}}
 @media (prefers-reduced-motion:reduce){#intro{display:none}}
 
