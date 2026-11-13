@@ -1083,6 +1083,7 @@ window.I18N_EN = {
 "Partager en image": "Share as image",
 "Partager mon mois": "Share my month",
 "Colonne « titre » (ou « texte ») introuvable.": "“title” (or “text”) column not found.",
+"Proposer avec Claude": "Suggest with Claude",
 "Republier": "Repost",
 "Programmer la republication": "Schedule the repost",
 "Dans 1 semaine": "In 1 week",

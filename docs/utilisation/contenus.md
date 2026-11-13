@@ -113,7 +113,7 @@ Si ton instance a une clé Claude, **Réécrire pour … avec Claude** propose u
 
 ### Description des images
 
-Dans les **Paramètres** de la fenêtre de création, le champ **Description des images (texte alternatif)** décrit ce qu'on voit sur l'image, pour les personnes malvoyantes. Elle est envoyée à Bluesky, Mastodon, X et LinkedIn avec chaque image. L'assistant IA peut la remplir (outil `planners_update_post`, ou une description par image avec `planners_add_media`).
+Dans les **Paramètres** de la fenêtre de création, le champ **Description des images (texte alternatif)** décrit ce qu'on voit sur l'image, pour les personnes malvoyantes. Elle est envoyée à Instagram, Facebook, Bluesky, Mastodon, X, LinkedIn et Pinterest avec chaque image. **Proposer avec Claude** la rédige en regardant la première image (avec la clé `ANTHROPIC_API_KEY`, voir [Assistants IA](../reference/assistants-ia.md)) : relis-la avant d'enregistrer. L'assistant IA peut aussi la remplir (outil `planners_update_post`, ou une description par image avec `planners_add_media`).
 
 ### Premier commentaire
 

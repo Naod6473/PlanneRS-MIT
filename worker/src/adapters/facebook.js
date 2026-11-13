@@ -1,6 +1,7 @@
 // Publication sur une Page Facebook (souvent en relais d'Instagram).
 // Doc : https://developers.facebook.com/docs/pages-api/
 import { graph, isVideo, publicUrl, PublishError } from "./meta.js";
+import { altOf } from "./common.js";
 
 export const id = "facebook";
 export const fields = [
@@ -44,12 +45,14 @@ export async function publish(env, post, cred) {
     return { status: "ok", id: r.id, url: await link(env, r.id, tok) };
   }
   const photos = media.filter((m) => !isVideo(m));
+  // Texte alternatif (alt_text_custom) : refusé par l'API, la photo part sans lui.
+  const photo = async (p, m) => { const alt = altOf(post, m); if (!alt) return graph(env, "POST", page + "/photos", p, tok); try { return await graph(env, "POST", page + "/photos", Object.assign({ alt_text_custom: alt.slice(0, 1000) }, p), tok); } catch (e) { if (e.code === "190") throw e; return graph(env, "POST", page + "/photos", p, tok); } };
   if (photos.length === 1) {
-    const r = await graph(env, "POST", page + "/photos", { url: publicUrl(env, photos[0]), message: msg }, tok);
+    const r = await photo({ url: publicUrl(env, photos[0]), message: msg }, photos[0]);
     return { status: "ok", id: r.post_id || r.id, url: await link(env, r.post_id || r.id, tok) };
   }
   const ids = [];
-  for (const m of photos) ids.push((await graph(env, "POST", page + "/photos", { url: publicUrl(env, m), published: "false" }, tok)).id);
+  for (const m of photos) ids.push((await photo({ url: publicUrl(env, m), published: "false" }, m)).id);
   const params = { message: msg };
   ids.forEach((x, i) => { params["attached_media[" + i + "]"] = JSON.stringify({ media_fbid: x }); });
   const r = await graph(env, "POST", page + "/feed", params, tok);

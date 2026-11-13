@@ -37,6 +37,8 @@ import * as agent from "./agent.js";
 import * as pepites from "./pepites.js";
 import * as maversion from "./maversion.js";
 import * as metasetup from "./metasetup.js";
+import { suggestAlt } from "./alttext.js";
+import { fetchMedia } from "./adapters/common.js";
 import Recette from "../../web/js/recette.js";
 import { aiClient } from "./ai.js";
 import * as igHistory from "./history.js";
@@ -354,6 +356,13 @@ async function api(request, env, path, url, auth) {
     return json({ ok: true, post: p });
   }
   // Assistant Meta : trouver la Page et le compte Instagram à partir du jeton de l'Explorateur, puis connecter.
+  if (path === "alt/suggest" && m === "POST") {
+    if (!env.ANTHROPIC_API_KEY) return err("Pour proposer un texte alternatif avec Claude, ajoute le secret ANTHROPIC_API_KEY au Worker (voir la documentation « Assistants IA »).", 409);
+    const md = body && body.media;
+    if (!md || !(md.url || md.path)) return err("Ajoute d'abord une image au post.", 400);
+    try { return json({ alt: await suggestAlt(aiClient(env), await fetchMedia(env, md), { title: body.title, caption: body.caption }) }); }
+    catch (e) { return err(e.status === 401 ? "Clé ANTHROPIC_API_KEY refusée : vérifie-la dans les secrets du Worker." : e.status === 429 ? "Trop de demandes à Claude : réessaie dans une minute." : e.status >= 500 ? "Claude est indisponible : réessaie dans un instant." : e.message, e.status ? 502 : 400); }
+  }
   if (path === "meta/login" && m === "POST") {
     try { return json({ url: await metasetup.loginStart(env, db, url.origin, body || {}), redirect: metasetup.redirectUri(url.origin) }); } catch (e) { return err(e.message, 400); }
   }

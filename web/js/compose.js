@@ -102,6 +102,7 @@
           '<label class="toggle"><input type="checkbox" id="cp-manual"> Publier à la main (rappel au lieu d\'un envoi automatique)</label>' +
           '<label id="cp-fcl">Premier commentaire (Instagram, Facebook)<textarea id="cp-fc" rows="2" placeholder="Hashtags, lien… posté juste après la publication"></textarea></label>' +
           '<label>Description des images (texte alternatif)<textarea id="cp-alt" rows="2" placeholder="Ce qu\'on voit sur l\'image, pour les personnes qui ne la voient pas"></textarea></label>' +
+          '<button type="button" class="btn sm quiet" data-cp="alt" id="cp-altgo">' + icon("spark") + "Proposer avec Claude</button>" +
         "</div></details></section>" +
         '<section class="cp-pv"><h3>Aperçu</h3><div class="seg cp-pvnets" role="group" aria-label="Aperçu sur"></div><div class="cp-pvbox" id="cp-pv"></div></section></div>' +
       '<div class="cp-foot"><div class="cp-when"><label><span class="sr">Jour</span><input type="date" id="cp-date"></label>' +
@@ -270,6 +271,7 @@
         $("#cp-url").value = ""; touch(); media(); return;
       }
       if (act === "rewrite") return rewrite(b);
+      if (act === "alt") return suggestAlt(b);
       if (act === "adapt") return adapt(b);
       if (act === "draft" || act === "go") return save(act);
     });
@@ -313,6 +315,18 @@
       bar.hidden = true; bar.firstChild.style.width = "0";
     }
 
+    // Texte alternatif proposé par Claude d'après la première image ; à relire, rien n'est enregistré tout seul.
+    async function suggestAlt(btn) {
+      const img = (d.media || []).find((m) => m.role !== "guide" && m.role !== "cover" && !isVid(m));
+      if (!img) { U.toast("Ajoute d'abord une image au post"); return; }
+      const box = $("#cp-alt");
+      if (S.mode !== "api") { box.value = "Une baguette dorée posée sur une planche en bois, à côté d'un pot de levain. Texte sur l'image : « 3 erreurs à éviter »."; U.toast("Mode démo : exemple de texte alternatif"); return; }
+      if (!S.state.rewrite) { U.toast("Ajoute la clé ANTHROPIC_API_KEY au Worker pour que Claude propose le texte"); return; }
+      btn.disabled = true; U.toast("Claude regarde l'image…");
+      try { const r = await S.call("POST", "alt/suggest", { media: img, title: $("#cp-title") ? $("#cp-title").value : d.title, caption: drafts[""] || text.value || "" }); box.value = r.alt; box.focus(); U.toast("Proposition de Claude : relis-la avant d'enregistrer"); }
+      catch (x) { U.toast("Proposition impossible : " + x.message); }
+      finally { btn.disabled = false; }
+    }
     async function rewrite(btn) {
       const net = cur; if (!net) return;
       if (S.mode !== "api") { U.toast("Mode démo : la réécriture demande une clé Claude sur ton instance"); return; }

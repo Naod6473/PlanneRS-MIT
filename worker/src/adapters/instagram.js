@@ -1,6 +1,7 @@
 // Publication Instagram par l'API Graph (compte pro relié à une Page Facebook).
 // Doc : https://developers.facebook.com/docs/instagram-platform/content-publishing
 import { graph, sleep, isVideo, publicUrl, PublishError } from "./meta.js";
+import { altOf } from "./common.js";
 
 export const id = "instagram";
 export const fields = [
@@ -30,6 +31,8 @@ export async function publish(env, post, cred, job) {
     const media = post.media || [];
     if (!media.length) throw new PublishError("Aucun média.", { why: "Instagram exige une image ou une vidéo.", todo: "Ajoute un média au post.", retryable: false });
     const caption = post.caption || "";
+    // Texte alternatif des images (alt_text) : si l'API le refuse, on recrée le conteneur sans lui.
+    const make = async (p, m) => { const alt = !isVideo(m) && altOf(post, m); if (!alt) return (await graph(env, "POST", acc + "/media", p, token)).id; try { return (await graph(env, "POST", acc + "/media", Object.assign({ alt_text: alt.slice(0, 1000) }, p), token)).id; } catch (e) { if (e.code === "190") throw e; return (await graph(env, "POST", acc + "/media", p, token)).id; } };
     if (post.format === "story") {
       const m = media[0];
       container = (await graph(env, "POST", acc + "/media", { media_type: "STORIES", [isVideo(m) ? "video_url" : "image_url"]: publicUrl(env, m) }, token)).id;
@@ -37,7 +40,7 @@ export async function publish(env, post, cred, job) {
       const kids = [];
       for (const m of media.slice(0, 10)) {
         const p = isVideo(m) ? { media_type: "VIDEO", video_url: publicUrl(env, m), is_carousel_item: "true" } : { image_url: publicUrl(env, m), is_carousel_item: "true" };
-        const c = (await graph(env, "POST", acc + "/media", p, token)).id;
+        const c = await make(p, m);
         if (isVideo(m)) await waitReady(env, c, token, 120000);
         kids.push(c);
       }
@@ -46,7 +49,7 @@ export async function publish(env, post, cred, job) {
       const cover = media.find((m) => m.role === "cover");
       container = (await graph(env, "POST", acc + "/media", { media_type: "REELS", video_url: publicUrl(env, media[0]), caption, share_to_feed: "true", cover_url: cover ? publicUrl(env, cover) : undefined }, token)).id;
     } else {
-      container = (await graph(env, "POST", acc + "/media", { image_url: publicUrl(env, media[0]), caption }, token)).id;
+      container = await make({ image_url: publicUrl(env, media[0]), caption }, media[0]);
     }
   }
   const ready = await waitReady(env, container, token, 150000);
