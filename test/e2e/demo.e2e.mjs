@@ -295,3 +295,18 @@ test("remplir la semaine : une reprise d'un contenu intemporel dans un créneau 
   assert.deepEqual(errors, []);
   await page.close();
 });
+
+test("import CSV : exports de Metricool, Buffer et Hootsuite reconnus", { skip }, async () => {
+  const { page, errors } = await open();
+  const r = await page.evaluate(() => {
+    const metricool = 'Text;Date;Time;Instagram;Facebook;Picture Url 1;Picture Url 2\n"Trois astuces pour ton pain #boulange https://x.y";2026-12-02;18:00;TRUE;FALSE;https://ex.com/a.jpg;https://ex.com/b.jpg';
+    const buffer = 'Text,Scheduled At,Profile\n"Nouveau levain, nouvelle vie",11/14/2026 9:30 AM,Instagram';
+    const hoot = 'Date (DD/MM/YYYY HH:mm),Message,Link\n15/12/2026 12:30,Le pain du dimanche,';
+    return [metricool, buffer, hoot].map((t) => App.csvToPosts(t)).map((x) => ({ e: x.errors, p: x.posts.map((p) => ({ t: p.title, d: p.date, h: p.time, n: p.networks, f: p.format, m: p.media.length })) }));
+  });
+  assert.deepEqual(r[0].p[0], { t: "Trois astuces pour ton pain", d: "2026-12-02", h: "18:00", n: ["instagram"], f: "carousel", m: 2 });
+  assert.deepEqual(r[1].p[0], { t: "Nouveau levain, nouvelle vie", d: "2026-11-14", h: "09:30", n: ["instagram"], f: "image", m: 0 });
+  assert.deepEqual([r[2].p[0].d, r[2].p[0].h, r[2].e.length], ["2026-12-15", "12:30", 0]);
+  assert.deepEqual(errors, []);
+  await page.close();
+});

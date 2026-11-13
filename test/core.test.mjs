@@ -52,3 +52,14 @@ test("contenus intemporels : publiés il y a plus de 2 mois, pas repris récemme
   assert.equal(c.title, "A (reprise)"); assert.equal(c.repostOf, "a"); assert.equal(c.captionValidated, false);
   assert.ok(!("url" in c) && !("evergreen" in c));
 });
+
+test("dates des autres outils : ISO, jour/mois, AM/PM américain, UTC", () => {
+  assert.deepEqual(Core.parseWhen("2026-11-13 12:30"), { date: "2026-11-13", time: "12:30" });
+  assert.deepEqual(Core.parseWhen("13/11/2026 12h30"), { date: "2026-11-13", time: "12:30" });
+  assert.deepEqual(Core.parseWhen("11/13/2026 1:30 PM"), { date: "2026-11-13", time: "13:30" });
+  assert.deepEqual(Core.parseWhen("05/11/2026 12:05 AM"), { date: "2026-05-11", time: "00:05" });
+  assert.deepEqual(Core.parseWhen("05/11/2026"), { date: "2026-11-05", time: null });
+  assert.equal(Core.parseWhen("2026-13-01"), null);
+  assert.equal(Core.parseWhen("demain"), null);
+  assert.equal(Core.parseWhen("2026-11-13T11:30:00Z").date, "2026-11-13");
+});

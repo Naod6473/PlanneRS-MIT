@@ -832,34 +832,53 @@
 
   // ------------------------------------------------------------ Import d'un planning CSV
   // Colonnes reconnues (en-tête, séparateur « ; » ou « , ») : date, heure, titre, format, réseaux, légende.
+  // Aussi les exports et modèles d'import des outils payants (Buffer, Later, Metricool, Hootsuite…) :
+  // date et heure dans une seule colonne, une colonne par réseau (TRUE/FALSE), adresses des médias.
   const parseCsv = C.parseCsv;
   const norm = (x) => String(x || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
+  // Pas de colonne titre : la première ligne du texte, sans liens ni hashtags, 80 caractères au plus.
+  const titleOfText = (t) => { const l = String(t || "").split("\n").map((x) => x.replace(/https?:\/\/\S+|#[\p{L}\p{N}_]+/gu, "").replace(/\s+/g, " ").trim()).find(Boolean) || ""; return l.length > 80 ? l.slice(0, 79).replace(/\s+\S*$/, "") + "…" : l; };
   A.csvToPosts = function (txt) {
     const rows = parseCsv(txt); if (rows.length < 2) return { posts: [], errors: ["Le fichier est vide ou n'a pas d'en-tête."] };
     const head = rows[0].map(norm);
     const col = (...names) => head.findIndex((h) => names.includes(h));
-    const ci = { date: col("date"), time: col("heure", "time", "horaire"), title: col("titre", "title", "sujet"), format: col("format", "type"), nets: col("reseaux", "reseau", "networks", "network"), cap: col("legende", "caption", "texte", "text"),
-      ref: col("n°", "no", "numero", "num", "ref", "reference"), status: col("statut", "status", "etat"), url: col("lien", "url", "link"), series: col("serie", "series") };
-    if (ci.date < 0) ci.date = col("jour");
-    if (ci.title < 0) return { posts: [], errors: ["Colonne « titre » introuvable."] };
+    const ci = { date: col("date"), time: col("heure", "time", "horaire"), title: col("titre", "title", "sujet", "post title", "name"), format: col("format", "type", "post type", "media type"), nets: col("reseaux", "reseau", "networks", "network", "profile", "profiles", "channel", "channels", "social network", "social networks", "platform", "platforms", "plateforme", "account", "accounts"),
+      cap: col("legende", "caption", "texte", "text", "message", "content", "contenu", "post", "post text", "body", "description"),
+      dt: col("datetime", "date time", "scheduled at", "scheduled time", "scheduled date", "scheduled_at", "publish date", "publish time", "publish at", "published at", "posted at", "send at", "date de publication", "date et heure"),
+      ref: col("n°", "no", "numero", "num", "ref", "reference"), status: col("statut", "status", "etat"), url: col("lien", "url", "link", "post url", "permalink"), series: col("serie", "series") };
+    if (ci.date < 0) ci.date = col("jour", "day");
+    if (ci.dt < 0) ci.dt = head.findIndex((h) => /^date ?\(/.test(h)); // Hootsuite : « Date (DD/MM/YYYY HH:mm) »
+    // Une colonne par réseau (Metricool, Later) : la case vaut TRUE, 1, oui ou x.
+    const netCols = Object.entries(window.BRANDS || {}).map(([id, b]) => [id, head.findIndex((h) => h === norm(id) || h === norm(b.title))]).filter(([, i]) => i >= 0 && i !== ci.nets);
+    const mediaCols = head.map((h, i) => (/^(image|images|photo|picture|video|media|medias|attachment)( ?url)?( ?\d+)?$|^(picture|image|media|video) url ?\d*$/.test(h) ? i : -1)).filter((i) => i >= 0);
+    if (ci.title < 0 && ci.cap < 0) return { posts: [], errors: ["Colonne « titre » (ou « texte ») introuvable."] };
     const fmts = Object.entries(C.FORMATS), brandsAll = Object.entries(window.BRANDS || {});
     const posts = [], errors = [], base = Date.now().toString(36);
     rows.slice(1).forEach((r, k) => {
       const line = k + 2, get = (i) => (i >= 0 ? (r[i] || "").trim() : "");
-      const title = get(ci.title); if (!title) { errors.push("Ligne " + line + " : pas de titre."); return; }
-      let date = get(ci.date) || null;
-      if (date) { const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(date); if (m) date = m[3] + "-" + m[2].padStart(2, "0") + "-" + m[1].padStart(2, "0"); }
-      if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) { errors.push("Ligne " + line + " : date illisible (« " + date + " »)."); return; }
-      let time = get(ci.time).replace(/^[—–-]+$/, "").replace(/h$/i, ":00").replace("h", ":") || null;
-      if (time && /^\d{1,2}:\d{2}$/.test(time)) time = time.padStart(5, "0"); else if (time) { errors.push("Ligne " + line + " : heure illisible (« " + time + " »)."); return; }
+      const cap0 = get(ci.cap), title = get(ci.title) || titleOfText(cap0);
+      if (!title) { errors.push("Ligne " + line + " : pas de titre."); return; }
+      let date = null, time = null;
+      const w = ci.dt >= 0 && get(ci.dt) ? C.parseWhen(get(ci.dt)) : null;
+      if (ci.dt >= 0 && get(ci.dt) && !w) { errors.push("Ligne " + line + " : date illisible (« " + get(ci.dt) + " »)."); return; }
+      if (w) { date = w.date; time = w.time; }
+      else if (get(ci.date)) {
+        const d = C.parseWhen(get(ci.date)); if (!d) { errors.push("Ligne " + line + " : date illisible (« " + get(ci.date) + " »)."); return; }
+        date = d.date; time = d.time;
+      }
+      const tv = get(ci.time).replace(/^[—–-]+$/, "");
+      if (tv) { const t = C.parseWhen("2000-01-01 " + tv.replace(/h$/i, ":00")); if (!t || !t.time) { errors.push("Ligne " + line + " : heure illisible (« " + tv + " »)."); return; } time = t.time; }
       const fv = norm(get(ci.format)); const fm = fmts.find(([key, l]) => norm(key) === fv || norm(l) === fv);
-      const nets = get(ci.nets).split(/[+|,/ ]+/).map(norm).filter(Boolean).map((n) => (brandsAll.find(([id, b]) => norm(id) === n || norm(b.title) === n) || [])[0]).filter(Boolean);
+      const nets = get(ci.nets).split(/[+|,/ ;]+/).map(norm).filter(Boolean).map((n) => (brandsAll.find(([id, b]) => norm(id) === n || norm(b.title) === n || n.startsWith(norm(id))) || [])[0]).filter(Boolean)
+        .concat(netCols.filter(([, i]) => /^(true|vrai|1|yes|oui|x)$/i.test(get(i))).map(([id]) => id));
+      const media = mediaCols.map(get).filter((u) => /^https?:\/\//i.test(u)).map((u) => ({ name: decodeURIComponent(u.split("?")[0].split("/").pop() || "media"), url: u, type: /\.(mp4|mov|webm|m4v)(\?|$)/i.test(u) ? "video" : "image" }));
       const sv = norm(get(ci.status)), url = /^https?:\/\//i.test(get(ci.url)) ? get(ci.url) : "";
       const published = /^publi/.test(sv) || (!!url && !sv);
       const st = published ? "published" : /^brouillon|^draft|^idee/.test(sv) ? "draft" : date ? "scheduled" : "ready";
       const networks = nets.length ? [...new Set(nets)] : [A.nets()[0]];
-      const p = { id: "i" + base + k, ref: get(ci.ref), title, format: fm ? fm[0] : "image", networks,
-        date, time: date ? time || ((S.state.settings.slots || [])[0] || {}).time || "12:00" : null, caption: get(ci.cap), captionValidated: published, manual: false, media: [],
+      const fmt = fm ? fm[0] : media.length > 1 ? "carousel" : media[0] && media[0].type === "video" ? "reel" : /reel|video/.test(fv) ? "reel" : /carous/.test(fv) ? "carousel" : /stor/.test(fv) ? "story" : "image";
+      const p = { id: "i" + base + k, ref: get(ci.ref), title, format: fmt, networks,
+        date, time: date ? time || ((S.state.settings.slots || [])[0] || {}).time || "12:00" : null, caption: cap0, captionValidated: published, manual: false, media,
         stage: published ? "published" : st === "draft" ? "idea" : date ? "scheduled" : "ready", status: st };
       if (get(ci.series)) p.series = get(ci.series);
       if (url) { p.url = url; p.results = { [networks[0]]: { ok: true, url } }; }

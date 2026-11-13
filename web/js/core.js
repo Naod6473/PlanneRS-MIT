@@ -413,7 +413,26 @@
     ["results", "failure", "url", "job", "ignored", "needsAttention", "reminded", "attempts", "comments", "ref", "tries", "plugs"].forEach((k) => delete c[k]);
     return c;
   }
-  const api = { evergreen, repostOf, STATUS, FORMATS, STAGES, STEPS, step, alertOf, pad, ymd, parseYmd, addDays, mondayOf, toMin, at, longDate, shortDay, MONTHS, DAYS, setLang,
+  // Date et heure écrites par un autre outil (Buffer, Later, Metricool, Hootsuite…) : « 2026-11-13 12:30 »,
+  // « 2026-11-13T12:30:00Z » (UTC, ramené à l'heure locale), « 13/11/2026 12:30 », « 11/13/2026 1:30 PM ».
+  function parseWhen(v) {
+    v = String(v || "").trim(); if (!v) return null;
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:?\d{2})$/.test(v)) { const d = new Date(v); if (!isNaN(d)) return { date: ymd(d), time: pad(d.getHours()) + ":" + pad(d.getMinutes()) }; }
+    let m = /^(\d{4})-(\d{1,2})-(\d{1,2})(?:[ T]+(\d{1,2})[:h](\d{2})(?::\d{2})?\s*([ap]\.?m\.?)?)?$/i.exec(v), y, mo, d;
+    if (m) { y = m[1]; mo = m[2]; d = m[3]; }
+    else {
+      m = /^(\d{1,2})[/.](\d{1,2})[/.](\d{2,4})(?:[ ,T]+(\d{1,2})[:h](\d{2})(?::\d{2})?\s*([ap]\.?m\.?)?)?$/i.exec(v); if (!m) return null;
+      y = m[3].length === 2 ? "20" + m[3] : m[3];
+      // Jour d'abord (usage français), sauf si c'est impossible ou si l'heure est en AM/PM (usage américain).
+      const us = !!m[6];
+      if (+m[1] > 12) { d = m[1]; mo = m[2]; } else if (+m[2] > 12 || us) { mo = m[1]; d = m[2]; } else { d = m[1]; mo = m[2]; }
+    }
+    if (+mo < 1 || +mo > 12 || +d < 1 || +d > 31) return null;
+    let time = null;
+    if (m[4] != null) { let h = +m[4]; const pm = m[6] && /^p/i.test(m[6]); if (m[6]) { if (h === 12) h = pm ? 12 : 0; else if (pm) h += 12; } if (h > 23 || +m[5] > 59) return null; time = pad(h) + ":" + m[5]; }
+    return { date: y + "-" + pad(+mo) + "-" + pad(+d), time };
+  }
+  const api = { parseWhen, evergreen, repostOf, STATUS, FORMATS, STAGES, STEPS, step, alertOf, pad, ymd, parseYmd, addDays, mondayOf, toMin, at, longDate, shortDay, MONTHS, DAYS, setLang,
     displayStatus, missed, willSend, hashtags, checks, mediaChecks, slotOf, nowStamp, fold, seriesOf, matchQuery, parseCsv, toCsv, manualNets, autoNets, pendingManual, prefillUrl, titleFor, capFor, TEXT_MAX, utm, textOut, PROD_STEPS, inFabrique, prodOf, CREW, CREW_WHO, crewOf, crewWork, reviewPile, reviewOf, needsFix, achievements, achText };
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.Core = api;
 })(typeof self !== "undefined" ? self : this);

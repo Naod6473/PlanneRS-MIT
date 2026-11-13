@@ -1082,6 +1082,7 @@ window.I18N_EN = {
 "Contenu intemporel : le reproposer tout seul pour remplir les trous (tous les 2 mois au plus)": "Evergreen content: suggest it again to fill gaps (at most every 2 months)",
 "Partager en image": "Share as image",
 "Partager mon mois": "Share my month",
+"Colonne « titre » (ou « texte ») introuvable.": "“title” (or “text”) column not found.",
 "Republier": "Repost",
 "Programmer la republication": "Schedule the repost",
 "Dans 1 semaine": "In 1 week",
