@@ -30,7 +30,7 @@
     if (r === "more") {
       const h = A.health();
       v = { title: "Plus", html: '<div class="morelist"><a href="#fabrique">' + mico("fabrique") + "La Fabrique</a><a href=\"#stats\">" + mico("stats") + "Stats</a><a href=\"#activity\">" + mico("activity") + "Activité<span class=\"muted\" style=\"margin-left:auto;font-weight:400\">" + esc(h.text) + "</span></a>" +
-        '<a href="#settings">' + mico("settings") + "Réglages</a>" + '<a href="#" data-search>' + icon("search") + "Rechercher</a>" + '<a href="#" data-theme-toggle>' + icon("moon") + "Changer de thème</a>" + '<a href="#" data-tour>' + icon("today") + "Visite guidée</a></div>" };
+        '<a href="#settings">' + mico("settings") + "Réglages</a>" + '<a href="#" data-search>' + mico("search") + "Rechercher</a>" + '<a href="#" data-theme-toggle>' + mico("theme") + "Changer de thème</a>" + '<a href="#" data-tour>' + mico("tour") + "Visite guidée</a></div>" };
     } else v = (A.views[r] || A.views.today)();
     document.getElementById("title").textContent = v.title;
     document.title = v.title + " · PlanneRs";

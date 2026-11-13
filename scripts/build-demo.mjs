@@ -9,7 +9,7 @@ const logo = (await readFile(new URL("img/logo.png", web))).toString("base64");
 html = html.replace('src="img/logo.png"', () => 'src="data:image/png;base64,' + logo + '"');
 // Icônes des menus, incluses pour que la démo tienne en un seul fichier.
 const micons = {};
-for (const k of ["today", "calendar", "contents", "fabrique", "stats", "activity", "settings", "more"]) micons[k] = "data:image/png;base64," + (await readFile(new URL("img/menu/" + k + ".png", web))).toString("base64");
+for (const k of ["today", "calendar", "contents", "fabrique", "stats", "activity", "settings", "more", "search", "theme", "tour"]) micons[k] = "data:image/png;base64," + (await readFile(new URL("img/menu/" + k + ".png", web))).toString("base64");
 const scripts = [...html.matchAll(/<script (?:defer )?src="([^"]+)"><\/script>/g)].map((m) => m[1]);
 // Le dictionnaire anglais est chargé à la demande sur le site ; ici, tout tient dans un seul fichier.
 scripts.splice(scripts.indexOf("js/i18n.js"), 0, "js/i18n-en.js");
