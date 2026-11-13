@@ -961,7 +961,7 @@
       const bs = r.querySelectorAll("button");
       if (e.key === "ArrowDown") { sel = Math.min(bs.length - 1, sel + 1); mark(); e.preventDefault(); }
       if (e.key === "ArrowUp") { sel = Math.max(0, sel - 1); mark(); e.preventDefault(); }
-      if (e.key === "Enter" && bs[sel]) bs[sel].click();
+      if (e.key === "Enter" && !e.isComposing && e.keyCode !== 229 && bs[sel]) bs[sel].click();
     });
     r.addEventListener("click", (e) => {
       const a = e.target.closest("[data-sact]"); if (a) { const x = acts.find(([k]) => k === a.dataset.sact); A.closeLayer(); x[3](); return; }

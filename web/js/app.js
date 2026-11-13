@@ -452,7 +452,7 @@
     const sh = document.querySelector("#layer .sheet"); if (sh) sh.classList.add("ask");
   };
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && e.target.matches(".tl[data-open]")) { A.openPost(e.target.dataset.open); return; }
+    if (e.key === "Enter" && !e.isComposing && e.target.matches(".tl[data-open]")) { A.openPost(e.target.dataset.open); return; }
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") { e.preventDefault(); A.openSearch(); return; }
     if (e.key === "Escape" && document.getElementById("layer").innerHTML && !document.querySelector(".review")) { A.closeLayer(); return; }
     if (A.shortcut(e)) return;
@@ -600,10 +600,15 @@
   function toggleTheme() {
     const cur = document.documentElement.dataset.theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
     const next = cur === "dark" ? "light" : "dark";
-    document.documentElement.dataset.theme = next;
+    setTheme(next);
     try { localStorage.setItem("planners-theme", next); } catch (e) { /* rien */ }
   }
-  try { const th = localStorage.getItem("planners-theme"); if (th) document.documentElement.dataset.theme = th; } catch (e) { /* rien */ }
+  // Le choix s'applique aussi aux éléments natifs (barres de défilement, champs) via <meta name="color-scheme">.
+  function setTheme(t) {
+    document.documentElement.dataset.theme = t;
+    const m = document.querySelector('meta[name="color-scheme"]'); if (m) m.content = t === "dark" || t === "light" ? t : "light dark";
+  }
+  try { const th = localStorage.getItem("planners-theme"); if (th) setTheme(th); } catch (e) { /* rien */ }
 
   // Retour de l'autorisation Google : #settings/<message>
   function hashNote() {
