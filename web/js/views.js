@@ -4,7 +4,7 @@
   // Icônes des tuiles de compteurs, dans le style du logo (img/menu/st-*.png ; incluses dans la démo autonome).
   const stPic = (k) => window.UI.pic("st-" + k);
   const C = window.Core, U = window.UI, S = window.Store;
-  const { esc, safeUrl, icon, brand, brands, status, card } = U;
+  const { esc, safeUrl, icon, brand, brands, status, card, tint, tintLogo } = U;
   const docsBase = () => (window.CONNECTOR_GUIDES || {}).base || "docs/";
 
   const A = (window.App = window.App || {});
@@ -95,12 +95,12 @@
       todo += '<div class="tcard fail"><div class="head">' + brands(p.networks) + '<span class="muted">' + esc(C.FORMATS[p.format]) + " · " + esc(C.shortDay(p.date)) + " " + p.time + "</span>" + status("failed") + "</div>" +
         "<h3>" + esc(p.title) + "</h3><p>" + esc(p.failure ? p.failure.what : "L'envoi a échoué.") + "</p>" +
         (p.status === "failed" ? '<div class="acts"><button class="btn primary" data-retry="' + p.id + '">Réessayer</button><button class="btn" data-open="' + p.id + '">Comprendre</button></div></div>'
-          : '<div class="acts"><button class="btn primary" data-manual="' + p.id + '" data-onet="' + esc(failedNet(p)) + '">Poster à la main</button><button class="btn" data-open="' + p.id + '">Comprendre</button><button class="btn quiet" data-ignore="' + p.id + '">Ignorer</button></div></div>');
+          : '<div class="acts"><button class="btn primary" data-manual="' + p.id + '" data-onet="' + esc(failedNet(p)) + '"' + tint(failedNet(p) || p.networks[0]) + ">" + tintLogo(failedNet(p) || p.networks[0]) + 'Poster à la main</button><button class="btn" data-open="' + p.id + '">Comprendre</button><button class="btn quiet" data-ignore="' + p.id + '">Ignorer</button></div></div>');
     });
     td.late.forEach((p) => {
       todo += '<div class="tcard warn"><div class="head">' + brands(p.networks) + '<span class="muted">' + esc(C.FORMATS[p.format]) + "</span>" +
         '<span class="st st-late">' + icon("hand") + "En retard · " + (p.date === C.addDays(t, -1) ? "hier" : esc(C.shortDay(p.date))) + " " + p.time + "</span></div>" +
-        "<h3>" + esc(p.title) + '</h3><div class="acts"><button class="btn primary" data-manual="' + p.id + '">Poster</button><button class="btn" data-open="' + p.id + '">Détails</button><button class="btn quiet" data-ignore="' + p.id + '">Ignorer</button></div></div>';
+        "<h3>" + esc(p.title) + '</h3><div class="acts"><button class="btn primary" data-manual="' + p.id + '"' + tint((C.pendingManual(p, S.state.settings)[0]) || p.networks[0]) + ">" + tintLogo((C.pendingManual(p, S.state.settings)[0]) || p.networks[0]) + 'Poster</button><button class="btn" data-open="' + p.id + '">Détails</button><button class="btn quiet" data-ignore="' + p.id + '">Ignorer</button></div></div>';
     });
     if (td.missed.length) {
       const m = td.missed, f = m[0];
@@ -128,7 +128,7 @@
     td.manual.forEach((p) => {
       const pm = C.pendingManual(p, S.state.settings);
       todo += '<div class="tcard' + (mob ? " swipe" : "") + '"' + (mob ? ' data-swipe="' + esc(p.id) + '" data-swipe-r="manual" data-swipe-l="later" data-onet="' + esc(pm[0] || "") + '"' : "") + '><div class="head">' + brands(pm.length ? pm : p.networks) + '<span class="st st-manual">' + icon("hand") + "À poster · " + p.time + "</span></div>" +
-        "<h3>" + esc(p.title) + '</h3><div class="acts"><button class="btn primary" data-manual="' + p.id + '" data-onet="' + esc(pm[0] || "") + '">Poster</button><button class="btn" data-open="' + p.id + '">Détails</button></div></div>';
+        "<h3>" + esc(p.title) + '</h3><div class="acts"><button class="btn primary" data-manual="' + p.id + '" data-onet="' + esc(pm[0] || "") + '"' + tint(pm[0] || p.networks[0]) + ">" + tintLogo(pm[0] || p.networks[0]) + 'Poster</button><button class="btn" data-open="' + p.id + '">Détails</button></div></div>';
     });
     td.expiring.forEach((p) => {
       todo += '<div class="tcard warn"><div class="head">' + brands(p.networks) + '<span class="st st-ready">' + icon("clock") + "Se périme le " + esc(C.shortDay(p.expires)) + "</span></div>" +
@@ -169,8 +169,8 @@
     const when = (p) => (p.date === t ? (en ? "today" : "aujourd'hui") : p.date === C.addDays(t, 1) ? (en ? "tomorrow" : "demain") : C.longDate(p.date)) + (en ? " at " : " à ") + p.time;
     const q = (p) => (en ? "“" + p.title + "”" : "« " + p.title + " »");
     if (td.failed.length) { const p = td.failed[0]; return { tone: "bad", text: en ? "Fix the failed post " + q(p) + "." : "Régler l'envoi raté de " + q(p) + ".", btn: "Comprendre", attr: 'data-open="' + esc(p.id) + '"' }; }
-    if (td.late.length) { const p = td.late[0]; return { tone: "warn", text: en ? "Post " + q(p) + ", due " + when(p) + "." : "Poster " + q(p) + ", prévu " + when(p) + ".", btn: "Poster", attr: 'data-manual="' + esc(p.id) + '"' }; }
-    if (td.manual.length) { const p = td.manual[0], pm = C.pendingManual(p, S.state.settings); return { tone: "warn", text: en ? "Post " + q(p) + " by hand " + when(p) + "." : "Poster " + q(p) + " à la main " + when(p) + ".", btn: "Poster", attr: 'data-manual="' + esc(p.id) + '" data-onet="' + esc(pm[0] || "") + '"' }; }
+    if (td.late.length) { const p = td.late[0]; return { tone: "warn", text: en ? "Post " + q(p) + ", due " + when(p) + "." : "Poster " + q(p) + ", prévu " + when(p) + ".", btn: "Poster", attr: 'data-manual="' + esc(p.id) + '"' + tint(C.pendingManual(p, S.state.settings)[0] || p.networks[0]), net: C.pendingManual(p, S.state.settings)[0] || p.networks[0] }; }
+    if (td.manual.length) { const p = td.manual[0], pm = C.pendingManual(p, S.state.settings); return { tone: "warn", text: en ? "Post " + q(p) + " by hand " + when(p) + "." : "Poster " + q(p) + " à la main " + when(p) + ".", btn: "Poster", attr: 'data-manual="' + esc(p.id) + '" data-onet="' + esc(pm[0] || "") + '"' + tint(pm[0] || p.networks[0]), net: pm[0] || p.networks[0] }; }
     if (td.review.length) { const n = td.review.length, f = td.review[0]; return { tone: "info", text: en ? "Review " + (n > 1 ? "your " + n + " captions" : "your caption") + ": the first one goes out " + when(f) + "." : "Relire " + (n > 1 ? "tes " + n + " légendes" : "ta légende") + " : la première part " + when(f) + ".", btn: "Relire", attr: "data-review", href: A.canValidate() ? "" : "#list/review" }; }
     if (td.missed.length) { const n = td.missed.length; return { tone: "warn", text: en ? "Reschedule or ignore " + n + " missed post" + (n > 1 ? "s" : "") + "." : "Reprogrammer ou ignorer " + n + " publication" + (n > 1 ? "s manquées" : " manquée") + ".", btn: "Voir", href: "#list/missed" }; }
     if (td.expiring.length) { const p = td.expiring[0]; return { tone: "warn", text: en ? "Schedule " + q(p) + " before " + C.shortDay(p.expires) + "." : "Programmer " + q(p) + " avant le " + C.shortDay(p.expires) + ".", btn: "Programmer", attr: 'data-open="' + esc(p.id) + '"' }; }
@@ -182,7 +182,7 @@
   function nextStepCard(td, k) {
     const n = A.nextStep(td, k);
     return '<section class="nextstep t-' + n.tone + '" aria-labelledby="h-next"><span class="ns-ic">' + icon(n.tone === "ok" ? "check" : n.tone === "info" ? "spark" : "alert") + '</span>' +
-      '<div class="ns-txt"><h2 id="h-next">Prochaine étape</h2><p data-noi18n>' + esc(n.text) + '</p></div>' + (n.href ? '<a class="btn primary" href="' + n.href + '">' + esc(n.btn) + icon("right") + "</a>" : '<button class="btn primary" ' + n.attr + ">" + esc(n.btn) + icon("right") + "</button>") + "</section>";
+      '<div class="ns-txt"><h2 id="h-next">Prochaine étape</h2><p data-noi18n>' + esc(n.text) + '</p></div>' + (n.href ? '<a class="btn primary" href="' + n.href + '">' + esc(n.btn) + icon("right") + "</a>" : '<button class="btn primary" ' + n.attr + ">" + (n.net ? tintLogo(n.net) : "") + esc(n.btn) + icon("right") + "</button>") + "</section>";
   }
 
   // « Bien démarrer » : les étapes d'installation, cochées toutes seules, puis la carte disparaît.

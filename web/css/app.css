@@ -1640,3 +1640,24 @@ input:user-invalid,textarea:user-invalid,select:user-invalid{border-color:var(--
 .wf-title{font-weight:700}
 .wf-b > .btn{align-self:flex-start;margin-top:6px}
 .wf-done{padding:16px;border-radius:12px;background:var(--action);color:var(--action-fg);font-weight:800;font-size:18px;text-align:center}
+
+/* Boutons aux vraies couleurs du réseau (data-tint), comme les cartes de l'ouverture : aplat, logo blanc, pas de lueur. */
+[data-tint]{--tc:#14171A;--tfg:#FFFFFF}
+[data-tint="facebook"]{--tc:#0866FF}[data-tint="linkedin"]{--tc:#0A66C2}[data-tint="youtube"]{--tc:#FF0000}
+[data-tint="pinterest"]{--tc:#E60023}[data-tint="bluesky"]{--tc:#1185FE}[data-tint="mastodon"]{--tc:#6364FF}
+[data-tint="tiktok"]{--tc:#000000}[data-tint="x"],[data-tint="threads"]{--tc:#000000}
+[data-tint="gdrive"]{--tc:#4285F4}[data-tint="dropbox"]{--tc:#0061FF}[data-tint="telegram"]{--tc:#26A5E4}
+.btn[data-tint],.pt-net[data-tint],.noimg[data-tint]{background:var(--tc);border-color:var(--tc);color:var(--tfg)}
+.btn[data-tint="instagram"],.pt-net[data-tint="instagram"],.noimg[data-tint="instagram"]{background:linear-gradient(100deg,#FA7E1E,#D62976 45%,#962FBF 80%,#4F5BD5);border-color:transparent}
+.btn[data-tint="tiktok"]{box-shadow:inset 3px 0 0 #25F4EE,inset -3px 0 0 #FE2C55}
+.btn[data-tint]:hover:not(:disabled),.pt-net[data-tint]:hover{filter:brightness(1.08);background-color:var(--tc)}
+.btn[data-tint] svg,.btn[data-tint] .tlogo{fill:currentColor;color:currentColor}
+.tlogo{width:16px;height:16px;flex:none;fill:currentColor}
+.btn[data-tint] svg:not(.tlogo){fill:none;stroke:currentColor}
+:root[data-theme="dark"] .btn[data-tint="x"],:root[data-theme="dark"] .btn[data-tint="threads"],:root[data-theme="dark"] .btn[data-tint="tiktok"],
+:root[data-theme="dark"] .pt-net[data-tint="x"],:root[data-theme="dark"] .pt-net[data-tint="threads"],:root[data-theme="dark"] .pt-net[data-tint="tiktok"]{border-color:rgba(255,255,255,.35)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .btn[data-tint="x"],:root:not([data-theme="light"]) .btn[data-tint="threads"],:root:not([data-theme="light"]) .btn[data-tint="tiktok"],:root:not([data-theme="light"]) .pt-net[data-tint="x"],:root:not([data-theme="light"]) .pt-net[data-tint="threads"],:root:not([data-theme="light"]) .pt-net[data-tint="tiktok"]{border-color:rgba(255,255,255,.35)}}
+.pt-net[data-tint]{font-weight:800;min-height:72px;border-radius:16px;align-content:flex-end}
+.pt-net[data-tint] .brand{background:none!important;box-shadow:none}
+.pt-net[data-tint] .pt-ok,.pt-net[data-tint] .pt-in{color:inherit;opacity:.9}
+.noimg[data-tint] .tlogo{width:22px;height:22px}

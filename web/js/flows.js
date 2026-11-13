@@ -165,13 +165,14 @@
       '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" data-act="move">Déplacer</button>' + (p.date ? '<button class="btn" data-act="unschedule">Retirer du calendrier</button>' : "") + "</div></div></details>";
 
     let foot = "";
+    const manNet = (C.pendingManual(p, set)[0]) || (p.networks || [])[0];
     if (st === "failed") {
       const relayBlocked = set.rules && set.rules.noRetryRelay && p.results && Object.values(p.results).some((r) => r.status === "ok");
-      foot = '<button class="btn primary" data-act="retry"' + (relayBlocked ? " disabled" : "") + ">Réessayer maintenant</button><button class=\"btn\" data-act=\"manual\">Poster à la main</button><button class=\"btn\" data-act=\"showmove\">Reprogrammer</button>" +
+      foot = '<button class="btn primary" data-act="retry"' + (relayBlocked ? " disabled" : "") + ">Réessayer maintenant</button><button class=\"btn\" data-act=\"manual\"" + U.tint(manNet) + ">" + U.tintLogo(manNet) + "Poster à la main</button><button class=\"btn\" data-act=\"showmove\">Reprogrammer</button>" +
         (relayBlocked ? '<p class="muted" style="font-size:12px;margin:4px 0 0;width:100%">Réessayer est désactivé : un réseau a déjà publié, relancer créerait un doublon. Publie le relais à la main.</p>' : "");
     } else if (st === "review" && !A.canValidate()) foot = '<span class="muted" style="font-size:13px">En attente d\'un validateur</span><button class="btn" data-act="showmove">Changer la date</button>';
     else if (st === "review") foot = '<button class="btn primary" data-act="validate">' + (p.format === "story" ? "Valider la story" : "Valider la légende") + '</button><button class="btn" data-act="showmove">Changer la date</button>';
-    else if (st === "manual" || st === "late") foot = '<button class="btn primary" data-act="manual">Poster à la main</button><button class="btn" data-act="showmove">Changer la date</button>' + (st === "late" ? '<button class="btn" data-act="ignore">Ignorer</button>' : "");
+    else if (st === "manual" || st === "late") foot = '<button class="btn primary" data-act="manual"' + U.tint(manNet) + ">" + U.tintLogo(manNet) + 'Poster à la main</button><button class="btn" data-act="showmove">Changer la date</button>' + (st === "late" ? '<button class="btn" data-act="ignore">Ignorer</button>' : "");
     else if (st === "scheduled") foot = '<button class="btn" data-act="showmove">Changer la date</button><button class="btn" data-act="unvalidate">Retirer la validation</button>' + (A.stageOf && A.stageOf(p) === "scheduled" ? '<button class="btn" data-unlock="' + esc(p.id) + '">' + icon("unlock") + "Débloquer</button>" : "");
     else if (st === "ready" || st === "draft") foot = '<button class="btn primary" data-act="showmove">Programmer</button>' + (st === "draft" ? '<button class="btn" data-act="toready">Marquer prêt</button>' : "");
     else if (done) foot = (p.url ? '<a class="btn primary" href="' + safeUrl(p.url) + '" target="_blank" rel="noopener">' + icon("open") + "Voir le post</a>" : "") + (p.parent ? "" : '<button class="btn' + (p.url ? "" : " primary") + '" data-act="recycle">' + icon("undo") + "Republier</button>");
@@ -584,7 +585,7 @@
       (!has2 ? "" : p.format === "story" ? step(2, "Préparer la story", (p.note ? '<div class="quote">' + esc(p.note) + "</div>" : "<p>Aucune consigne.</p>") + "<p class=\"muted\">Pas de légende sur une story.</p>" + (p.note ? '<button class="btn big" data-mstep="2" data-copy>' + icon("copy") + "Copier la consigne</button>" : '<button class="btn big" data-mstep="2">C\'est fait</button>'))
         : step(2, "Copier le texte", (C.capFor(p, net) ? '<div class="quote">' + esc(C.textOut(p, net, S.state.settings)) + "</div>" : "<p>Pas de texte pour ce post.</p>") + '<button class="btn big" data-mstep="2" data-copy>' + icon("copy") + "Copier</button>")) +
       step(3, "Ouvrir " + esc(appName), (p.format === "story" ? "<p>Publie l'image en story, puis ajoute l'autocollant de la consigne.</p>" : pre ? "<p>Le texte est déjà écrit : ajoute le média, puis publie.</p>" : "<p>Publie le média avec le texte copié.</p>") +
-        (pre ? '<a class="btn big primary" href="' + safeUrl(pre) + '" target="_blank" rel="noopener" data-mstep="3">' + icon("open") + "Ouvrir " + esc(appName) + " avec le texte</a>" : '<a class="btn big" href="' + safeUrl(APP_URL[net] || "#") + '" target="_blank" rel="noopener" data-mstep="3"' + (txtOut ? " data-copy" : "") + ">" + icon("open") + (txtOut ? "Copier le texte et ouvrir " : "Ouvrir ") + esc(appName) + "</a>")) +
+        (pre ? '<a class="btn big primary" href="' + safeUrl(pre) + '" target="_blank" rel="noopener" data-mstep="3"' + U.tint(net) + ">" + (U.tintLogo(net) || icon("open")) + "Ouvrir " + esc(appName) + " avec le texte</a>" : '<a class="btn big" href="' + safeUrl(APP_URL[net] || "#") + '" target="_blank" rel="noopener" data-mstep="3"' + (txtOut ? " data-copy" : "") + U.tint(net) + ">" + (U.tintLogo(net) || icon("open")) + (txtOut ? "Copier le texte et ouvrir " : "Ouvrir ") + esc(appName) + "</a>")) +
       step(4, "Revenir ici", '<p>Confirme quand c\'est en ligne. Le lien est facultatif.</p><label class="form"><input id="m-url" type="url" placeholder="Lien du post (facultatif)"></label>') +
       '</div></div><div class="sh-foot"><button class="btn primary big" data-posted>' + icon("check") + "C'est posté</button>" +
       '<button class="btn quiet" data-later style="width:100%">Reporter à demain</button></div>', "Poster à la main");
@@ -674,7 +675,7 @@
     const top = '<div class="sh-top">' + brands(p.networks, "lg") + '<span class="muted" style="font-size:13px">' + esc(C.FORMATS[p.format] || "") + (p.date ? " · " + esc(C.shortDay(p.date)) + " " + (p.time || "") : "") + '</span><span style="flex:1"></span><button class="iconbtn" data-close aria-label="Fermer">' + icon("x") + "</button></div>";
     if (!net) {
       openLayer(top + '<div class="sh-body"><h2>Poster sur…</h2><p class="muted" style="margin:0">« ' + esc(p.title) + " » : choisis le réseau. Tu récupères le titre, la description et les médias, et le réseau s'ouvre.</p>" +
-        '<div class="pt-grid" role="group" aria-label="Réseaux">' + order.map((n) => '<button class="pt-net" data-ptnet="' + n + '">' + brand(n, "lg") + "<span>" + esc(name(n)) + "</span>" +
+        '<div class="pt-grid" role="group" aria-label="Réseaux">' + order.map((n) => '<button class="pt-net" data-ptnet="' + n + '"' + U.tint(n) + ">" + brand(n, "lg") + "<span>" + esc(name(n)) + "</span>" +
           (done(n) ? '<span class="pt-ok">' + icon("check") + "Posté</span>" : p.networks.includes(n) ? '<span class="pt-in">Prévu</span>' : "") + "</button>").join("") + "</div></div>", "Poster sur");
       layer().querySelectorAll("[data-ptnet]").forEach((b) => b.addEventListener("click", () => { A.closeLayer(); A.openPostTo(p.id, b.dataset.ptnet); }));
       return;
@@ -698,7 +699,7 @@
         '<button class="btn" data-ptshare hidden>' + icon("send") + "Partager la vidéo vers l'appli</button></div>" +
       (NET_TIPS[net] ? '<p class="muted pt-tip">' + esc(NET_TIPS[net]) + "</p>" : "") +
       '<label class="form"><span class="muted" style="font-size:13px">Une fois en ligne : lien du post (facultatif)</span><input id="pt-url" type="url" placeholder="https://…"></label>' +
-      '</div><div class="sh-foot">' + (pre ? '<a class="btn primary" href="' + safeUrl(pre) + '" target="_blank" rel="noopener" data-ptopen>' + icon("open") + "Ouvrir " + esc(name(net)) + " avec le texte</a>" : '<a class="btn primary" href="' + safeUrl(APP_URL[net] || "#") + '" target="_blank" rel="noopener" data-ptopen>' + icon("open") + "Copier la description et ouvrir " + esc(name(net)) + "</a>") +
+      '</div><div class="sh-foot">' + (pre ? '<a class="btn primary" href="' + safeUrl(pre) + '" target="_blank" rel="noopener" data-ptopen' + U.tint(net) + ">" + U.tintLogo(net) + "Ouvrir " + esc(name(net)) + " avec le texte</a>" : '<a class="btn primary" href="' + safeUrl(APP_URL[net] || "#") + '" target="_blank" rel="noopener" data-ptopen' + U.tint(net) + ">" + U.tintLogo(net) + "Copier la description et ouvrir " + esc(name(net)) + "</a>") +
       '<button class="btn" data-ptdone>' + icon("check") + "C'est posté</button></div>", "Poster sur " + name(net));
     const L = layer();
     L.querySelector("[data-ptback]").addEventListener("click", () => { A.closeLayer(); A.openPostTo(p.id); });
@@ -817,9 +818,9 @@
   A.openBest = function () {
     const list = A.bestToRecycle();
     const fmt = (n) => n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 0 : 1).replace(".", ",") + " k" : String(n);
-    const row = (x, i) => '<div class="best-row"><span class="rk">' + (i + 1) + "</span>" + (x.p.thumb ? '<img src="' + U.safeUrl(x.p.thumb) + '" alt="">' : '<span class="noimg">' + icon("contents") + "</span>") +
+    const row = (x, i) => '<div class="best-row"><span class="rk">' + (i + 1) + "</span>" + (x.p.thumb ? '<img src="' + U.safeUrl(x.p.thumb) + '" alt="">' : '<span class="noimg"' + U.tint(x.p.networks[0]) + ">" + (U.tintLogo(x.p.networks[0]) || icon("contents")) + "</span>") +
       '<span class="bt"><b data-noi18n>' + esc(x.p.title || "") + "</b><small data-noi18n>" + esc(C.longDate(x.p.date)) + " · " + (x.views ? fmt(x.views) + (EN() ? "\u00a0views · " : "\u00a0vues · ") : "") + fmt(x.likes) + (EN() ? "\u00a0likes" : "\u00a0j'aime") + "</small></span>" +
-      '<button class="btn" data-best-rc="' + esc(x.p.id) + '">' + icon("undo") + '<span class="lbl">Reprogrammer</span></button></div>';
+      '<button class="btn" data-best-rc="' + esc(x.p.id) + '"' + U.tint(x.p.networks[0]) + ">" + icon("undo") + '<span class="lbl">Reprogrammer</span></button></div>';
     openLayer('<div class="sh-top"><b>Recycler le meilleur</b><span style="flex:1"></span><button class="iconbtn" data-close aria-label="Fermer">' + icon("x") + "</button></div>" +
       '<div class="sh-body"><p style="margin:0">Tes posts qui ont le mieux marché, publiés il y a plus de 3 mois. Ton audience a grandi depuis : beaucoup ne les ont jamais vus.</p>' +
       (list.length ? '<div class="best-list">' + list.map(row).join("") + "</div>" : '<div class="empty" data-fx="seed">Rien à recycler pour l\'instant : il faut des posts publiés il y a plus de 3 mois, avec des chiffres.</div>') +

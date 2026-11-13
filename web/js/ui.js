@@ -230,5 +230,8 @@
     return '<img class="' + (st ? "ic pic" : "mico") + " set-" + set + '" src="' + src + '" alt="" width="' + (st ? 36 : 28) + '" height="' + (st ? 36 : 28) + '">';
   }
 
-  window.UI = { pic, fxi, iconSet, accent, ACCENTS, announce, modal, unmodal, toastHome, icon, esc, safeUrl, brand, brands, status, card, look, abar, badge, toast, copy, ICONS };
+  // Bouton aux vraies couleurs d'un réseau : attribut à mettre sur le bouton, logo blanc à mettre avant le libellé.
+  const tint = (id) => (window.BRANDS && window.BRANDS[id] ? ' data-tint="' + esc(id) + '"' : "");
+  const tintLogo = (id) => { const b = window.BRANDS && window.BRANDS[id]; return b ? '<svg class="tlogo" viewBox="0 0 24 24" aria-hidden="true"><path d="' + b.path + '"/></svg>' : ""; };
+  window.UI = { tint, tintLogo, pic, fxi, iconSet, accent, ACCENTS, announce, modal, unmodal, toastHome, icon, esc, safeUrl, brand, brands, status, card, look, abar, badge, toast, copy, ICONS };
 })();
