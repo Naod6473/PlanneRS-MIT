@@ -231,7 +231,14 @@ test("ma version : pépite, recette, ta sauce, puis envoi à La Fabrique et carn
     assert.ok(p && p.inF && p.shots >= 3 && p.book === 1);
     assert.match(p.note, /Inspiration : https:/);
     await page.click('[data-stattab="mv"]');
-    assert.equal(await page.locator(".mv-rc").count(), 1);
+    await page.locator("[data-lib-keep]").first().waitFor();
+    assert.equal(await page.locator(".mv-rcs").first().locator(".mv-rc").count(), 1);
+    assert.match(await page.locator(".mv-rcs").first().innerText(), /Partager/);
+    const nLib = await page.locator("[data-lib-keep]").count();
+    await page.locator("[data-lib-keep]").first().click();
+    await page.waitForTimeout(300);
+    assert.equal(await page.locator("[data-lib-keep]").count(), nLib - 1);
+    assert.equal(await page.evaluate(() => Store.state.settings.recipes.length), 2);
     assert.deepEqual(errors, []);
     await page.close();
   }

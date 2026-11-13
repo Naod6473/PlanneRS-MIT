@@ -356,6 +356,19 @@ async function api(request, env, path, url, auth) {
     return json({ ok: true, post: p });
   }
   // Assistant Meta : trouver la Page et le compte Instagram à partir du jeton de l'Explorateur, puis connecter.
+  // Bibliothèque partagée de recettes : celle du dépôt public (à jour), sinon celle livrée avec l'app.
+  if (path === "recipes/library" && m === "GET") {
+    const c = await db.getKV(env, "recipes-library");
+    if (c && c.at && Date.now() - c.at < 12 * 3600000 && c.data) return json(c.data);
+    const ok = (d) => d && Array.isArray(d.recipes) && d.recipes.length <= 500;
+    try {
+      const r = await fetch(env.RECIPES_URL || "https://raw.githubusercontent.com/Naod6473/PlanneRS-MIT/main/web/recettes/bibliotheque.json", { cf: { cacheTtl: 3600 } });
+      const d = r.ok ? await r.json() : null;
+      if (ok(d)) { await db.putKV(env, "recipes-library", { at: Date.now(), data: d }); return json(d); }
+    } catch (e) { /* hors ligne : la copie locale */ }
+    try { const r = await env.ASSETS.fetch(new Request(url.origin + "/recettes/bibliotheque.json")); if (r.ok) return json(await r.json()); } catch (e) { /* rien */ }
+    return json({ recipes: [] });
+  }
   if (path === "alt/suggest" && m === "POST") {
     if (!env.ANTHROPIC_API_KEY) return err("Pour proposer un texte alternatif avec Claude, ajoute le secret ANTHROPIC_API_KEY au Worker (voir la documentation « Assistants IA »).", 409);
     const md = body && body.media;

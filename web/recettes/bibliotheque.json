@@ -1,0 +1,536 @@
+{
+ "version": 1,
+ "updated": "2026-11-13",
+ "recipes": [
+  {
+   "id": "lib-liste-aveu",
+   "name": "Liste chiffrée + aveu",
+   "hook": {
+    "type": "Liste chiffrée",
+    "pattern": "[n] erreurs qui [problème] (la [x]e, tout le monde la fait)"
+   },
+   "structure": [
+    {
+     "part": "Accroche",
+     "sec": 2
+    },
+    {
+     "part": "Erreur 1",
+     "sec": 5
+    },
+    {
+     "part": "Erreur 2 (l'aveu)",
+     "sec": 6
+    },
+    {
+     "part": "Erreur 3",
+     "sec": 5
+    },
+    {
+     "part": "Ce qu'il faut faire",
+     "sec": 6
+    },
+    {
+     "part": "Question",
+     "sec": 3
+    }
+   ],
+   "format": "reel",
+   "spring": "Curiosité et culpabilité légère",
+   "ending": "Question au public",
+   "why": [
+    "On sait en 2 secondes ce qu'on va apprendre.",
+    "Le petit aveu donne envie de vérifier si on est concerné.",
+    "Une liste se suit facilement jusqu'au bout."
+   ],
+   "tags": [
+    "éducatif",
+    "liste"
+   ],
+   "by": "PlanneRs"
+  },
+  {
+   "id": "lib-mythe",
+   "name": "Mythe ou réalité",
+   "hook": {
+    "type": "Idée reçue démontée",
+    "pattern": "On t'a dit que [idée reçue]. C'est faux."
+   },
+   "structure": [
+    {
+     "part": "Accroche : l'idée reçue",
+     "sec": 2
+    },
+    {
+     "part": "Pourquoi on y croit",
+     "sec": 5
+    },
+    {
+     "part": "La réalité",
+     "sec": 6
+    },
+    {
+     "part": "La preuve",
+     "sec": 6
+    },
+    {
+     "part": "Le bon réflexe",
+     "sec": 5
+    }
+   ],
+   "format": "reel",
+   "spring": "Surprise",
+   "ending": "Appel à commenter",
+   "why": [
+    "Contredire une croyance arrête le pouce.",
+    "La preuve rend crédible.",
+    "On repart avec un geste concret."
+   ],
+   "tags": [
+    "éducatif",
+    "surprise"
+   ],
+   "by": "PlanneRs"
+  },
+  {
+   "id": "lib-avant-apres",
+   "name": "Avant / après",
+   "hook": {
+    "type": "Transformation",
+    "pattern": "Avant : [situation pénible]. Après : [résultat]."
+   },
+   "structure": [
+    {
+     "part": "L'après en premier",
+     "sec": 2
+    },
+    {
+     "part": "L'avant",
+     "sec": 4
+    },
+    {
+     "part": "Le déclic",
+     "sec": 5
+    },
+    {
+     "part": "Les étapes",
+     "sec": 8
+    },
+    {
+     "part": "Le résultat",
+     "sec": 4
+    }
+   ],
+   "format": "reel",
+   "spring": "Envie et soulagement",
+   "ending": "Appel à essayer",
+   "why": [
+    "Montrer le résultat d'abord crée l'envie.",
+    "Le contraste se voit même sans le son.",
+    "Les étapes rendent la transformation accessible."
+   ],
+   "tags": [
+    "transformation"
+   ],
+   "by": "PlanneRs"
+  },
+  {
+   "id": "lib-erreur-commune",
+   "name": "L'erreur que tout le monde fait",
+   "hook": {
+    "type": "Interpellation",
+    "pattern": "Arrête de [geste courant] !"
+   },
+   "structure": [
+    {
+     "part": "Accroche : l'interdit",
+     "sec": 2
+    },
+    {
+     "part": "Ce que tout le monde fait",
+     "sec": 4
+    },
+    {
+     "part": "Pourquoi c'est un problème",
+     "sec": 6
+    },
+    {
+     "part": "La bonne méthode",
+     "sec": 8
+    },
+    {
+     "part": "Récap en une phrase",
+     "sec": 3
+    }
+   ],
+   "format": "reel",
+   "spring": "Peur de mal faire",
+   "ending": "Question au public",
+   "why": [
+    "L'injonction directe interpelle.",
+    "Chacun se demande s'il le fait.",
+    "La solution arrive vite."
+   ],
+   "tags": [
+    "éducatif",
+    "interpellation"
+   ],
+   "by": "PlanneRs"
+  },
+  {
+   "id": "lib-question-commu",
+   "name": "Votre question de la semaine",
+   "hook": {
+    "type": "Question de la communauté",
+    "pattern": "On m'a demandé : « [question] »."
+   },
+   "structure": [
+    {
+     "part": "La question, telle quelle",
+     "sec": 3
+    },
+    {
+     "part": "La réponse courte",
+     "sec": 4
+    },
+    {
+     "part": "L'explication",
+     "sec": 10
+    },
+    {
+     "part": "L'exemple",
+     "sec": 6
+    },
+    {
+     "part": "Pose la tienne",
+     "sec": 3
+    }
+   ],
+   "format": "reel",
+   "spring": "Proximité",
+   "ending": "Appel à poser une question",
+   "why": [
+    "La communauté se reconnaît dans la question.",
+    "Ça montre qu'on écoute.",
+    "Ça amène les questions des prochaines vidéos."
+   ],
+   "tags": [
+    "communauté"
+   ],
+   "by": "PlanneRs"
+  },
+  {
+   "id": "lib-tuto-3",
+   "name": "Tuto en 3 étapes",
+   "hook": {
+    "type": "Promesse claire",
+    "pattern": "[Résultat] en 3 étapes."
+   },
+   "structure": [
+    {
+     "part": "Le résultat final",
+     "sec": 2
+    },
+    {
+     "part": "Étape 1",
+     "sec": 6
+    },
+    {
+     "part": "Étape 2",
+     "sec": 6
+    },
+    {
+     "part": "Étape 3",
+     "sec": 6
+    },
+    {
+     "part": "Le résultat, encore",
+     "sec": 3
+    },
+    {
+     "part": "Enregistre-la",
+     "sec": 2
+    }
+   ],
+   "format": "reel",
+   "spring": "Bénéfice immédiat",
+   "ending": "Appel à enregistrer",
+   "why": [
+    "La promesse est concrète et courte.",
+    "Trois étapes, c'est facile à retenir.",
+    "On l'enregistre pour plus tard."
+   ],
+   "tags": [
+    "tuto"
+   ],
+   "by": "PlanneRs"
+  },
+  {
+   "id": "lib-chiffre-choc",
+   "name": "Le chiffre choc",
+   "hook": {
+    "type": "Chiffre surprenant",
+    "pattern": "[chiffre vérifié] : c'est [ce que ça représente]."
+   },
+   "structure": [
+    {
+     "part": "Le chiffre à l'écran",
+     "sec": 2
+    },
+    {
+     "part": "Ce qu'il veut dire",
+     "sec": 5
+    },
+    {
+     "part": "Pourquoi ça te concerne",
+     "sec": 6
+    },
+    {
+     "part": "Ce que tu peux faire",
+     "sec": 6
+    },
+    {
+     "part": "La source",
+     "sec": 2
+    }
+   ],
+   "format": "reel",
+   "spring": "Surprise",
+   "ending": "Question au public",
+   "why": [
+    "Un chiffre précis arrête le défilement.",
+    "On rattache le chiffre à la vie de chacun.",
+    "La source rend crédible."
+   ],
+   "tags": [
+    "actu",
+    "surprise"
+   ],
+   "by": "PlanneRs"
+  },
+  {
+   "id": "lib-histoire-3-temps",
+   "name": "Il était une fois",
+   "hook": {
+    "type": "Récit",
+    "pattern": "Ce jour-là, [personnage] a [action inattendue]."
+   },
+   "structure": [
+    {
+     "part": "La scène d'ouverture",
+     "sec": 3
+    },
+    {
+     "part": "Le problème",
+     "sec": 6
+    },
+    {
+     "part": "Le tournant",
+     "sec": 6
+    },
+    {
+     "part": "La fin et la leçon",
+     "sec": 8
+    },
+    {
+     "part": "Et toi ?",
+     "sec": 3
+    }
+   ],
+   "format": "reel",
+   "spring": "Suspense",
+   "ending": "Question au public",
+   "why": [
+    "Une histoire se suit jusqu'au bout.",
+    "Le tournant crée la surprise.",
+    "La leçon donne une raison de partager."
+   ],
+   "tags": [
+    "histoire"
+   ],
+   "by": "PlanneRs"
+  },
+  {
+   "id": "lib-a-vs-b",
+   "name": "A contre B",
+   "hook": {
+    "type": "Comparatif",
+    "pattern": "[A] ou [B] : lequel choisir ?"
+   },
+   "structure": [
+    {
+     "part": "La question",
+     "sec": 2
+    },
+    {
+     "part": "A : pour et contre",
+     "sec": 7
+    },
+    {
+     "part": "B : pour et contre",
+     "sec": 7
+    },
+    {
+     "part": "Le verdict",
+     "sec": 5
+    },
+    {
+     "part": "Ton choix ?",
+     "sec": 3
+    }
+   ],
+   "format": "reel",
+   "spring": "Envie de trancher",
+   "ending": "Appel à voter en commentaire",
+   "why": [
+    "Tout le monde a un avis.",
+    "Le verdict récompense ceux qui restent.",
+    "Les commentaires débattent."
+   ],
+   "tags": [
+    "comparatif"
+   ],
+   "by": "PlanneRs"
+  },
+  {
+   "id": "lib-coulisses",
+   "name": "Les coulisses",
+   "hook": {
+    "type": "Curiosité",
+    "pattern": "Ce que personne ne voit avant [résultat]."
+   },
+   "structure": [
+    {
+     "part": "Le résultat fini",
+     "sec": 2
+    },
+    {
+     "part": "Le début du travail",
+     "sec": 6
+    },
+    {
+     "part": "Le moment difficile",
+     "sec": 6
+    },
+    {
+     "part": "Le détail que personne ne remarque",
+     "sec": 6
+    },
+    {
+     "part": "Le résultat",
+     "sec": 3
+    }
+   ],
+   "format": "reel",
+   "spring": "Curiosité et proximité",
+   "ending": "Appel à commenter",
+   "why": [
+    "Les coulisses rendent humain.",
+    "Le moment difficile crée l'attachement.",
+    "On découvre un détail exclusif."
+   ],
+   "tags": [
+    "coulisses"
+   ],
+   "by": "PlanneRs"
+  },
+  {
+   "id": "lib-carrousel-memo",
+   "name": "Mémo à enregistrer",
+   "hook": {
+    "type": "Promesse claire",
+    "pattern": "Tout ce qu'il faut savoir sur [sujet], en [n] slides."
+   },
+   "structure": [
+    {
+     "part": "Couverture : la promesse",
+     "sec": 0
+    },
+    {
+     "part": "Le problème",
+     "sec": 0
+    },
+    {
+     "part": "Point 1",
+     "sec": 0
+    },
+    {
+     "part": "Point 2",
+     "sec": 0
+    },
+    {
+     "part": "Point 3",
+     "sec": 0
+    },
+    {
+     "part": "Récap",
+     "sec": 0
+    },
+    {
+     "part": "Enregistre ce post",
+     "sec": 0
+    }
+   ],
+   "format": "carousel",
+   "spring": "Utilité",
+   "ending": "Appel à enregistrer",
+   "why": [
+    "Un mémo s'enregistre et se repartage.",
+    "Une idée par slide se lit vite.",
+    "Le récap donne envie de garder le post."
+   ],
+   "tags": [
+    "carrousel",
+    "tuto"
+   ],
+   "by": "PlanneRs"
+  },
+  {
+   "id": "lib-carrousel-vrai-faux",
+   "name": "Vrai ou faux en carrousel",
+   "hook": {
+    "type": "Quiz",
+    "pattern": "Vrai ou faux : [affirmation] ?"
+   },
+   "structure": [
+    {
+     "part": "Couverture : l'affirmation",
+     "sec": 0
+    },
+    {
+     "part": "Fais ton choix",
+     "sec": 0
+    },
+    {
+     "part": "La réponse",
+     "sec": 0
+    },
+    {
+     "part": "L'explication",
+     "sec": 0
+    },
+    {
+     "part": "Le bon réflexe",
+     "sec": 0
+    },
+    {
+     "part": "Ton score ?",
+     "sec": 0
+    }
+   ],
+   "format": "carousel",
+   "spring": "Jeu",
+   "ending": "Question au public",
+   "why": [
+    "Le quiz pousse à faire défiler.",
+    "On veut savoir si on avait raison.",
+    "Les commentaires partagent les scores."
+   ],
+   "tags": [
+    "carrousel",
+    "quiz"
+   ],
+   "by": "PlanneRs"
+  }
+ ]
+}

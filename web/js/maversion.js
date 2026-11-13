@@ -183,6 +183,8 @@
       return;
     }
     if ((b = g("[data-mv-redo]"))) { const p = S.state.posts.find((x) => x.id === b.dataset.mvRedo); if (p) A.openVersion({ type: "post", post: p, score: +b.dataset.score || 0 }); return; }
+    if ((b = g("[data-lib-use]"))) { const r = (lib || []).find((x) => x.id === b.dataset.libUse); if (r) A.openVersion({ recipe: Object.assign({}, r) }); return; }
+    if ((b = g("[data-lib-keep]"))) { const r = (lib || []).find((x) => x.id === b.dataset.libKeep); if (r) saveBook(R.keep(book(), r, new Date().toISOString())).then(() => { A.render(); U.toast("Recette gardée dans ton carnet"); }); return; }
     if ((b = g("[data-mv-use]"))) { const r = book().find((x) => x.id === b.dataset.mvUse); if (r) A.openVersion({ recipe: r }); return; }
     if ((b = g("[data-mv-del]"))) { const id = b.dataset.mvDel, old = book(); saveBook(old.filter((r) => r.id !== id)).then(() => { A.render(); U.toast("Recette retirée", { label: "Annuler", fn: () => saveBook(old).then(A.render) }); }); return; }
     if ((b = g("[data-mv-mix]"))) {
@@ -223,6 +225,23 @@
   document.addEventListener("keydown", (e) => { if (M && e.key === "Escape") { e.stopPropagation(); close(); } }, true);
 
   // ------------------------------------------------------------ Onglet Stats › Ma version
+  // ------------------------------------------------------------ Bibliothèque partagée
+  // Des recettes (la forme seulement, jamais de contenu) proposées par la communauté dans le dépôt public.
+  // Chacun peut y ajouter les siennes : « Partager » ouvre une proposition sur GitHub, relue avant d'entrer.
+  const LIB_REPO = "https://github.com/Naod6473/PlanneRS-MIT";
+  let lib = null, libLoading = false;
+  function loadLib() {
+    if (lib || libLoading) return; libLoading = true;
+    const done = (d) => { lib = (d && Array.isArray(d.recipes) ? d.recipes : []).map((r) => { try { return Object.assign(R.cleanRecipe(r, null), { id: String(r.id || ""), by: r.by || "", tags: r.tags || [], lib: true, from: { type: "lib" } }); } catch (e) { return null; } }).filter((r) => r && r.id); libLoading = false; A.render(); };
+    if (window.PLANNERS_LIBRARY) return done(window.PLANNERS_LIBRARY);
+    (S.mode === "api" ? S.call("GET", "recipes/library") : fetch("recettes/bibliotheque.json").then((r) => (r.ok ? r.json() : null))).then(done).catch(() => done(null));
+  }
+  A.recipeLibrary = () => lib;
+  function shareUrl(r) {
+    const o = { name: r.name, hook: r.hook, structure: r.structure, format: r.format, spring: r.spring, ending: r.ending, why: r.why || [] };
+    const body = "Recette proposée depuis PlanneRs (la forme seulement, sans contenu d'origine).\n\nPour quel type de compte ou de sujet marche-t-elle ? [à compléter]\n\n```json\n" + JSON.stringify(o, null, 1) + "\n```";
+    return LIB_REPO + "/issues/new?labels=recette&title=" + encodeURIComponent("Recette : " + r.name) + "&body=" + encodeURIComponent(body);
+  }
   A.versionHtml = function () {
     const rk = rank(), list = R.sortBook(book(), rk), tops = R.ownTops(rows()).filter((r) => !r.post.remix).slice(0, 6);
     const pep = ((S.mode === "demo" ? A.pepDemo : S.state.pepites) || {}).top || [];
@@ -233,7 +252,9 @@
       return '<article class="mv-rc' + (mixA === r.id ? " picked" : "") + '"><div class="mv-row"><b data-noi18n>' + esc(r.name) + "</b>" + (s ? '<span class="mv-x" title="Score moyen de tes versions publiées">' + xs(s.score) + " chez toi</span>" : "") + "</div>" +
         bar(r.structure) + '<span class="muted small" data-noi18n>' + esc(r.hook.type + " · " + r.spring) + "</span>" +
         '<span class="muted small">' + (r.mix ? "Mélange de deux recettes" : f.handle ? "D'après @" + esc(f.handle) + (f.score ? " (" + xs(f.score) + ")" : "") : f.type === "post" ? "D'après ton succès" : "") + (s ? " · " + s.n + (s.n > 1 ? " versions publiées" : " version publiée") : "") + "</span>" +
-        '<span class="acts"><button class="btn sm primary" data-mv-use="' + esc(r.id) + '">' + icon("spark") + 'Utiliser</button><button class="btn sm" data-mv-mix="' + esc(r.id) + '" aria-pressed="' + (mixA === r.id) + '">' + (mixA && mixA !== r.id ? "Mélanger avec" : mixA === r.id ? "Choisie" : "Mélanger") + '</button><button class="iconbtn sm" data-mv-del="' + esc(r.id) + '" aria-label="Retirer ' + esc(r.name) + '">' + icon("trash") + "</button></span></article>";
+        '<span class="acts"><button class="btn sm primary" data-mv-use="' + esc(r.id) + '">' + icon("spark") + 'Utiliser</button><button class="btn sm" data-mv-mix="' + esc(r.id) + '" aria-pressed="' + (mixA === r.id) + '">' + (mixA && mixA !== r.id ? "Mélanger avec" : mixA === r.id ? "Choisie" : "Mélanger") + '</button>' +
+        (r.lib ? "" : '<a class="btn sm quiet" href="' + esc(shareUrl(r)) + '" target="_blank" rel="noopener" title="Proposer cette recette à la bibliothèque partagée (sur GitHub)">' + icon("send") + "Partager</a>") +
+        '<button class="iconbtn sm" data-mv-del="' + esc(r.id) + '" aria-label="Retirer ' + esc(r.name) + '">' + icon("trash") + "</button></span></article>";
     };
     const carnet = '<section class="panel"><h2 class="sec-h"><span>Ton carnet de recettes</span><span>' + list.length + "</span></h2>" +
       (list.length ? (Object.keys(rk.byRecipe).length ? '<p class="muted small mv-loop">' + icon("chart") + "La boucle : les recettes qui marchent chez toi passent en tête (score = interactions de tes versions, comparées à ta médiane).</p>" : "") + '<div class="mv-rcs">' + list.map(recipeCardHtml).join("") + "</div>"
@@ -241,6 +262,15 @@
     const own = '<section class="panel"><h2 class="sec-h"><span>Tes succès à refaire</span><span>' + tops.length + "</span></h2>" +
       (tops.length ? '<div class="mv-tops">' + tops.map((r) => '<article class="mv-top1"><span class="mv-x">' + xs(r.score) + '</span><div class="mv-col grow"><b data-noi18n>' + esc(r.post.title || "Sans titre") + '</b><span class="muted small">' + esc((C.FORMATS[r.post.format] || r.post.format) + (r.post.date ? " · " + C.shortDay(r.post.date) : "") + " · " + r.value + " interactions") + '</span></div><button class="btn sm" data-mv-redo="' + esc(r.post.id) + '" data-score="' + r.score + '">' + icon("spark") + "Refaire à ma sauce</button></article>").join("") + "</div>"
         : '<p class="muted">Quand une de tes publications fait 1,5 fois ta médiane d\'interactions, elle arrive ici : refais ce qui a marché chez toi, sur un nouveau sujet.</p>') + "</section>";
-    return intro + carnet + own;
+    loadLib();
+    const have = new Set(book().map((r) => r.id)), shared = (lib || []).filter((r) => !have.has(r.id));
+    const libBox = '<section class="panel"><h2 class="sec-h"><span>Bibliothèque partagée</span><span>' + (lib ? shared.length : "…") + "</span></h2>" +
+      '<p class="muted small" style="margin:0 0 8px">Des recettes qui marchent, proposées par la communauté : la forme seulement (accroche, structure, ressort, fin), jamais de contenu. Ajoute la tienne avec « Partager » sur une recette de ton carnet.</p>' +
+      (lib == null ? '<div class="mv-wait"><span class="mv-spin" aria-hidden="true"></span>Chargement…</div>' : shared.length ? '<div class="mv-rcs">' + shared.map((r) => '<article class="mv-rc"><div class="mv-row"><b data-noi18n>' + esc(r.name) + "</b>" + (r.format === "carousel" ? '<span class="chip">Carrousel</span>' : "") + "</div>" + bar(r.structure) +
+        '<span class="muted small" data-noi18n>' + esc(r.hook.type + " · " + r.spring) + '</span><span class="muted small" data-noi18n>' + esc(r.hook.pattern) + "</span>" +
+        '<span class="acts"><button class="btn sm primary" data-lib-use="' + esc(r.id) + '">' + icon("spark") + 'Utiliser</button><button class="btn sm" data-lib-keep="' + esc(r.id) + '">' + icon("bookmark") + "Garder</button></span></article>").join("") + "</div>"
+        : '<p class="muted">Toutes les recettes de la bibliothèque sont déjà dans ton carnet.</p>') +
+      '<p class="muted small" style="margin:8px 0 0"><a href="' + LIB_REPO + '/issues?q=label%3Arecette" target="_blank" rel="noopener">Voir les recettes proposées</a></p></section>';
+    return intro + carnet + libBox + own;
   };
 })();

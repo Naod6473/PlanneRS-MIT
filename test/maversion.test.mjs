@@ -129,3 +129,17 @@ test("lien partagé : format, compte et réseau devinés depuis l'adresse", () =
   const r = R.guessRecipe({ type: "link", url: "https://www.instagram.com/reel/abc/", kind: "reel", caption: "" });
   assert.equal(r.from.url, "https://www.instagram.com/reel/abc/");
 });
+
+test("bibliothèque partagée : recettes lisibles, sans contenu d'origine, identifiants uniques", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const lib = JSON.parse(await readFile(new URL("../web/recettes/bibliotheque.json", import.meta.url), "utf8"));
+  assert.ok(lib.recipes.length >= 10);
+  assert.equal(new Set(lib.recipes.map((r) => r.id)).size, lib.recipes.length);
+  for (const r of lib.recipes) {
+    assert.match(r.id, /^lib-[a-z0-9-]+$/);
+    assert.ok(!("from" in r) && !("text" in r), r.id);
+    const c = R.cleanRecipe(r, null);
+    assert.equal(c.structure.length, r.structure.length, r.id);
+    assert.ok(r.format === "carousel" ? r.structure.every((x) => x.sec === 0) : r.structure.every((x) => x.sec > 0), r.id);
+  }
+});

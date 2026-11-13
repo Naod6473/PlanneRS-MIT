@@ -11,6 +11,8 @@ const scripts = [...html.matchAll(/<script (?:defer )?src="([^"]+)"><\/script>/g
 // Le dictionnaire anglais est chargé à la demande sur le site ; ici, tout tient dans un seul fichier.
 scripts.splice(scripts.indexOf("js/i18n.js"), 0, "js/i18n-en.js");
 let js = "window.PLANNERS_FORCE_DEMO = true;\n";
+// La bibliothèque de recettes partagée, incluse pour que la démo marche hors ligne.
+js += "window.PLANNERS_LIBRARY = " + (await readFile(new URL("recettes/bibliotheque.json", web), "utf8")).trim().replace(/<\//g, "<\\/") + ";\n";
 const data = process.argv[2];
 for (const s of scripts) js += (await readFile(new URL(s, web), "utf8")) + "\n";
 const dataTxt = data ? await readFile(data, "utf8") : "";

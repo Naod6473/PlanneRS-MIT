@@ -72,3 +72,11 @@ Quand une version est publiée, PlanneRs compare ses interactions à ta médiane
 
 PlanneRs installé sur l'écran d'accueil du téléphone apparaît dans le menu **Partager**. Sur une publication Instagram, TikTok, YouTube ou Facebook : **Partager** › **PlanneRs**, puis **Faire ma version**. L'atelier s'ouvre sur ce lien. Le lien seul ne dit pas ce que raconte la vidéo : colle sa légende ou sa transcription dans **Ce que dit l'original** pour une version plus juste. **Garder comme idée** crée une idée avec le lien, comme avant.
 
+## Bibliothèque partagée
+
+Sous ton carnet, **Bibliothèque partagée** propose des recettes qui marchent, écrites par la communauté : la forme seulement (accroche, structure dans le temps, ressort, façon de finir), jamais le contenu d'une publication. **Utiliser** ouvre l'atelier avec la recette ; **Garder** la range dans ton carnet.
+
+La bibliothèque vit dans le dépôt public de PlanneRs (`web/recettes/bibliotheque.json`) : ton instance la relit toutes les 12 heures, et garde la copie livrée avec l'app si le dépôt ne répond pas.
+
+**Ajouter ta recette** : sur une recette de ton carnet, **Partager** ouvre une proposition sur GitHub (un compte GitHub gratuit suffit), avec la recette déjà remplie, sans le texte ni le lien de l'original. Elle est relue, puis ajoutée à la bibliothèque pour tout le monde.
+
