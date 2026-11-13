@@ -4,8 +4,8 @@
   const C = window.Core, U = window.UI, S = window.Store, A = window.App;
   const { esc, safeUrl, icon } = U;
 
-  // Icônes des menus : petites images dans le style du logo (img/menu/*.png ; incluses dans la démo autonome).
-  const mico = (k, cls) => '<img class="mico' + (cls ? " " + cls : "") + '" src="' + ((window.PLANNERS_MENU_ICONS || {})[k] || "img/menu/" + k + ".png") + '" alt="" width="28" height="28">';
+  // Icônes des menus : jeu choisi (voir UI.pic).
+  const mico = (k) => U.pic(k);
   const NAV = [["today", "Aujourd'hui", "today"], ["calendar", "Calendrier", "calendar"], ["contents", "Contenus", "contents"], ["fabrique", "La Fabrique", "film"], ["stats", "Stats", "chart"], ["activity", "Activité", "activity"], ["settings", "Réglages", "settings"]];
   const route = () => (location.hash.replace("#", "").split("/")[0] || "today");
   const navOf = (r) => (r === "list" ? "today" : r === "report" ? "stats" : r);

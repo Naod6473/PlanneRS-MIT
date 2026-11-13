@@ -11,8 +11,11 @@
 <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="stylesheet" href="css/app.css">
+<script>/* Animation d'ouverture : une fois par session, jamais si le système demande moins d'animations. */
+try { if (sessionStorage.getItem("planners-intro") || matchMedia("(prefers-reduced-motion: reduce)").matches || navigator.webdriver) document.documentElement.classList.add("no-intro"); } catch (e) { document.documentElement.classList.add("no-intro"); }</script>
 </head>
 <body>
+<div id="intro" aria-hidden="true"><div class="in-deck"><div class="in-card c1"></div><div class="in-card c2"></div><div class="in-card c3"></div><div class="in-card hero"><img src="img/logo.png" alt="" width="102" height="88"></div></div></div>
 <a class="skip" href="#view">Aller au contenu</a>
 <div class="app">
   <aside class="side" aria-label="Navigation">
@@ -54,5 +57,6 @@
 <script defer src="js/maversion.js"></script>
 <script defer src="js/tour.js"></script>
 <script defer src="js/app.js"></script>
+<script defer src="js/intro.js"></script>
 </body>
 </html>

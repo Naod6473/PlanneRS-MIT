@@ -2,7 +2,7 @@
 (function () {
   "use strict";
   // Icônes des tuiles de compteurs, dans le style du logo (img/menu/st-*.png ; incluses dans la démo autonome).
-  const stPic = (k) => { const n = "st-" + k; return '<img class="ic pic" src="' + ((window.PLANNERS_MENU_ICONS || {})[n] || "img/menu/" + n + ".png") + '" alt="" width="36" height="36">'; };
+  const stPic = (k) => window.UI.pic("st-" + k);
   const C = window.Core, U = window.UI, S = window.Store;
   const { esc, safeUrl, icon, brand, brands, status, card } = U;
   const docsBase = () => (window.CONNECTOR_GUIDES || {}).base || "docs/";
