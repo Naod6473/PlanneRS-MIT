@@ -286,18 +286,19 @@ async function decodePlan(file, v, plan, onFrame, busy = () => false) {
 // Image décodée (et recadrée) redressée sur une toile, avec les sous-titres par-dessus : pour incruster
 // du texte, l'image doit être à l'endroit (la rotation des MOV de téléphone ne s'applique plus après).
 function painter(v, src, groups, style = {}) {
+  // `src` : rectangle de départ (il fixe la taille) ; frame() peut en recevoir un autre de même taille.
   const turned = v.rotation % 180 !== 0;
   const [w, h] = turned ? [even(src.height), even(src.width)] : [even(src.width), even(src.height)];
   const canvas = new OffscreenCanvas(w, h);
   const ctx = canvas.getContext("2d");
   return {
     width: w, height: h,
-    frame(frame, t, init) {
+    frame(frame, t, init, r = src) {
       ctx.save();
       ctx.translate(w / 2, h / 2);
       ctx.rotate((v.rotation * Math.PI) / 180);
       const [bw, bh] = turned ? [h, w] : [w, h];
-      ctx.drawImage(frame, src.x, src.y, src.width, src.height, -bw / 2, -bh / 2, bw, bh);
+      ctx.drawImage(frame, r.x, r.y, r.width, r.height, -bw / 2, -bh / 2, bw, bh);
       ctx.restore();
       drawCaption(ctx, w, h, groups, t, style);
       return new VideoFrame(canvas, init);
@@ -326,11 +327,14 @@ async function encodeAudio(aenc, channels, frames, startUs) {
 
 // Écrit un MP4 avec les passages `pieces` ([{ start, end }] en secondes) mis bout à bout.
 // `audioFor(piece)` renvoie le son du passage : canaux Float32Array à 48 kHz, de la durée exacte du passage.
-// `crop` : rectangle de cropRect, ou null pour l'image entière.
+// `crop` : rectangle de cropRect, ou null pour l'image entière, ou une fonction (t en secondes dans la
+// vidéo d'origine) qui renvoie un rectangle de même taille à chaque image (cadre qui suit la personne).
 // `captions` : groupes de captionGroups (temps de la vidéo exportée) à incruster, ou null.
 // `writable` : fichier ouvert en écriture (FileSystemWritableFileStream) où la vidéo s'écrit au fil de l'eau ;
 // la fonction renvoie alors true au lieu d'un Blob, et rien ne reste en mémoire.
 export async function renderVideo(file, v, pieces, audioFor, onProgress = () => {}, { crop = null, captions = null, captionStyle = {}, writable = null } = {}) {
+  const cropAt = typeof crop === "function" ? crop : () => crop;
+  crop = cropAt(pieces.length ? pieces[0].start : 0);
   const src = crop || { x: 0, y: 0, width: v.width, height: v.height };
   const paint = captions && captions.length ? painter(v, src, captions, captionStyle) : null;
   const width = paint ? paint.width : crop ? crop.width : even(v.width);
@@ -367,7 +371,8 @@ export async function renderVideo(file, v, pieces, audioFor, onProgress = () => 
         if (done >= total) return;
         const ts = Math.round(outStart + (t - plan.first) * 1e6);
         const init = { timestamp: ts, duration: frameUs };
-        const out = paint ? paint.frame(frame, ts / 1e6, init) : new VideoFrame(frame, { ...init, ...(crop ? { visibleRect: crop } : {}) });
+        const r = crop ? cropAt(t) : null;
+        const out = paint ? paint.frame(frame, ts / 1e6, init, r || src) : new VideoFrame(frame, { ...init, ...(r ? { visibleRect: r } : {}) });
         // Une image clé au début de chaque passage et toutes les 2 secondes
         const key = first || ts - lastKey >= 2e6;
         if (key) lastKey = ts;

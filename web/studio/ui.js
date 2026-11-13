@@ -7,6 +7,7 @@ import { probe, canExport, renderVideo, cropRect, AUDIO_RATE } from "./video.js"
 import { bestMoments, MOMENT_REASONS } from "./moments.js";
 import { captionGroups } from "./captions.js";
 import { transcribe, SAMPLE_RATE, MODEL_MB, srt } from "./speech.js";
+import { trackPerson, sampleTimes, posFor, xAt } from "./reframe.js";
 
 const A = window.App, U = window.UI;
 const { esc, icon } = U;
@@ -103,7 +104,7 @@ let st = null;
 
 export function open() {
   if (!document.getElementById("cut-css")) { const s = document.createElement("style"); s.id = "cut-css"; s.textContent = CSS; document.head.appendChild(s); }
-  st = { focus: document.activeElement, busy: false, file: null, url: "", v: null, ch: null, a: null, blanks: true, ums: true, preset: "normale", vertical: false, mode: "full", subs: false, cues: null, moments: [], off: new Set(), outs: [] };
+  st = { focus: document.activeElement, busy: false, file: null, url: "", v: null, ch: null, a: null, blanks: true, ums: true, preset: "normale", vertical: false, follow: true, path: null, pathKey: "", mode: "full", subs: false, cues: null, moments: [], off: new Set(), outs: [] };
   A.beforeClose = () => { if (st && st.busy) { U.toast("Attends la fin du calcul pour fermer."); return false; } cleanup(); return true; };
   pick();
 }
@@ -197,8 +198,9 @@ function review() {
     '<div class="seg" role="group" aria-label="Coupe des blancs">' + [["douce", "Douce"], ["normale", "Normale"], ["serree", "Serrée"]].map(([k, l]) => '<button data-cutp="' + k + '" aria-pressed="' + (st.preset === k) + '">' + l + "</button>").join("") + "</div></div>" +
     '<div class="cut-opt"><label><input type="checkbox" id="cut-u"' + (st.ums ? " checked" : "") + ">Couper les « euh »</label></div>" +
     '<div class="cut-opt"><span><b>Format</b></span><div class="seg" role="group" aria-label="Format">' + [["0", "D'origine"], ["1", "Vertical 9:16"]].map(([k, l]) => '<button data-cutf="' + k + '" aria-pressed="' + (String(+st.vertical) === k) + '">' + l + "</button>").join("") + "</div></div>" +
+    '<div class="cut-opt" id="cut-fw"' + (st.vertical ? "" : " hidden") + '><label><input type="checkbox" id="cut-f"' + (st.follow ? " checked" : "") + ">Le cadre suit la personne</label></div>" +
     '<div class="cut-opt"><label><input type="checkbox" id="cut-s"' + (st.subs ? " checked" : "") + ">Sous-titres incrustés</label>" + (st.cues ? '<span class="cut-note">' + st.cues.length + " phrases reconnues</span>" : "") + "</div>" +
-    '<p class="cut-note">Douce garde les respirations, Serrée enchaîne les phrases. Le vertical garde le centre de l\'image. Les sous-titres viennent d\'une reconnaissance de la parole faite dans ton navigateur (environ ' + MODEL_MB.precise + " Mo à télécharger la première fois).</p>" +
+    '<p class="cut-note">Douce garde les respirations, Serrée enchaîne les phrases. En vertical, le cadre suit la personne qui parle (modèle d\'environ 10 Mo la première fois), sinon il garde le centre. Les sous-titres viennent d\'une reconnaissance de la parole faite dans ton navigateur (environ ' + MODEL_MB.precise + " Mo à télécharger la première fois).</p>" +
     '<div id="cut-mom"></div></div></div>',
     '<button class="btn" data-cutagain>Autre vidéo</button><span style="flex:1"></span><button class="btn primary" data-cutgo>' + icon("film") + "Créer la vidéo coupée</button>");
   const vid = L.querySelector("#cut-v");
@@ -216,13 +218,15 @@ function review() {
   }));
   L.querySelectorAll("[data-cutf]").forEach((b) => b.addEventListener("click", () => {
     st.vertical = b.dataset.cutf === "1"; L.querySelectorAll("[data-cutf]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    L.querySelector("#cut-fw").hidden = !st.vertical;
   }));
+  L.querySelector("#cut-f").addEventListener("change", (e) => { st.follow = e.target.checked; });
   L.querySelector("[data-cutagain]").addEventListener("click", () => { if (st.url) URL.revokeObjectURL(st.url); st.url = ""; pick(); });
   L.querySelector("[data-cutgo]").addEventListener("click", make);
   L.querySelector("#cut-s").addEventListener("change", (e) => { st.subs = e.target.checked; });
   L.querySelectorAll("[data-cutm]").forEach((b) => b.addEventListener("click", () => {
     st.mode = b.dataset.cutm;
-    if (st.mode === "shorts" && !st.vertical) { st.vertical = true; L.querySelectorAll("[data-cutf]").forEach((x) => x.setAttribute("aria-pressed", String(x.dataset.cutf === "1"))); }
+    if (st.mode === "shorts" && !st.vertical) { st.vertical = true; L.querySelector("#cut-fw").hidden = false; L.querySelectorAll("[data-cutf]").forEach((x) => x.setAttribute("aria-pressed", String(x.dataset.cutf === "1"))); }
     L.querySelectorAll("[data-cutm]").forEach((x) => x.setAttribute("aria-pressed", String(x === b))); draw();
   }));
   L.querySelector("#cut-mom").addEventListener("click", async (e) => {
@@ -443,12 +447,12 @@ function audioFor(p) {
 // 4. Créer la vidéo coupée, ou les shorts
 async function make() {
   const s = stats(), base = st.file.name.replace(/\.[^.]+$/, "");
-  const crop = st.vertical ? cropRect(st.v, 9 / 16, 0.5) : null;
   st.busy = true;
   if (st.subs && !(await listen())) st.subs = false;
   const jobs = st.mode === "shorts"
     ? st.moments.map((m, i) => ({ m, i })).filter((x) => !st.off.has(x.i)).map(({ m, i }) => ({ ps: m.pieces.map(([a, b]) => ({ start: a, end: b })), name: base + "_short" + (i + 1) + ".mp4", hook: m.hook, label: "Short " + (i + 1) }))
     : [{ ps: s.ps, name: base + (st.vertical ? "_vertical" : "") + "_coupe.mp4", hook: "", label: "Vidéo" }];
+  const crop = st.vertical ? await frame(jobs.flatMap((j) => j.ps)) : null;
   st.outs.forEach((o) => URL.revokeObjectURL(o.url)); st.outs = [];
   layer('<div class="cut-proc" role="status"><b id="cut-wt">Création… 0 %</b><div class="cut-scanw">' + waveSVG() + '<div class="cut-pend" id="cp-pd" style="left:0"></div><div class="cut-scan" id="cp-sc" style="left:0"></div></div>' +
     '<div class="cut-bar"><i id="cut-wp"></i></div><p class="cut-note">Tout se calcule sur ton ordinateur. Garde cet onglet ouvert.</p></div>', "");
@@ -472,6 +476,33 @@ async function make() {
     st.busy = false;
     pick("La création de la vidéo a échoué : " + (e.message || e) + ".");
   }
+}
+
+// Cadre vertical : fixe au centre, ou qui suit la personne (repérée dans les passages gardés)
+async function frame(ps) {
+  const fixed = cropRect(st.v, 9 / 16, 0.5);
+  const turned = st.v.rotation % 180 !== 0;
+  const [dw, dh] = turned ? [st.v.height, st.v.width] : [st.v.width, st.v.height];
+  if (!st.follow || dw / dh <= 9 / 16 + 0.01) return fixed;
+  const times = sampleTimes(ps), key = times.join(",");
+  if (st.pathKey !== key) {
+    layer('<div class="cut-proc" role="status"><b id="cut-wt">Recherche de la personne…</b><div class="cut-bar"><i id="cut-wp"></i></div>' +
+      '<p class="cut-note">La première fois, le modèle (environ 10 Mo) est téléchargé puis gardé par le navigateur. L\'image ne quitte pas ton ordinateur.</p></div>', "");
+    const set = (t, f) => { const L = document.getElementById("layer"); if (!st || !L) return; const a = L.querySelector("#cut-wt"), b = L.querySelector("#cut-wp"); if (a) a.textContent = t; if (b) b.style.width = Math.round(f * 100) + "%"; };
+    try {
+      st.path = await trackPerson(st.url, times, { ortUrl: new URL("./ort/", import.meta.url).href }, (stage, f) =>
+        set(stage === "model" ? "Téléchargement du modèle… " + Math.round(f * 100) + " %" : "Recherche de la personne… " + Math.round(f * 100) + " %", f));
+      st.pathKey = key;
+      if (!st.path) U.toast("Personne n'a été repérée : le cadre reste au centre.");
+    } catch (e) {
+      console.error(e);
+      U.toast("Suivi de la personne impossible, le cadre reste au centre : " + (e.message || e));
+      st.path = null; st.pathKey = "";
+    }
+  }
+  if (!st.path) return fixed;
+  const frac = (dh * 9) / 16 / dw, path = st.path;
+  return (t) => cropRect(st.v, 9 / 16, posFor(xAt(path, t), frac));
 }
 
 // Avancement de l'export : la ligne avance sur l'onde au fil des images écrites

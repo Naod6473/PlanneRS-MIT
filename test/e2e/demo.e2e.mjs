@@ -64,7 +64,8 @@ test("chaque écran s'affiche sans erreur, en français et en anglais", { skip }
 test("relire et valider une légende la fait passer en programmé", { skip }, async () => {
   const { page, errors } = await open();
   const id = await page.evaluate(() => {
-    const p = Store.state.posts.find((x) => !x.parent && x.status !== "published" && !x.captionValidated && x.date && x.media && x.media.length && x.format !== "story");
+    const d = new Date(), now = new Date(d.getTime() - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 16);
+    const p = Store.state.posts.find((x) => !x.parent && x.date && x.media && x.media.length && x.format !== "story" && Core.displayStatus(x, now) === "review");
     return p && p.id;
   });
   assert.ok(id, "un post à valider existe dans la démo");
