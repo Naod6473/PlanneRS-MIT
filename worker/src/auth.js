@@ -14,7 +14,8 @@ async function keys(team, fresh) {
 }
 
 export async function checkAccess(request, env) {
-  if (env.ALLOW_NO_AUTH === "true") return { ok: true, email: "local" };
+  // Sans contrôle d'accès : seulement en local (wrangler dev), jamais sur une adresse publique.
+  if (env.ALLOW_NO_AUTH === "true" && /^(localhost|127\.0\.0\.1|\[::1\])$/.test(new URL(request.url).hostname)) return { ok: true, email: "local" };
   const team = env.ACCESS_TEAM_DOMAIN, aud = env.ACCESS_AUD;
   if (!team || !aud) return { ok: false, why: "Accès non configuré : renseigne ACCESS_TEAM_DOMAIN et ACCESS_AUD (voir docs/demarrage/installation.md)." };
   const jwt = request.headers.get("cf-access-jwt-assertion") || (request.headers.get("cookie") || "").match(/CF_Authorization=([^;]+)/)?.[1];

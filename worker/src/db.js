@@ -125,3 +125,14 @@ export async function getPost(env, id) {
   const r = await env.DB.prepare("SELECT data FROM posts WHERE id = ?").bind(id).first();
   return r ? JSON.parse(r.data) : null;
 }
+
+// Schéma de la base (copie de migrations/0001_init.sql, vérifiée par les tests) : créé au premier passage
+// s'il manque, pour une installation par le bouton « Deploy to Cloudflare » qui n'applique pas les migrations.
+export const SCHEMA = "-- PlanneRs : sch\u00e9ma initial de la base D1.\nCREATE TABLE IF NOT EXISTS posts (\n  id TEXT PRIMARY KEY,\n  data TEXT NOT NULL,          -- le post complet, en JSON\n  date TEXT, time TEXT,        -- copies pour les requ\u00eates\n  status TEXT NOT NULL DEFAULT 'draft',\n  updated_at TEXT NOT NULL\n);\nCREATE INDEX IF NOT EXISTS posts_due ON posts (status, date, time);\n\nCREATE TABLE IF NOT EXISTS log (\n  id INTEGER PRIMARY KEY AUTOINCREMENT,\n  at TEXT NOT NULL, level TEXT NOT NULL, text TEXT NOT NULL, why TEXT, post_id TEXT\n);\n\nCREATE TABLE IF NOT EXISTS kv (k TEXT PRIMARY KEY, v TEXT NOT NULL);\n\n-- Comptes connect\u00e9s : info visible dans l'interface, identifiants chiffr\u00e9s (AES-GCM).\nCREATE TABLE IF NOT EXISTS accounts (id TEXT PRIMARY KEY, info TEXT NOT NULL, cred TEXT);\n";
+export const schemaStatements = (sql) => sql.split("\n").map((l) => l.replace(/--.*$/, "")).join("\n").split(";").map((x) => x.trim()).filter(Boolean);
+let schemaReady = null;
+export function ensureSchema(env) {
+  if (!env || !env.DB) return Promise.resolve();
+  if (!schemaReady) schemaReady = env.DB.batch(schemaStatements(SCHEMA).map((q) => env.DB.prepare(q))).catch((e) => { schemaReady = null; throw e; });
+  return schemaReady;
+}

@@ -788,6 +788,7 @@ async function stats(env, onlyIfDue) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    await db.ensureSchema(env).catch(() => null);
     // Adresse publique (sans Cloudflare Access) : elle ne sert que la page de présentation,
     // demandée par Google et TikTok pour vérifier l'app. Tout le reste y est refusé.
     if (env.PUBLIC_HOST && url.hostname === env.PUBLIC_HOST) {
@@ -837,6 +838,7 @@ export default {
   async scheduled(event, env, ctx) {
     // Chaque tâche suit son propre chemin : un envoi lent (vidéo en préparation chez Instagram) ne retarde plus le reste.
     const safe = (f) => Promise.resolve().then(f).catch(() => null);
+    await db.ensureSchema(env).catch(() => null);
     ctx.waitUntil(safe(() => robot(env)).then(() => safe(() => syncInstagram(env))));
     ctx.waitUntil(safe(() => stats(env, true)).then(() => safe(() => pepitesIfDue(env))));
     ctx.waitUntil(safe(() => runDaily(env)));

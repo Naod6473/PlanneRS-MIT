@@ -48,8 +48,8 @@ Garde le dossier `planners` : pour une mise à jour, remplace le code par la nou
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/Naod6473/PlanneRS-MIT)
 
 1. Clique sur le bouton et connecte tes comptes Cloudflare et GitHub.
-2. Garde les noms proposés (Worker `planners`, base D1 `planners`) et lance le déploiement. Cloudflare copie le dépôt sur ton GitHub, crée la base, applique les tables et met le site en ligne.
-3. Ajoute la clé de chiffrement : ton Worker › **Settings** › **Variables and Secrets** › **Add** › type **Secret**, nom `ENCRYPTION_KEY`, valeur : une longue phrase au hasard.
+2. Garde les noms proposés (Worker `planners`, base D1 `planners`). La page demande la **clé de chiffrement** `ENCRYPTION_KEY` : mets une longue phrase au hasard et garde-la de côté. Lance le déploiement : Cloudflare copie le dépôt sur ton GitHub, crée la base et met le site en ligne. Les tables sont créées toutes seules à la première visite.
+3. Si la page n'a pas demandé la clé : ton Worker › **Settings** › **Variables and Secrets** › **Add** › type **Secret**, nom `ENCRYPTION_KEY`, valeur : une longue phrase au hasard.
 4. Protège l'accès : voir [Protéger l'accès](#protéger-laccès-avec-cloudflare-access). Tant que ce n'est pas fait, le site s'ouvre mais l'API refuse tout.
 
 Chaque modification poussée ensuite sur ta copie redéploie le site. Doc officielle : [Deploy to Cloudflare](https://developers.cloudflare.com/workers/platform/deploy-buttons/).
@@ -156,7 +156,7 @@ puis redéploie. Tu peux aussi arrêter le robot sans redéployer : Réglages �
 ## Développement local
 
 ```bash
-cp .dev.vars.example .dev.vars          # ALLOW_NO_AUTH=true, uniquement en local
+cp .dev.vars.example .dev.vars          # puis enlève le # devant ALLOW_NO_AUTH=true (pris en compte en local seulement)
 npx wrangler d1 migrations apply planners --local
 npm run dev                              # http://localhost:8787
 ```

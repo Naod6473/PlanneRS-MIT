@@ -25,7 +25,12 @@ export function findDbId(out, name) {
 }
 // Lit et écrit une valeur « clé = "valeur" » de wrangler.toml, sans toucher au reste du fichier.
 export const tomlGet = (toml, key) => { const m = new RegExp("^" + key + '\\s*=\\s*"([^"]*)"', "m").exec(toml); return m ? m[1] : ""; };
-export const tomlSet = (toml, key, value) => toml.replace(new RegExp("^(" + key + '\\s*=\\s*)"[^"]*"', "m"), (_, a) => a + JSON.stringify(String(value)));
+export const tomlSet = (toml, key, value) => {
+  if (new RegExp("^" + key + "\\s*=", "m").test(toml)) return toml.replace(new RegExp("^(" + key + '\\s*=\\s*)"[^"]*"', "m"), (_, a) => a + JSON.stringify(String(value)));
+  // Identifiant de base absent (configuration du bouton « Deploy to Cloudflare ») : ajouté sous database_name.
+  if (key === "database_id" && value) return toml.replace(/^(database_name\s*=.*)$/m, (l) => l + "\ndatabase_id = " + JSON.stringify(String(value)));
+  return toml;
+};
 // Remet une configuration à zéro : aucune base, aucun domaine, aucun réglage d'accès d'une autre installation.
 export function cleanToml(toml) {
   let t = tomlSet(tomlSet(tomlSet(toml, "database_id", ""), "ACCESS_TEAM_DOMAIN", ""), "ACCESS_AUD", "");

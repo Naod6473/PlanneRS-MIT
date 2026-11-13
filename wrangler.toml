@@ -16,7 +16,7 @@ run_worker_first = ["/api/*", "/mcp", "/v/*", "/cal/*"]
 [[d1_databases]]
 binding = "DB"
 database_name = "planners"
-database_id = "" # identifiant de ta base D1 (voir docs/demarrage/installation.md)
+# database_id : ajouté tout seul à la création de la base (bouton « Deploy to Cloudflare » ou npm run setup).
 migrations_dir = "migrations"
 
 [triggers]

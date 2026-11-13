@@ -1,3 +1,5 @@
-# Copie ce fichier en .dev.vars pour le développement local (jamais commité).
+# Secret demandé à l'installation : une longue phrase au hasard qui chiffre les identifiants des comptes.
+# Garde-la de côté : sans elle, les comptes connectés sont à reconnecter.
 ENCRYPTION_KEY=une-longue-phrase-secrete-au-hasard
-ALLOW_NO_AUTH=true
+# Développement local seulement (copie ce fichier en .dev.vars, puis enlève le # ci-dessous) :
+# ALLOW_NO_AUTH=true

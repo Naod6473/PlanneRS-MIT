@@ -39,3 +39,20 @@ test("adresse du site, domaine d'équipe, clé", () => {
   assert.notEqual(newKey(), newKey());
   assert.ok(newKey().length >= 40);
 });
+
+test("configuration sans identifiant de base (bouton Deploy) : ajouté sous database_name", async () => {
+  const { tomlSet, tomlGet } = await import("../scripts/install.mjs");
+  const t = '[[d1_databases]]\nbinding = "DB"\ndatabase_name = "planners"\nmigrations_dir = "migrations"\n';
+  const ID = "12345678-1234-1234-1234-123456789abc";
+  assert.equal(tomlGet(tomlSet(t, "database_id", ID), "database_id"), ID);
+  assert.equal(tomlSet(t, "database_id", ""), t);
+});
+
+test("schéma de la base : la copie du Worker suit les migrations", async () => {
+  const { readFile, readdir } = await import("node:fs/promises");
+  const { SCHEMA, schemaStatements } = await import("../worker/src/db.js");
+  const dir = new URL("../migrations/", import.meta.url), files = (await readdir(dir)).filter((f) => f.endsWith(".sql")).sort();
+  const all = (await Promise.all(files.map((f) => readFile(new URL(f, dir), "utf8")))).join("\n");
+  assert.deepEqual(schemaStatements(SCHEMA), schemaStatements(all));
+  assert.ok(schemaStatements(SCHEMA).every((q) => /IF NOT EXISTS/i.test(q)));
+});

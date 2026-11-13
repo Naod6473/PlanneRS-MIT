@@ -27,5 +27,15 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.8.0"
+  },
+  "cloudflare": {
+    "bindings": {
+      "ENCRYPTION_KEY": {
+        "description": "Une longue phrase au hasard (par exemple le résultat de « openssl rand -hex 32 ») : elle chiffre les identifiants des comptes. Garde-la de côté."
+      },
+      "DRY_RUN": {
+        "description": "« true » : le robot simule les envois sans rien publier. Passe à « false » quand tout est prêt."
+      }
+    }
   }
 }
