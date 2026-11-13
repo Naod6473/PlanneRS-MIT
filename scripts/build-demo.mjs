@@ -7,11 +7,15 @@ const css = await readFile(new URL("css/app.css", web), "utf8");
 html = html.replace(/<link rel="(icon|manifest)"[^>]*>\n?/g, "").replace('<link rel="stylesheet" href="css/app.css">', () => "<style>\n" + css + "\n</style>");
 const logo = (await readFile(new URL("img/logo.png", web))).toString("base64");
 html = html.replace('src="img/logo.png"', () => 'src="data:image/png;base64,' + logo + '"');
+// Icônes des menus, incluses pour que la démo tienne en un seul fichier.
+const micons = {};
+for (const k of ["today", "calendar", "contents", "fabrique", "stats", "activity", "settings", "more"]) micons[k] = "data:image/png;base64," + (await readFile(new URL("img/menu/" + k + ".png", web))).toString("base64");
 const scripts = [...html.matchAll(/<script (?:defer )?src="([^"]+)"><\/script>/g)].map((m) => m[1]);
 // Le dictionnaire anglais est chargé à la demande sur le site ; ici, tout tient dans un seul fichier.
 scripts.splice(scripts.indexOf("js/i18n.js"), 0, "js/i18n-en.js");
 let js = "window.PLANNERS_FORCE_DEMO = true;\n";
 // La bibliothèque de recettes partagée, incluse pour que la démo marche hors ligne.
+js += "window.PLANNERS_MENU_ICONS = " + JSON.stringify(micons) + ";\n";
 js += "window.PLANNERS_LIBRARY = " + (await readFile(new URL("recettes/bibliotheque.json", web), "utf8")).trim().replace(/<\//g, "<\\/") + ";\n";
 const data = process.argv[2];
 for (const s of scripts) js += (await readFile(new URL(s, web), "utf8")) + "\n";

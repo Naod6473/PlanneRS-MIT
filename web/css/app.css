@@ -1269,6 +1269,9 @@ table.list tr.sel td{background:var(--rev-bg)}
 .nav a{padding:7px 8px}
 .nico{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--nc,var(--n-settings));color:#fff;flex:none}
 .nico svg.i{width:16px;height:16px;stroke-width:2}
+.mico{width:28px;height:28px;flex:none;object-fit:contain;display:block}
+.tabbar .mico{width:26px;height:26px}
+.morelist .mico{width:24px;height:24px}
 .n-today{--nc:var(--n-today)}.n-calendar{--nc:var(--n-calendar)}.n-contents{--nc:var(--n-contents)}.n-stats{--nc:var(--n-stats)}.n-activity{--nc:var(--n-activity)}.n-settings{--nc:var(--n-settings)}.n-fabrique{--nc:var(--n-fabrique)}.n-more{--nc:var(--n-settings)}
 .nav a[aria-current="page"]{background:color-mix(in srgb,var(--nc,var(--ink)) 9%,var(--panel));box-shadow:none;color:var(--ink)}
 .tcard,.kpi,.panel,.setup{border-radius:16px;box-shadow:var(--card-sh)}
