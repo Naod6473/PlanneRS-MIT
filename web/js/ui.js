@@ -189,7 +189,14 @@
   function iconSet() {
     let v = "";
     try { const q = new URLSearchParams(location.search).get("icons"); if (ICON_SETS.includes(q)) localStorage.setItem("planners-icons", q); v = localStorage.getItem("planners-icons") || ""; } catch (e) {}
-    return ICON_SETS.includes(v) ? v : (window.PLANNERS_ICON_SET || "gemini");
+    return ICON_SETS.includes(v) ? v : (window.PLANNERS_ICON_SET || "fluent");
+  }
+  // Grosses icônes dans une pastille (.ic) : version Fluent 3D quand ce jeu est choisi, sinon le picto au trait.
+  const FX = { check: 1, contents: 1, mic: 1, film: 1, bubble: 1, eye: 1, spark: 1, calendar: 1, pen: 1, clock: 1, bulb: 1 };
+  function fxi(name) {
+    if (iconSet() !== "fluent" || !FX[name]) return '<span class="ic">' + icon(name) + "</span>";
+    const src = (window.PLANNERS_MENU_ICONS || {})["fx/" + name] || "img/fx/" + name + ".png";
+    return '<span class="ic fxw"><img src="' + src + '" alt="" width="36" height="36"></span>';
   }
   const NAV_TINT = { today: 1, calendar: 1, contents: 1, fabrique: 1, stats: 1, activity: 1, settings: 1 };
   // k : clé du menu (today, calendar…) ou de la tuile (st-prep, st-fix…).
@@ -204,5 +211,5 @@
     return '<img class="' + (st ? "ic pic" : "mico") + " set-" + set + '" src="' + src + '" alt="" width="' + (st ? 36 : 28) + '" height="' + (st ? 36 : 28) + '">';
   }
 
-  window.UI = { pic, iconSet, announce, modal, unmodal, toastHome, icon, esc, safeUrl, brand, brands, status, card, look, abar, badge, toast, copy, ICONS };
+  window.UI = { pic, fxi, iconSet, announce, modal, unmodal, toastHome, icon, esc, safeUrl, brand, brands, status, card, look, abar, badge, toast, copy, ICONS };
 })();

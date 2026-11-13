@@ -39,7 +39,7 @@
       const work = C.crewWork(posts, r), done = work.filter((x) => x.state === "done").length, doing = work.filter((x) => x.state === "doing");
       const opts = Object.entries(C.CREW_WHO).filter(([k]) => k !== "api" || r.api).map(([k, l]) => '<option value="' + k + '"' + (r.who === k ? " selected" : "") + ">" + esc(l) + "</option>").join("");
       const last = work.slice(0, 3).map((x) => '<li><button class="lk" data-fab="' + esc(x.id) + '" data-noi18n>' + esc(x.title) + '</button><span class="muted"> · ' + esc(stepLabel(x.step)) + " " + (x.state === "done" ? "fait" : x.state === "doing" ? "en cours" : "à faire") + (x.at ? " · " + esc(C.shortDay(x.at.slice(0, 10))) : "") + "</span></li>").join("");
-      return '<article class="crew-card' + (doing.length ? " busy" : "") + '" aria-labelledby="cr-' + r.key + '"><header><span class="ic">' + icon(ROLE_IC[r.key] || "dot") + '</span><div><h3 id="cr-' + r.key + '">' + esc(r.name) + "</h3>" +
+      return '<article class="crew-card' + (doing.length ? " busy" : "") + '" aria-labelledby="cr-' + r.key + '"><header>' + U.fxi(ROLE_IC[r.key] || "dot") + '<div><h3 id="cr-' + r.key + '">' + esc(r.name) + "</h3>" +
         '<span class="muted small">' + (r.steps.length ? "Étape : " + r.steps.map(stepLabel).join(", ") : "Légende du post") + "</span></div>" +
         (doing.length ? '<span class="fwho doing"><span class="pulse" aria-hidden="true"></span>' + doing.length + " en cours</span>" : "") + "</header>" +
         '<label class="crew-who">Qui tient ce rôle<select data-crew-who="' + r.key + '">' + opts + "</select></label>" +
@@ -76,7 +76,7 @@
     all.forEach((x) => by[colOf(x.pr)].push(x));
     const working = all.filter((x) => x.pr.current && x.pr.current.state === "doing").length;
     const f = A.fabSt || "";
-    const kpis = COLS.map(([k, l]) => '<button class="pkpi c-' + (k === "ready" ? "published" : "fab") + '" data-fabst="' + k + '" aria-pressed="' + (f === k) + '"><span class="ic">' + icon(k === "ready" ? "check" : k === "script" ? "contents" : k === "voice" ? "mic" : k === "edit" ? "film" : k === "subs" ? "bubble" : "eye") + "</span><b>" + by[k].length + "</b><span>" + esc(l.toLowerCase()) + "</span></button>").join("");
+    const kpis = COLS.map(([k, l]) => '<button class="pkpi c-' + (k === "ready" ? "published" : "fab") + '" data-fabst="' + k + '" aria-pressed="' + (f === k) + '">' + U.fxi(k === "ready" ? "check" : k === "script" ? "contents" : k === "voice" ? "mic" : k === "edit" ? "film" : k === "subs" ? "bubble" : "eye") + "<b>" + by[k].length + "</b><span>" + esc(l.toLowerCase()) + "</span></button>").join("");
     const cols = COLS.filter(([k]) => !f || f === k).map(([k, l]) => '<section class="wcol fcol" aria-labelledby="fc-' + k + '"><h3 class="wcol-h" id="fc-' + k + '"><span>' + esc(l) + '</span><span class="n">' + (by[k].length || "") + "</span></h3>" +
       (by[k].map((x) => card(x.p)).join("") || '<p class="wnone">Rien</p>') + "</section>").join("");
     const phrase = all.length ? (en() ? all.length + " video" + (all.length > 1 ? "s" : "") + " in production" + (working ? ", " + working + " being worked on right now" : "") : all.length + " vidéo" + (all.length > 1 ? "s" : "") + " en fabrication" + (working ? ", dont " + working + " en cours de travail en ce moment" : "")) : "";

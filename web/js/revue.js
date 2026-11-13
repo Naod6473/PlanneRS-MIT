@@ -122,7 +122,7 @@
         '<div class="pl-sb"><button class="btn" data-pl="shut">Annuler</button><button class="btn primary" data-pl="savecap">Garder cette légende</button></div></div>';
     }
     const fab = C.inFabrique(p);
-    const opt = (k, ic, l, h) => '<button class="pl-opt" data-pl="' + k + '"><span class="ic">' + icon(ic) + "</span><span><b>" + esc(l) + "</b><small>" + esc(h) + "</small></span></button>";
+    const opt = (k, ic, l, h) => '<button class="pl-opt" data-pl="' + k + '">' + U.fxi(ic) + "<span><b>" + esc(l) + "</b><small>" + esc(h) + "</small></span></button>";
     return top("Plus d'options", p.title) + opt("date", "calendar", "Changer la date", "Jour et heure en deux touches") + opt("cap", "pen", "Modifier la légende", "Corrige le texte sans quitter la pile") +
       opt("later", "clock", "Revoir plus tard", "La carte passe en fin de pile") + opt("post", "contents", "Ouvrir la fiche du post", "Médias, réseaux, commentaires") +
       (fab ? opt("fab", "film", "Ouvrir dans La Fabrique", "Storyboard et étapes") : "") + opt("idea", "bulb", "Ne pas publier", "Range la vidéo dans les idées, sans date") + "</div>";
