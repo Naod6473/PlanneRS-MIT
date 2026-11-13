@@ -482,6 +482,8 @@
     const from = A.stageOf(p);
     if (from === to) return;
     if (from === "published") { U.toast("Une publication publiée ne bouge plus."); return; }
+    const lbl = (C.STEPS.find((x) => x[0] === to) || [])[1];
+    if (lbl) U.announce("« " + (p.title || "Sans titre") + " » passe dans la colonne " + lbl + ".");
     if (from === "scheduled") { U.toast("Programmé est verrouillé : clique sur « Débloquer » d'abord."); return; }
     if (to === "published") { U.toast("Publié se remplit tout seul (robot ou « C'est posté »)."); return; }
     const reval = to !== "scheduled" && p.captionValidated;
@@ -624,7 +626,14 @@
     if (S.post(id)) A.openManual(id); else U.toast("Ce post n'existe plus");
     return true;
   };
-  window.addEventListener("hashchange", () => { if (!A.ready) return; if (A.posterHash()) return; A.closeLayer(); A.render(); window.scrollTo(0, 0); if (location.hash === "#share") A.receiveShare(); });
+  // Changement d'écran en fondu court (View Transitions), sauf si « réduire les animations » est demandé.
+  const calm = () => window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  A.swap = (fn) => {
+    if (!document.startViewTransition || calm() || document.hidden) return fn();
+    const t = document.startViewTransition(fn), quiet = () => {}; // une transition sautée (changements rapprochés) n'est pas une erreur
+    [t.ready, t.finished, t.updateCallbackDone].forEach((p) => p && p.catch(quiet));
+  };
+  window.addEventListener("hashchange", () => { if (!A.ready) return; if (A.posterHash()) return; A.closeLayer(); A.swap(() => { A.render(); window.scrollTo(0, 0); }); if (location.hash === "#share") A.receiveShare(); });
 
   // Partage reçu depuis le téléphone : une photo ou une vidéo → envoi dans le Drive ; un lien ou un texte → une idée.
   A.receiveShare = async function () {

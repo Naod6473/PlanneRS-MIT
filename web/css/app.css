@@ -85,8 +85,8 @@ svg.i{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-widt
 [class*="c-"].sti{color:var(--tint)}
 
 /* ---------- Coque ---------- */
-.app{display:grid;grid-template-columns:var(--side) 1fr;min-height:100vh}
-.side{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:6px;padding:16px 12px;background:var(--panel);border-right:1px solid var(--line)}
+.app{display:grid;grid-template-columns:var(--side) 1fr;min-height:100dvh}
+.side{position:sticky;top:0;height:100dvh;display:flex;flex-direction:column;gap:6px;padding:16px 12px;background:var(--panel);border-right:1px solid var(--line)}
 .logo{text-decoration:none;color:inherit;display:flex;align-items:center;gap:8px;font-weight:800;font-size:19px;letter-spacing:.01em;padding:0 6px 10px}
 .logo-mark{height:44px;width:auto;flex:none}
 .logo .wm{background:linear-gradient(90deg,var(--brand-a),var(--brand-b));-webkit-background-clip:text;background-clip:text;color:transparent}
@@ -252,7 +252,7 @@ main{min-width:0;display:flex;flex-direction:column}
 .free{border:1px dashed var(--line2);border-radius:8px;background:transparent;color:var(--ink3);font-size:12px;min-height:30px;cursor:pointer}
 .free:hover{color:var(--ink);border-color:var(--ink3)}
 .pc .kids{font-size:12px;color:var(--ink3);border-top:1px dashed var(--line);padding-top:4px}
-.tray{position:sticky;top:76px;border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:10px;display:flex;flex-direction:column;gap:8px;max-height:calc(100vh - 100px);overflow:auto}
+.tray{position:sticky;top:76px;border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:10px;display:flex;flex-direction:column;gap:8px;max-height:calc(100dvh - 100px);overflow:auto}
 .tray.over{outline:2px solid var(--action)}
 .tray .exp{font-size:12px;color:var(--main)}
 .filters{display:flex;gap:6px;flex-wrap:wrap}
@@ -508,7 +508,7 @@ table.list tr.clk:hover td{background:var(--panel2)}
 .pl-toast.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}
 .pl-toast span{flex:1}.pl-toast button{border:0;background:transparent;color:inherit;font-weight:700;text-decoration:underline;min-height:36px;cursor:pointer}
 .pl-scrim{position:fixed;inset:0;background:rgba(10,12,14,.45);width:auto!important;z-index:5;animation:pl-fade .2s}
-.pl-sheet{position:fixed;left:50%;bottom:0;transform:translateX(-50%);z-index:6;background:var(--panel);border-radius:24px 24px 0 0;padding:10px 20px calc(20px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px;max-height:88vh;overflow:auto;box-shadow:var(--shadow);animation:pl-sheet .32s cubic-bezier(.2,.9,.25,1.05)}
+.pl-sheet{position:fixed;left:50%;bottom:0;transform:translateX(-50%);z-index:6;background:var(--panel);border-radius:24px 24px 0 0;padding:10px 20px calc(20px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px;max-height:88dvh;overflow:auto;box-shadow:var(--shadow);animation:pl-sheet .32s cubic-bezier(.2,.9,.25,1.05)}
 .pl-sheet .grab{align-self:center;width:40px;height:4px;border-radius:4px;background:var(--line2)}
 .pl-sheet h2{margin:0;font-size:19px}.pl-sheet>p{margin:-8px 0 0}
 .pl-chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
@@ -603,8 +603,8 @@ table.list tr.clk:hover td{background:var(--panel2)}
 
 /* ---------- PC : l'application tient dans l'écran, seul le contenu défile ---------- */
 @media (min-width:761px){
-  .app{height:100vh;min-height:0}
-  main{height:100vh;overflow:hidden}
+  .app{height:100dvh;min-height:0}
+  main{height:100dvh;overflow:hidden}
   .top{position:static;flex-wrap:nowrap}
   .view{flex:1;min-height:0;overflow:auto;padding-bottom:28px}
   .view:has(> .fit){display:flex;flex-direction:column;overflow:hidden;padding-bottom:16px}
@@ -1358,7 +1358,7 @@ table.list tr.sel td{background:var(--rev-bg)}
 .sheet.wide{width:min(920px,100%)}
 .sh-body.fab{display:flex;flex-direction:column;gap:14px}
 .fab-grid{display:grid;grid-template-columns:minmax(200px,300px) 1fr;gap:16px;align-items:start}
-.fvideo{width:100%;aspect-ratio:9/16;max-height:62vh;border-radius:14px;background:#0F1113;display:block;object-fit:contain}
+.fvideo{width:100%;aspect-ratio:9/16;max-height:62dvh;border-radius:14px;background:#0F1113;display:block;object-fit:contain}
 .sh-body.fab h3.bh{margin:0 0 8px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3)}
 .fvideo.empty-v{aspect-ratio:9/12;display:grid;place-content:center;justify-items:center;gap:8px;padding:16px;text-align:center;color:var(--ink3);background:var(--panel2);border:1.5px dashed var(--line2);font-size:13px}
 .fvideo.empty-v svg.i{width:32px;height:32px}
@@ -1497,3 +1497,24 @@ body.fabdrag main::after{content:"Lâche tes vidéos ici : elles partent dans to
 .mv-top>.mv-col,.mv-top1>.mv-col{flex:1}
 .mv-field textarea{font-weight:400;font-size:14px;border:1px solid var(--line2);border-radius:10px;padding:9px 12px;background:var(--panel);color:var(--ink);resize:vertical;min-height:84px}
 .mv-note{font-weight:400}
+.i18n-wait body{visibility:hidden}
+
+/* Fenêtres natives <dialog> (classe mh) : la mise en page reste celle des classes de chaque fenêtre. */
+:where(dialog.mh){position:fixed;inset:0;width:100%;height:100%;max-width:none;max-height:none;margin:0;padding:0;border:0;background:transparent;color:inherit;overflow:visible}
+dialog.mh:not([open]){display:none!important}
+dialog.mh::backdrop{background:transparent}
+dialog#layer{pointer-events:none}dialog#layer>*{pointer-events:auto}
+::view-transition-old(root),::view-transition-new(root){animation-duration:.16s}
+@media (prefers-reduced-motion:reduce){::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}}
+/* Longues listes : le navigateur saute le rendu des lignes hors écran. */
+.logl{content-visibility:auto;contain-intrinsic-size:auto 52px}
+.tl{content-visibility:auto;contain-intrinsic-size:auto 64px}
+table.list tbody tr{content-visibility:auto;contain-intrinsic-size:auto 46px}
+/* Formulaires : l'erreur ne s'affiche qu'après la saisie (:user-invalid), sous le champ concerné. */
+input:user-invalid,textarea:user-invalid,select:user-invalid{border-color:var(--fail)!important;outline-color:var(--fail)}
+.ferr{flex-basis:100%;display:none;color:var(--fail);font-size:12px;font-weight:500;margin-top:2px}
+:is(input,textarea,select):user-invalid~.ferr,label:has(:user-invalid) .ferr,form:has(:user-invalid)>.ferr{display:block}
+/* Cartes qui s'adaptent à leur propre largeur (container queries), pas seulement à l'écran. */
+.pep-grid>.pep,.mv-rcs>.mv-rc,.mv-ver{container-type:inline-size}
+@container (max-width:300px){.pep>img,.pep>.noimg{width:64px;height:64px}.pep .acts .btn{flex:1;justify-content:center}}
+@container (max-width:520px){.mv-tr{grid-template-columns:38px minmax(0,1fr);row-gap:4px}.mv-tr>:nth-child(1){grid-area:1/1}.mv-tr>:nth-child(2){grid-area:2/1}.mv-tr>:nth-child(3){grid-area:1/2}.mv-tr>:nth-child(4){grid-area:2/2}.mv-th{display:none}}

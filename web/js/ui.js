@@ -114,10 +114,41 @@
       "</button>";
   }
 
+  // ------------------------------------------------------------ Fenêtres modales natives (<dialog>)
+  // showModal() : le reste de la page devient inerte, le focus reste dedans, Échap et le geste retour
+  // du téléphone passent par l'événement « cancel » (on le confie à la fonction de fermeture de la fenêtre).
+  // Les messages (toasts) suivent la fenêtre du dessus, sinon ils seraient sous la couche modale.
+  // La boîte des messages peut disparaître avec le contenu d'une fenêtre : on la recrée au besoin.
+  function toastHome() {
+    let box = document.querySelector(".toasts");
+    if (!box) { box = document.createElement("div"); box.className = "toasts"; box.setAttribute("aria-live", "polite"); box.setAttribute("role", "status"); }
+    const top = [...document.querySelectorAll("dialog[open]")].pop();
+    const home = top || document.body;
+    if (box.parentElement !== home) home.appendChild(box);
+    return box;
+  }
+  function modal(el, onCancel) {
+    if (!el || typeof el.showModal !== "function") return;
+    if (onCancel && !el._mhCancel) {
+      el._mhCancel = true;
+      el.addEventListener("cancel", (e) => { e.preventDefault(); setTimeout(() => { if (el.open) onCancel(); }, 0); });
+    }
+    if (!el.open) { const f = document.activeElement; try { el.showModal(); } catch (e) { el.setAttribute("open", ""); } if (f && el.contains(f)) f.focus(); }
+    toastHome();
+  }
+  function unmodal(el) { if (el && el.open) el.close(); toastHome(); }
+
+  // Annonce pour les lecteurs d'écran (glisser-déposer, déplacements) : région invisible, lue poliment.
+  function announce(msg) {
+    let r = document.getElementById("sr-live");
+    if (!r) { r = document.createElement("div"); r.id = "sr-live"; r.className = "sr"; r.setAttribute("aria-live", "polite"); r.setAttribute("aria-atomic", "true"); document.body.appendChild(r); }
+    r.textContent = ""; setTimeout(() => { r.textContent = msg; }, 50);
+  }
+
   let toastBox;
   // action : { label, fn } facultatif (ex. « Annuler »).
   function toast(msg, action) {
-    if (!toastBox) { toastBox = document.querySelector(".toasts"); }
+    toastBox = toastHome();
     const t = document.createElement("div");
     t.className = "toast"; t.textContent = msg;
     if (action) { const b = document.createElement("button"); b.className = "tact"; b.textContent = action.label; b.onclick = () => { t.remove(); action.fn(); }; t.appendChild(b); }
@@ -134,5 +165,5 @@
     }
   }
 
-  window.UI = { icon, esc, safeUrl, brand, brands, status, card, look, abar, badge, toast, copy, ICONS };
+  window.UI = { announce, modal, unmodal, toastHome, icon, esc, safeUrl, brand, brands, status, card, look, abar, badge, toast, copy, ICONS };
 })();

@@ -660,7 +660,10 @@
   function agoText(iso) {
     if (!iso) return "jamais";
     const m = Math.round((Date.now() - new Date(iso).getTime()) / 6e4);
-    return m < 2 ? "à l'instant" : m < 60 ? "il y a " + m + " min" : m < 1440 ? "il y a " + Math.round(m / 60) + " h" : "il y a " + Math.round(m / 1440) + " j";
+    if (m < 2) return "à l'instant";
+    const [n, u] = m < 60 ? [m, "minute"] : m < 1440 ? [Math.round(m / 60), "hour"] : [Math.round(m / 1440), "day"];
+    try { return new Intl.RelativeTimeFormat((window.I18N && I18N.lang) || "fr", { style: "short" }).format(-n, u); } // « il y a 5 min », « 5 min ago »
+    catch (e) { return "il y a " + n + " " + ({ minute: "min", hour: "h", day: "j" })[u]; }
   }
   // Petite courbe d'une seule série (une échelle), avec info-bulle sur chaque point.
   function spark(points, label) {

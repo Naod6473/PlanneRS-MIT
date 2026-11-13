@@ -5,8 +5,10 @@
   const { esc, safeUrl, icon, brand, brands, status } = U;
 
   const layer = () => document.getElementById("layer");
-  A.closeLayer = function () { if (A.beforeClose && A.beforeClose() === false) return; A.beforeClose = null; layer().innerHTML = ""; document.body.style.overflow = ""; if (A.lastFocus) { try { A.lastFocus.focus(); } catch (e) { /* rien */ } } };
+  A.closeLayer = function () { if (A.beforeClose && A.beforeClose() === false) return; A.beforeClose = null; U.unmodal(layer()); layer().innerHTML = ""; document.body.style.overflow = ""; if (A.lastFocus) { try { A.lastFocus.focus(); } catch (e) { /* rien */ } } };
   A.openLayer = (h, l) => openLayer(h, l);
+  // Tout ce qui écrit dans #layer (création, assistants, remplissage…) ouvre ou ferme la fenêtre native.
+  new MutationObserver(() => { const L = layer(); if (L.firstElementChild) U.modal(L, A.closeLayer); else U.unmodal(L); }).observe(layer(), { childList: true });
 
   // ------------------------------------------------------------ Dépôt de fichiers dans le stockage choisi
   // Réglages › Stockage › Dossier des dépôts : « auto » = le premier stockage connecté qui sait écrire.
@@ -44,6 +46,7 @@
   function openLayer(html, label) {
     A.lastFocus = document.activeElement;
     layer().innerHTML = '<div class="scrim" data-close></div><div class="sheet" role="dialog" aria-modal="true" aria-label="' + esc(label) + '">' + html + "</div>";
+    U.modal(layer(), A.closeLayer);
     document.body.style.overflow = "hidden";
     const f = layer().querySelector("[autofocus],.sh-body button,.sh-body textarea,.sh-top button");
     if (f) f.focus();
@@ -366,6 +369,7 @@
     A.pending = A.pending.filter((c) => c.id !== id);
     if (p.date !== to.date || p.time !== to.time) A.pending.push({ id, to });
     A.renderPending();
+    U.announce("« " + (p.title || "Sans titre") + " » " + (to.date ? "déplacé au " + C.longDate(to.date) + (to.time ? " à " + to.time : "") : "retiré du calendrier") + ". Changement en attente de confirmation.");
   };
   A.describe = function (c) {
     const p = S.post(c.id);
@@ -1024,8 +1028,8 @@
     if (!items.length) return;
     let i = Math.max(0, Math.min(start || 0, items.length - 1));
     const prevFocus = document.activeElement;
-    const box = document.createElement("div");
-    box.className = "lb";
+    const box = document.createElement("dialog");
+    box.className = "lb mh";
     box.setAttribute("role", "dialog"); box.setAttribute("aria-modal", "true"); box.setAttribute("aria-label", "Visionneuse d'images");
     document.body.appendChild(box);
     const many = items.length > 1;
@@ -1043,7 +1047,7 @@
       (box.querySelector('[data-lbx="next"]:not([disabled])') || box.querySelector('[data-lbx="close"]')).focus({ preventScroll: true });
     };
     const go = (d) => { const n = i + d; if (n >= 0 && n < items.length) { i = n; draw(); } };
-    const close = () => { document.removeEventListener("keydown", key, true); box.remove(); try { prevFocus && prevFocus.focus(); } catch (e) { /* rien */ } };
+    const close = () => { document.removeEventListener("keydown", key, true); U.unmodal(box); box.remove(); U.toastHome(); try { prevFocus && prevFocus.focus(); } catch (e) { /* rien */ } };
     const key = (e) => {
       if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); close(); }
       else if (e.key === "ArrowRight") { e.preventDefault(); e.stopPropagation(); go(1); }
@@ -1057,6 +1061,7 @@
       }
     };
     document.addEventListener("keydown", key, true);
+    U.modal(box, () => close());
     box.addEventListener("click", (e) => {
       const g = e.target.closest("[data-lbgo]"); if (g) { i = +g.dataset.lbgo; draw(); return; }
       const b = e.target.closest("[data-lbx]"); if (!b) return;

@@ -92,7 +92,7 @@
             '<span class="grow"></span><span class="cp-count" id="cp-count"></span></div>' +
           '<div class="cp-add" id="cp-add" hidden><label class="btn sm">' + icon("download") + 'Depuis l\'appareil<input type="file" id="cp-file" accept="image/*,video/*" multiple hidden></label>' +
             '<button type="button" class="btn sm" data-cp="lib">' + icon("contents") + "Bibliothèque</button>" +
-            '<input type="url" id="cp-url" placeholder="ou colle le lien d\'une image ou d\'une vidéo (https://…)"><button type="button" class="btn sm" data-cp="addurl">Ajouter</button></div>' +
+            '<input type="url" id="cp-url" pattern="https://.+" aria-describedby="cp-url-err" placeholder="ou colle le lien d\'une image ou d\'une vidéo (https://…)"><button type="button" class="btn sm" data-cp="addurl">Ajouter</button><span class="ferr" id="cp-url-err">Un lien qui commence par https://</span></div>' +
           '<div class="cp-lib" id="cp-lib" hidden><input type="search" id="cp-libq" placeholder="Chercher un média (nom du fichier ou titre du post)" aria-label="Chercher dans la bibliothèque"><div class="cp-libgrid" id="cp-libgrid"></div></div>' +
           '<div class="bar" id="cp-bar" hidden><i></i></div></div>' +
         '<details class="cp-set" id="cp-set"><summary>' + icon("settings") + "Paramètres</summary><div class=\"form\">" +
@@ -114,6 +114,7 @@
 
     A.lastFocus = document.activeElement;
     layer().innerHTML = '<div class="scrim" data-close></div><div class="composer" role="dialog" aria-modal="true" aria-label="' + esc(orig ? "Modifier la publication" : "Créer une publication") + '">' + html + "</div>";
+    U.modal(layer(), A.closeLayer);
     document.body.style.overflow = "hidden";
     const L = layer().querySelector(".composer"), $ = (s) => L.querySelector(s);
     const text = $("#cp-text");

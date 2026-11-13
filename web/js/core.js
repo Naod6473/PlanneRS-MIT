@@ -44,7 +44,16 @@
     en: [["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"], ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]],
   };
   // Langue des dates : les tableaux sont modifiés sur place (les vues les lisent directement).
-  function setLang(l) { const n = NAMES[l] || NAMES.fr; DAYS.splice(0, 7, ...n[0]); MONTHS.splice(0, 12, ...n[1]); }
+  // Noms des jours et des mois donnés par Intl (toute langue que le navigateur connaît), sinon la liste ci-dessus.
+  function intlNames(l) {
+    try {
+      const f = (o) => new Intl.DateTimeFormat(l, o);
+      const d = [0, 1, 2, 3, 4, 5, 6].map((i) => f({ weekday: "long" }).format(new Date(2026, 0, 4 + i))); // 4 janvier 2026 : un dimanche
+      const m = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((i) => f({ month: "long" }).format(new Date(2026, i, 15)));
+      return d.every((x) => x && !/\d/.test(x)) && m.every((x) => x && !/\d/.test(x)) ? [d, m] : null;
+    } catch (e) { return null; }
+  }
+  function setLang(l) { const n = intlNames(l) || NAMES[l] || NAMES.fr; DAYS.splice(0, 7, ...n[0]); MONTHS.splice(0, 12, ...n[1]); }
   function longDate(s) { const d = parseYmd(s); return DAYS[d.getDay()] + " " + d.getDate() + " " + MONTHS[d.getMonth()]; }
   function shortDay(s) { const d = parseYmd(s); return DAYS[d.getDay()].slice(0, 3) + " " + d.getDate(); }
 

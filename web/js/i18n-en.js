@@ -1008,6 +1008,8 @@ window.I18N_EN = {
 "On reprend le sujet et les infos, réécrits à ta façon. Pas d'image ni de phrase de l'original : la note d'originalité compare aussi ce texte.": "We keep the topic and the facts, rewritten your way. No image or sentence from the original: the originality score also checks this text.",
 "Le lien d'origine reste en note privée. Aucune image ni phrase de l'original n'est reprise telle quelle.": "The original link stays in a private note. No image or sentence from the original is reused as is.",
 "Garde la recette d'une publication qui a marché (accroche, structure, format, ressort, fin) et refais-la à ta sauce : sur le même sujet, avec ses infos réécrites à ta façon, ou sur un autre. Sous 80 % d'originalité, l'envoi est bloqué.": "Keep the recipe of a post that worked (hook, structure, format, driver, ending) and redo it your way: on the same topic, with its facts rewritten in your words, or on another one. Below 80% originality, sending is blocked.",
+"Écris le nom du compte (ex. @boulangerie) ou colle son lien.": "Type the account name (e.g. @bakery) or paste its link.",
+"Un lien qui commence par https://": "A link starting with https://",
 "Republier": "Repost",
 "Programmer la republication": "Schedule the repost",
 "Dans 1 semaine": "In 1 week",

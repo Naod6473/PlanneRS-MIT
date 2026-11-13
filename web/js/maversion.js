@@ -32,8 +32,9 @@
     M = { src, recipe: src.recipe || null, ai: false, why: "", version: null, busy: !src.recipe, saved: !!(src.recipe && book().some((r) => r.id === src.recipe.id)), focus: document.activeElement,
       sauce: { same: !!src.item, material: "", subject: "", angle: "myth", format: "reel", maxSec: (st.crew && st.crew.maxSec) || 30 } };
     let el = document.getElementById("mv");
-    if (!el) { el = document.createElement("div"); el.id = "mv"; el.className = "mv"; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", "Ma version"); document.body.appendChild(el); }
+    if (!el) { el = document.createElement("dialog"); el.id = "mv"; el.className = "mv mh"; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", "Ma version"); document.body.appendChild(el); }
     el.hidden = false; document.body.style.overflow = "hidden";
+    U.modal(el, close);
     if (M.recipe) { M.sauce.format = M.recipe.format || "reel"; if (M.sauce.same) M.sauce.subject = R.sourceSubject(M.recipe); }
     draw();
     if (!M.recipe) {
@@ -58,7 +59,7 @@
     return Object.assign({ type: "pepite" }, src.item);
   }
   function close() {
-    const el = document.getElementById("mv"); if (el) { el.hidden = true; el.innerHTML = ""; }
+    const el = document.getElementById("mv"); if (el) { el.hidden = true; el.innerHTML = ""; U.unmodal(el); }
     document.body.style.overflow = "";
     const f = M && M.focus; M = null;
     if (f && f.focus && document.contains(f)) f.focus();

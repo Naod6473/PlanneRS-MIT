@@ -27,15 +27,16 @@
     if (!list.length) { U.toast("Rien à relire pour l'instant"); return; }
     R = { ids: list, i: 0, hist: [], streak: 0, best: 0, t0: Date.now(), sheet: "", picked: {}, focus: document.activeElement };
     let el = document.getElementById("pile");
-    if (!el) { el = document.createElement("div"); el.id = "pile"; document.body.appendChild(el); }
-    el.className = "pile"; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", "Revue en pile");
+    if (!el) { el = document.createElement("dialog"); el.id = "pile"; document.body.appendChild(el); }
+    el.className = "pile mh"; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", "Revue en pile");
     el.hidden = false; document.body.style.overflow = "hidden";
+    U.modal(el, close);
     draw();
     const f = el.querySelector(".pl-act.ok"); if (f) f.focus();
   };
   function close() {
     const el = document.getElementById("pile"); if (!el) return;
-    el.hidden = true; el.innerHTML = ""; document.body.style.overflow = "";
+    el.hidden = true; el.innerHTML = ""; U.unmodal(el); document.body.style.overflow = "";
     const back = R && R.focus; R = null; A.render();
     if (back && back.focus && document.contains(back)) back.focus();
   }

@@ -17,7 +17,9 @@
   document.documentElement.lang = lang;
   if (lang === "fr") return;
 
-  const D = window.I18N_EN || {};
+  // Le dictionnaire anglais (≈ 95 Ko) n'est chargé que pour l'interface en anglais.
+  // En attendant, la page reste masquée (au plus 3 s) pour éviter un éclair de français.
+  let D = window.I18N_EN || {};
   // Dates déjà écrites en anglais par Core (« Tuesday 10 November », « Tue 10 ») : remplacées par « @ » dans les clés.
   const DATE = /\b(?:Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday) \d{1,2}(?: (?:January|February|March|April|May|June|July|August|September|October|November|December))?\b|\b(?:Sun|Mon|Tue|Wed|Thu|Fri|Sat) \d{1,2}\b/g;
   function fill(m, dates, nums) { let i = 0, j = 0; return m.replace(/@/g, () => (dates[j++] || "")).replace(/#/g, () => (i < nums.length ? nums[i++] : "")); }
@@ -76,7 +78,18 @@
     walk(document.body);
     mo.observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ATTRS });
   }
-  if (document.body) start(); else document.addEventListener("DOMContentLoaded", start);
+  const root = document.documentElement;
+  function ready() { root.classList.remove("i18n-wait"); if (document.body) start(); else document.addEventListener("DOMContentLoaded", start); }
+  if (window.I18N_EN) ready();
+  else {
+    root.classList.add("i18n-wait");
+    const tag = document.createElement("script"), base = (document.currentScript && document.currentScript.src) || "js/i18n.js";
+    tag.src = base.replace(/i18n\.js(\?.*)?$/, "i18n-en.js");
+    let done = false;
+    const go = () => { if (done) return; done = true; D = window.I18N_EN || {}; ready(); };
+    tag.onload = go; tag.onerror = go; setTimeout(go, 3000);
+    document.head.appendChild(tag);
+  }
   const conf = window.confirm.bind(window);
   window.confirm = (m) => conf(I.t(m));
 })();
