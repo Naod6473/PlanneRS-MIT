@@ -1,6 +1,8 @@
 /* PlanneRs : les 5 vues (Aujourd'hui, Calendrier, Contenus, Activité, Réglages). */
 (function () {
   "use strict";
+  // Icônes des tuiles de compteurs, dans le style du logo (img/menu/st-*.png ; incluses dans la démo autonome).
+  const stPic = (k) => { const n = "st-" + k; return '<img class="ic pic" src="' + ((window.PLANNERS_MENU_ICONS || {})[n] || "img/menu/" + n + ".png") + '" alt="" width="36" height="36">'; };
   const C = window.Core, U = window.UI, S = window.Store;
   const { esc, safeUrl, icon, brand, brands, status, card } = U;
   const docsBase = () => (window.CONNECTOR_GUIDES || {}).base || "docs/";
@@ -394,7 +396,7 @@
     return '<section class="pband" aria-labelledby="h-period"><div class="pband-h"><h2 id="h-period" data-noi18n>' + esc(phrase) + '</h2><span class="muted">' + total + " contenu" + (total > 1 ? "s" : "") +
       (A.calSt ? ' · <button class="lk" data-calst="">' + icon("x") + "Tout afficher</button>" : "") + "</span></div>" +
       '<div class="pkpis" role="group" aria-label="Filtrer par étape">' + cards.map(([k, l, v]) => '<button class="pkpi c-' + k + (k === "alert" ? " is-alert" : "") + '" data-calst="' + k + '" aria-pressed="' + (A.calSt === k) + '">' +
-        '<span class="ic">' + icon(k === "alert" ? "alert" : C.STATUS[k].icon) + "</span><b>" + v + (k === "published" && total ? '<small> / ' + total + "</small>" : "") + "</b><span>" + l + "</span></button>").join("") + "</div></section>";
+        stPic(k === "alert" ? "fix" : k) + "<b>" + v + (k === "published" && total ? '<small> / ' + total + "</small>" : "") + "</b><span>" + l + "</span></button>").join("") + "</div></section>";
   }
 
   // Vue « Vignettes » : 7 colonnes, une carte avec image par contenu (façon planche).
