@@ -13,7 +13,7 @@ for (const k of ["today", "calendar", "contents", "fabrique", "stats", "activity
   micons[k] = "data:image/png;base64," + (await readFile(new URL("img/menu/" + k + ".png", web))).toString("base64");
   micons["fluent/" + k] = "data:image/png;base64," + (await readFile(new URL("img/menu-fluent/" + k + ".png", web))).toString("base64");
 }
-for (const k of ["check", "contents", "mic", "film", "bubble", "eye", "spark", "calendar", "pen", "clock", "bulb"]) micons["fx/" + k] = "data:image/png;base64," + (await readFile(new URL("img/fx/" + k + ".png", web))).toString("base64");
+for (const k of ["check", "contents", "mic", "film", "bubble", "eye", "spark", "calendar", "pen", "clock", "bulb", "party", "sleep", "seed", "gem", "notepad", "chart", "scroll", "plug", "loupe", "trophy", "rocket"]) micons["fx/" + k] = "data:image/png;base64," + (await readFile(new URL("img/fx/" + k + ".png", web))).toString("base64");
 const scripts = [...html.matchAll(/<script (?:defer )?src="([^"]+)"><\/script>/g)].map((m) => m[1]);
 // Le dictionnaire anglais est chargé à la demande sur le site ; ici, tout tient dans un seul fichier.
 scripts.splice(scripts.indexOf("js/i18n.js"), 0, "js/i18n-en.js");

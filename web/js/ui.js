@@ -198,6 +198,16 @@
     const src = (window.PLANNERS_MENU_ICONS || {})["fx/" + name] || "img/fx/" + name + ".png";
     return '<span class="ic fxw"><img src="' + src + '" alt="" width="36" height="36"></span>';
   }
+  // Écrans vides : une icône Fluent 3D au-dessus du texte (attribut data-fx), posée dès que l'élément apparaît.
+  function decorateEmpty(root) {
+    if (iconSet() !== "fluent") return;
+    (root || document).querySelectorAll(".empty[data-fx]:not(.has-fx)").forEach((el) => {
+      const k = el.dataset.fx, src = (window.PLANNERS_MENU_ICONS || {})["fx/" + k] || "img/fx/" + k + ".png";
+      el.classList.add("has-fx");
+      el.insertAdjacentHTML("afterbegin", '<img class="empty-fx" src="' + src + '" alt="" width="56" height="56">');
+    });
+  }
+  if (window.MutationObserver) new MutationObserver(() => decorateEmpty()).observe(document.documentElement, { childList: true, subtree: true });
   const NAV_TINT = { today: 1, calendar: 1, contents: 1, fabrique: 1, stats: 1, activity: 1, settings: 1 };
   // k : clé du menu (today, calendar…) ou de la tuile (st-prep, st-fix…).
   function pic(k) {

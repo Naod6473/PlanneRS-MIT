@@ -134,7 +134,7 @@
       todo += '<div class="tcard warn"><div class="head">' + brands(p.networks) + '<span class="st st-ready">' + icon("clock") + "Se périme le " + esc(C.shortDay(p.expires)) + "</span></div>" +
         "<h3>" + esc(p.title) + '</h3><p>Contenu d\'actualité pas encore programmé.</p><div class="acts"><button class="btn primary" data-open="' + p.id + '">Programmer</button></div></div>';
     });
-    if (!todo) todo = '<div class="empty">Rien à faire pour l\'instant. Tout ce qui est programmé partira tout seul.</div>';
+    if (!todo) todo = '<div class="empty" data-fx="party">Rien à faire pour l\'instant. Tout ce qui est programmé partira tout seul.</div>';
 
     const day = top().filter((p) => p.date === t && visible(p)).sort((a, b) => a.time.localeCompare(b.time));
     const pub = day.filter((p) => p.status === "published").length;
@@ -148,7 +148,7 @@
       const d = range === "today" ? t : C.addDays(t, 1);
       const list = top().filter((p) => p.date === d && visible(p)).sort((a, b) => a.time.localeCompare(b.time));
       gal = list.length ? progRows(list, false, d === t ? now.slice(11) : null)
-        : '<div class="empty">Aucune publication ' + (d === t ? "aujourd'hui" : "demain") + ".</div>";
+        : '<div class="empty" data-fx="sleep">Aucune publication ' + (d === t ? "aujourd'hui" : "demain") + ".</div>";
     }
     const kpi = (key, val, lbl, cls) => '<a class="kpi' + (cls ? " " + cls : "") + '" href="#list/' + key + '"><b>' + val + "</b><span>" + lbl + "</span>" + icon("right", "go") + "</a>";
 
@@ -210,7 +210,7 @@
 
   // Programme compact : une ligne par contenu (heure, miniature, réseaux, titre, statut).
   function progRows(list, byDay, hm) {
-    if (!list.length) return '<div class="empty">Rien de prévu.</div>';
+    if (!list.length) return '<div class="empty" data-fx="sleep">Rien de prévu.</div>';
     const t = today(), now = C.nowStamp();
     let out = '<div class="prog">', cur = "", marked = !hm;
     list.slice().sort((a, b) => C.at(a).localeCompare(C.at(b))).forEach((p) => {
@@ -267,7 +267,7 @@
     list.forEach((p) => { (by[p.date] = by[p.date] || []).push(p); });
     let days = Object.keys(by).sort();
     if (opts.empty && days.length) { days = []; for (let d = opts.from || t; d <= (opts.to || Object.keys(by).sort().pop()); d = C.addDays(d, 1)) days.push(d); }
-    if (!days.length) return '<div class="empty">Rien ici pour l\'instant.</div>';
+    if (!days.length) return '<div class="empty" data-fx="seed">Rien ici pour l\'instant.</div>';
     return '<div class="days' + (opts.small ? " frise" : "") + '">' + days.map((d) => {
       const l = (by[d] || []).sort((a, b) => a.time.localeCompare(b.time));
       const lbl = d === t ? "Aujourd'hui" : d === C.addDays(t, 1) ? "Demain" : C.longDate(d);
@@ -312,7 +312,7 @@
           : '<button class="btn primary" data-resched="' + p.id + '">Reprogrammer</button><button class="btn" data-manual="' + p.id + '">Déjà posté</button><button class="btn quiet" data-ignore="' + p.id + '">Ignorer</button>') + "</div></div>";
       return { title: "Manqués", sub: open.length ? open.length + " à rattraper" : "Rien à rattraper", tools: back,
         html: '<div class="lead"><p>Publications dont l\'heure est passée depuis plus de 24 h sans que rien ne parte. Reprogramme-les, note-les comme déjà postées (avec le lien), ou ignore-les.</p></div>' +
-          (open.length ? '<div class="mlist">' + open.map(row).join("") + "</div>" : '<div class="empty">Aucune publication manquée. Tout ce qui était prévu est parti.</div>') +
+          (open.length ? '<div class="mlist">' + open.map(row).join("") + "</div>" : '<div class="empty" data-fx="check">Aucune publication manquée. Tout ce qui était prévu est parti.</div>') +
           (ign.length ? '<details class="box" style="margin-top:18px"><summary style="cursor:pointer;font-weight:600">' + ign.length + " ignorée" + (ign.length > 1 ? "s" : "") + '</summary><div class="mlist" style="margin-top:10px">' + ign.map(row).join("") + "</div></details>" : "") };
     }
     if (kind === "next7") return { title: "Prêts à partir", sub: k.next7.length + " sur les 7 prochains jours", tools: back, html: '<div class="lead"><p>Validés, datés et automatiques : le robot les enverra seul.</p></div>' + dayGroups(k.next7) };
@@ -577,7 +577,7 @@
           return '<tr class="clk' + (on ? " sel" : "") + '" data-open="' + p0.id + '"><td class="lsel"><input type="checkbox" data-sel="' + esc(r.ps.map((p) => p.id).join(",")) + '" aria-label="Sélectionner"' + (on ? " checked" : "") + '></td><td class="ld">' + (p0.date ? '<b>' + esc(C.shortDay(p0.date)) + '</b><span class="mono">' + (p0.time || "") + "</span>" : '<span class="muted">Sans date</span>') + "</td>" +
             '<td><span class="mono muted">' + esc(p0.ref || "") + "</span> " + esc(p0.title.replace(/ \(carrousel\)$/, "")) + (p0.category ? '<span class="lcat">' + esc(p0.category) + "</span>" : "") + "</td>" +
             '<td><div class="lpubs">' + r.ps.map((p) => '<span class="lpub" data-open="' + p.id + '">' + brands(p.networks) + '<span class="lfmt">' + esc(C.FORMATS[p.format] || "") + (p.date && p.date !== p0.date ? " · " + esc(C.shortDay(p.date)) : "") + (p.time && p !== p0 ? " " + p.time : "") + "</span>" + U.badge(p, now) + (C.alertOf(p, now) ? status(C.alertOf(p, now)) : "") + "</span>").join("") + "</div></td></tr>";
-        }).join("") + "</tbody></table></div>" : '<div class="empty">Rien ici.</div>');
+        }).join("") + "</tbody></table></div>" : '<div class="empty" data-fx="loupe">Rien ici.</div>');
     }
     if (A.contentsMode !== "media") html = fbar() + html;
     return { title: "Contenus", tools, html };
@@ -717,7 +717,7 @@
       '<div class="kpis">' + kpi(r.pub.length, "publications") + kpi(r.days + " / " + r.nDays, "jours avec au moins un post") + kpi(sign(r.igGain), "abonnés Instagram") + kpi(sign(r.fbGain), "abonnés Facebook") + kpi(fmtN(r.views), "vues") + kpi(fmtN(r.likes + r.comments), "likes et commentaires") + "</div>" +
       (nets ? '<p style="margin:12px 0 0">' + nets + "</p>" : "") + (fmts ? '<p class="muted" style="margin:6px 0 0">' + fmts + "</p>" : "") +
       (r.views == null ? '<p class="muted small" style="margin:10px 0 0">Les vues et les abonnés viennent des statistiques relevées chaque matin (Instagram et Facebook connectés).</p>' : "") + "</section>" +
-      '<section class="panel"><h2 class="sec-h"><span>Meilleurs posts</span><span>' + r.best.length + "</span></h2>" + (best || '<div class="empty">Pas encore de chiffres pour les posts de ce mois.</div>') + "</section></div>";
+      '<section class="panel"><h2 class="sec-h"><span>Meilleurs posts</span><span>' + r.best.length + "</span></h2>" + (best || '<div class="empty" data-fx="chart">Pas encore de chiffres pour les posts de ce mois.</div>') + "</section></div>";
     return { title: "Bilan du mois", tools, html };
   };
   A.reportText = function () {
@@ -743,7 +743,7 @@
     const ig = st.instagram || {}, fb = st.facebook || {};
     const t = today();
     const tools = '<span class="muted">Relevé ' + esc(agoText(st.updated)) + '</span><a class="btn" href="#report" aria-label="Bilan du mois">' + icon("chart") + '<span class="lbl">Bilan du mois</span></a><button class="btn" data-export-csv title="Exporter les publications et leurs chiffres (CSV)">' + icon("download") + '<span class="lbl">CSV</span></button><button class="btn" data-stats-refresh title="Actualiser" aria-label="Actualiser les statistiques">' + icon("undo") + '<span class="lbl">Actualiser</span></button>';
-    if (!st.updated) return { title: "Stats", tools, html: '<div class="empty">Pas encore de statistiques. Elles sont relevées chaque matin à partir de 7 h pour Instagram et Facebook (comptes connectés dans Réglages › Comptes). Tu peux aussi cliquer sur « Actualiser ».</div>' };
+    if (!st.updated) return { title: "Stats", tools, html: '<div class="empty" data-fx="chart">Pas encore de statistiques. Elles sont relevées chaque matin à partir de 7 h pour Instagram et Facebook (comptes connectés dans Réglages › Comptes). Tu peux aussi cliquer sur « Actualiser ».</div>' };
 
     // Publications de l'app avec leurs chiffres, triées au choix.
     const SORTS = [["views", "Vues"], ["likes", "Likes"], ["comments", "Commentaires"], ["reach", "Portée"], ["date", "Date"]];
@@ -846,7 +846,7 @@
       html: '<h2 class="sec-h"><span>État des connexions</span></h2><div class="tiles">' + robotTile + tiles + "</div>" +
         commentsBox() +
         '<h2 class="sec-h"><span>Journal</span><span class="seg" role="group" aria-label="Filtrer le journal">' + filters.map(([k, l]) => '<button data-logf="' + k + '" aria-pressed="' + (A.logFilter === k) + '">' + l + "</button>").join("") + "</span></h2>" +
-        '<div class="log">' + (lines || '<div class="empty">Rien dans le journal.</div>') + "</div>",
+        '<div class="log">' + (lines || '<div class="empty" data-fx="scroll">Rien dans le journal.</div>') + "</div>",
     };
   };
 
@@ -890,7 +890,7 @@
     const acc = S.state.accounts || {};
     const list = window.CONNECTORS[kind];
     const on = list.filter((c) => acc[c.id]), off = list.filter((c) => !acc[c.id]);
-    return '<section class="panel"><h2>' + title + "</h2><p>" + intro + "</p>" + (on.map((c) => accRow(c, acc[c.id])).join("") || '<div class="empty">Aucun compte connecté.</div>') + "</section>" +
+    return '<section class="panel"><h2>' + title + "</h2><p>" + intro + "</p>" + (on.map((c) => accRow(c, acc[c.id])).join("") || '<div class="empty" data-fx="plug">Aucun compte connecté.</div>') + "</section>" +
       '<section class="panel"><h2>Ajouter</h2><p>Chaque service a sa fiche : ce qu\'il permet, ce qu\'il demande, et le lien vers sa documentation officielle.</p><div class="addlist">' +
       off.map((c) => '<button data-conn="' + c.id + '">' + brand(c.logo === undefined ? c.id : c.logo || c.id, "lg") + esc(c.name) + "</button>").join("") + "</div></section>";
   }

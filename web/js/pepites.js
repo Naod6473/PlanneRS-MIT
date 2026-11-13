@@ -45,7 +45,7 @@
     const list = rivals().length || S.mode === "demo"
       ? '<section class="panel"><h2 class="sec-h"><span>Pépites</span><span>' + top.length + "</span></h2>" +
         '<p class="muted small" style="margin:0 0 10px">Des publications au moins deux fois au-dessus de la moyenne de leur compte, sur les 60 derniers jours. Inspire-toi de la recette (accroche, structure, format), pas du contenu.</p>' +
-        (top.length ? '<div class="pep-grid">' + top.map(card).join("") + "</div>" : '<div class="empty">' + (d.updated ? "Pas de pépite en ce moment : rien ne sort du lot." : "Pas encore de relevé : clique sur « Actualiser ».") + "</div>") + "</section>"
+        (top.length ? '<div class="pep-grid">' + top.map(card).join("") + "</div>" : '<div class="empty" data-fx="gem">' + (d.updated ? "Pas de pépite en ce moment : rien ne sort du lot." : "Pas encore de relevé : clique sur « Actualiser ».") + "</div>") + "</section>"
       : "";
     return (errs.length ? '<div class="banner warn">' + errs.map((a) => "@" + esc(a.handle) + " : " + esc(a.error)).join("<br>") + "</div>" : "") + follow() + list;
   };

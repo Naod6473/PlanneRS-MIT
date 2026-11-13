@@ -1569,3 +1569,22 @@ input:user-invalid,textarea:user-invalid,select:user-invalid{border-color:var(--
 .cp-net.n-instagram{background:linear-gradient(180deg,rgba(255,255,255,.32),rgba(255,255,255,.06) 50%,rgba(0,0,0,.1)),radial-gradient(circle at 30% 107%,#fdf497 0%,#fd5949 45%,#d6249f 60%,#285AEB 90%)}
 .cp-net .brand.lg{box-shadow:none}.cp-net .brand.lg::before{display:none}
 .cp-net .lbl{text-shadow:0 1px 1px rgba(0,0,0,.3)}
+
+/* Écrans vides illustrés */
+.empty.has-fx{display:flex;flex-direction:column;align-items:center;gap:10px;padding:26px 18px;border-style:solid;border-color:var(--line);background:var(--panel)}
+.empty-fx{width:56px;height:56px;animation:empty-in .5s cubic-bezier(.3,1.4,.5,1) both}
+@keyframes empty-in{from{opacity:0;transform:translateY(8px) scale(.8)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.empty-fx{animation:none}}
+
+/* Célébrations : carte en aplat qui monte du bas, confettis plats */
+.fete{position:fixed;left:0;right:0;bottom:calc(24px + env(safe-area-inset-bottom,0px));z-index:90;display:grid;justify-items:center;pointer-events:none;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.fete-card{pointer-events:auto;cursor:pointer;display:flex;align-items:center;gap:16px;max-width:min(560px,100%);padding:18px 26px 18px 18px;border-radius:20px;background:var(--fbg);color:var(--ffg);box-shadow:0 20px 50px rgba(0,0,0,.28);animation:fete-in .5s cubic-bezier(.3,1.35,.5,1) both}
+.fete-card img{width:72px;height:72px;flex:none}
+.fete-card b{display:block;font:800 clamp(26px,5vw,40px)/1.05 system-ui,"Segoe UI",sans-serif;letter-spacing:-.02em}
+.fete-card span{display:block;margin-top:4px;font-size:15px;font-weight:600;opacity:.9}
+.fete i{position:absolute;bottom:40px;width:10px;height:14px;border-radius:2px;opacity:0;animation:fete-conf 1.1s cubic-bezier(.2,.7,.4,1) both}
+.fete.out .fete-card{animation:fete-out .3s ease-in both}
+@keyframes fete-in{from{opacity:0;transform:translateY(60px) scale(.9)}to{opacity:1;transform:none}}
+@keyframes fete-out{to{opacity:0;transform:translateY(40px) scale(.95)}}
+@keyframes fete-conf{0%{opacity:1;transform:translate(0,0) rotate(0)}100%{opacity:0;transform:translate(var(--dx),var(--dy)) rotate(var(--r))}}
+@media (max-width:760px){.fete{bottom:calc(76px + env(safe-area-inset-bottom,0px))}}

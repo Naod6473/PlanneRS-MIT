@@ -89,7 +89,7 @@
         '<div class="pkpis" role="group" aria-label="Filtrer par étape">' + kpis + "</div></section>" +
         '<div class="wcols fcols' + (f ? " one" : "") + '" role="group" aria-label="Vidéos par étape">' + cols + "</div>" +
         '<p class="muted small fhelp">Les étapes se cochent ici, ou toutes seules quand une IA (Claude par le lien MCP) avance sur une vidéo. Ouvre une carte pour voir le storyboard et regarder la vidéo finie.</p>'
-        : '<div class="empty">Aucune vidéo en fabrication. Les Reels et vidéos pas encore publiés apparaissent ici, avec leur avancement.</div>',
+        : '<div class="empty" data-fx="film">Aucune vidéo en fabrication. Les Reels et vidéos pas encore publiés apparaissent ici, avec leur avancement.</div>',
     };
   };
 

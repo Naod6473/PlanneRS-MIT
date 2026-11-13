@@ -448,7 +448,7 @@
     openLayer('<div class="sh-top"><b>' + esc(C.longDate(day)) + " · " + time + '</b><span style="flex:1"></span><button class="iconbtn" data-close aria-label="Fermer">' + icon("x") + "</button></div>" +
       '<div class="sh-body">' + (why ? '<p style="margin:0"><b>' + esc(why) + "</b></p>" : "") + '<p class="muted" style="margin:0">Choisis ce qui part sur ce créneau.</p><div class="todo">' +
       (ready.map((p) => '<button class="pc" data-place="' + p.id + '">' + '<span class="row1">' + brands(p.networks) + '<span class="ref">' + esc(p.ref || "") + '</span></span><span class="ttl">' + esc(p.title) + "</span>" + U.badge(p) + "</button>").join("") ||
-        '<div class="empty">Rien n\'est prêt. Crée un post depuis « Contenus ».</div>') + "</div></div>", "Créneau libre");
+        '<div class="empty" data-fx="seed">Rien n\'est prêt. Crée un post depuis « Contenus ».</div>') + "</div></div>", "Créneau libre");
     layer().querySelectorAll("[data-place]").forEach((b) => b.addEventListener("click", () => { A.queueMove(b.dataset.place, { date: day, time }); A.closeLayer(); A.render(); }));
   };
 

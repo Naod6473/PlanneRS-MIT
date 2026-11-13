@@ -58,6 +58,7 @@
       await S.savePosts(pick.map((x) => x.p));
       await S.log({ level: "change", text: "Semaine remplie : " + pick.length + " post(s) programmé(s) (" + pick.map((x) => x.p.title).join(", ") + ")" });
       A.closeLayer(); A.render();
+      if (A.celebrate && pick.length >= 3) A.celebrate({ word: (window.I18N || {}).lang === "en" ? "Week filled." : "Semaine remplie.", sub: pick.length + ((window.I18N || {}).lang === "en" ? " posts scheduled" : " posts programmés"), fx: "party", bg: "#0866FF" });
       U.toast(pick.length + " post(s) programmé(s)", { label: "Annuler", fn: async () => { for (const c of copies) await S.deletePost(c.id); const back = pick.filter((x) => !copies.includes(x.p)); back.forEach(({ p }) => { p.date = null; p.time = null; p.status = "ready"; p.stage = "ready"; }); await S.savePosts(back.map((x) => x.p)); A.render(); U.toast("Annulé"); } });
     });
   };
