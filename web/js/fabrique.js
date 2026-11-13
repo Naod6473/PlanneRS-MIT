@@ -160,7 +160,7 @@
     U.toast(p.captionValidated ? "Vidéo prête" : "Vidéo prête. Reste à valider la légende", p.captionValidated ? null : { label: "Relire", fn: () => A.openPost(p.id) });
   }
 
-  // Studio vidéo : présent seulement dans la version privée (dossier web/studio/).
+  // Studio vidéo (dossier web/studio/) : chargé à la demande ; sans ce dossier, le bouton n'apparaît pas.
   // Le résultat est retenu : le bouton reste là même si la vérification échoue un jour (hors ligne, session expirée).
   try { A.hasStudio = localStorage.getItem("planners-studio") === "1"; } catch (e) { A.hasStudio = false; }
   fetch("studio/VERSION", { cache: "no-store", credentials: "same-origin" }).then((r) => {
