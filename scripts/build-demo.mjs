@@ -24,7 +24,7 @@ js += "window.PLANNERS_LIBRARY = " + (await readFile(new URL("recettes/bibliothe
 const data = process.argv[2];
 for (const s of scripts) js += (await readFile(new URL(s, web), "utf8")) + "\n";
 // Suivi des visites de la démo (anonyme, sans cookie), seulement si une adresse de réception est fournie : STATS_URL=https://…/t
-if (process.env.STATS_URL && /^https:\/\/[\w.-]+(:\d+)?\/[\w/.-]*$/.test(process.env.STATS_URL)) js += "window.PLANNERS_STATS_URL = " + JSON.stringify(process.env.STATS_URL) + ";\n" + (await readFile(new URL("../site/suivi.js", import.meta.url), "utf8")) + "\n";
+if (process.env.STATS_URL && /^https:\/\/[\w.-]+(:\d+)?\/[\w/.-]*$/.test(process.env.STATS_URL)) js += "window.PLANNERS_STATS_URL = " + JSON.stringify(process.env.STATS_URL) + ";\n" + (await readFile(new URL("js/suivi.js", web), "utf8")) + "\n";
 const dataTxt = data ? await readFile(data, "utf8") : "";
 if (data) js = js.replace("window.PLANNERS_FORCE_DEMO = true;", () => "window.PLANNERS_FORCE_DEMO = true;\nwindow.PLANNERS_DEMO_DATA = " + dataTxt.replace(/<\//g, "<\\/") + ";");
 html = html.replace(/(<script (?:defer )?src="[^"]+"><\/script>\n?)+/, () => "<script>\n" + js.replace(/<\/script/gi, "<\\/script") + "\n</script>\n");

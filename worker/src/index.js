@@ -787,6 +787,28 @@ async function stats(env, onlyIfDue) {
   return s;
 }
 
+// Adresse publique : le site vitrine (web/vitrine/) à la racine, la démo en ligne sur /demo/ (l'interface en mode démo,
+// aucune donnée de l'instance), et le suivi des visites branché sur /t. Rien d'autre de l'instance n'y est servi.
+const VITRINE_FILE = /^\/(index\.html|img\/[\w-]+\.(png|jpg)|[\w-]+\.mp4)$/;
+const DEMO_FILE = /^\/(js\/[\w-]+\.js|css\/[\w-]+\.css|img\/[\w/-]+\.(png|jpg|svg)|recettes\/[\w-]+\.json|favicon\.(png|svg))$/;
+async function publicSite(request, env, url) {
+  if (!["GET", "HEAD"].includes(request.method)) return null;
+  const get = (path) => env.ASSETS.fetch(new Request(new URL(path, url), { method: request.method, headers: request.headers }));
+  const p = url.pathname;
+  if (p === "/") return get("/vitrine/");
+  if (p === "/js/suivi.js") return get("/js/suivi.js");
+  if (p === "/demo") return Response.redirect(url.origin + "/demo/" + url.search, 301);
+  if (p === "/demo/" || p === "/demo/index.html") {
+    const r = await get("/");
+    const html = (await r.text()).replace("<head>", '<head>\n<script>window.PLANNERS_FORCE_DEMO = true; window.PLANNERS_STATS_URL = "/t";</script>')
+      .replace("</body>", '<script defer src="/js/suivi.js"></script>\n</body>');
+    return new Response(html, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-cache" } });
+  }
+  if (p.startsWith("/demo/") && DEMO_FILE.test(p.slice(5))) return get(p.slice(5));
+  if (VITRINE_FILE.test(p)) return get("/vitrine" + p);
+  return null;
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -796,9 +818,11 @@ export default {
     // Adresse publique (sans Cloudflare Access) : elle ne sert que la page de présentation,
     // demandée par Google et TikTok pour vérifier l'app. Tout le reste y est refusé.
     if (env.PUBLIC_HOST && url.hostname === env.PUBLIC_HOST) {
-      if (url.pathname === "/" || url.pathname === "/accueil.html" || url.pathname === "/accueil") {
+      if (url.pathname === "/accueil.html" || url.pathname === "/accueil") {
         return env.ASSETS.fetch(new Request(new URL("/accueil", url), { method: "GET" }));
       }
+      const pub = await publicSite(request, env, url);
+      if (pub) return pub;
       // Page de présentation et ses images.
       if (url.pathname === "/presentation" || url.pathname === "/presentation.html") return env.ASSETS.fetch(new Request(new URL("/presentation", url), { method: "GET" }));
       if (/^\/img\/(presentation\/[\w-]+\.jpg|logo\.png)$/.test(url.pathname) || url.pathname === "/favicon.svg") return env.ASSETS.fetch(new Request(url, { method: "GET" }));
