@@ -104,8 +104,12 @@
     const med = srcs.video ? '<div class="npmed one"><video muted playsinline preload="metadata" src="' + esc(srcs.video) + '"' + (srcs.poster ? ' poster="' + esc(srcs.poster) + '"' : "") + "></video></div>"
       : imgs.length ? '<div class="npmed ' + (imgs.length === 1 ? "one" : "n" + Math.min(imgs.length, 4)) + '">' + imgs.slice(0, 4).map((u) => '<img src="' + esc(u) + '" alt="">').join("") + "</div>" : "";
     const lim = cfg.max ? '<p class="muted npcount' + (chars.length > cfg.max ? " over" : "") + '">' + chars.length + " / " + cfg.max + " caractères" + (srcs.images.length > cfg.imgs ? " · " + cfg.imgs + (cfg.imgs > 1 ? " images max" : " image affichée") : "") + "</p>" : "";
+    // Barre d'actions telle qu'elle apparaît sous le post sur chaque réseau.
+    const ACTS = { linkedin: [["heart", "J'aime"], ["bubble", "Commenter"], ["dup", "Republier"], ["send", "Envoyer"]], facebook: [["heart", "J'aime"], ["bubble", "Commenter"], ["send", "Partager"]] };
+    const acts = ACTS[net] ? '<div class="npacts lab">' + ACTS[net].map(([i, l]) => "<span>" + icon(i) + l + "</span>").join("") + "</div>"
+      : '<div class="npacts">' + ["bubble", "dup", "heart", net === "x" ? "chart" : "send"].map((i) => "<span>" + icon(i) + "</span>").join("") + "</div>";
     return '<div class="nppost np-' + net + '"><div class="npu"><span class="npav">' + esc(name.charAt(0).toUpperCase()) + "</span><span><b>" + esc(name) + '</b><small>' + esc(net === "linkedin" || net === "facebook" ? "À l'instant" : handle) + "</small></span>" + brand(net) + "</div>" +
-      '<p class="nptext">' + (body || '<span class="muted">Pas encore de texte</span>') + "</p>" + med + "</div>" + lim;
+      '<p class="nptext">' + (body || '<span class="muted">Pas encore de texte</span>') + "</p>" + med + acts + "</div>" + lim;
   }
   A.netPreview = netPreview;
 

@@ -1031,6 +1031,10 @@
     space: () => '<section class="panel"><h2>Espace</h2><p>Un espace regroupe des comptes, des réglages et un planning.</p><div class="form">' +
       '<label>Nom de l\'espace<input value="' + esc(settings().workspace.name) + '" data-ws-name></label>' +
       '<label>Langue · Language<select data-lang><option value="fr"' + (window.I18N && I18N.lang === "fr" ? " selected" : "") + '>Français</option><option value="en"' + (window.I18N && I18N.lang === "en" ? " selected" : "") + ">English</option></select></label>" +
+      '<div class="accent-pick"><span class="lbl">Couleur de l\'appli</span><div class="swatches" role="group" aria-label="Couleur de l\'appli">' +
+        U.ACCENTS.map(([hex, name]) => '<button type="button" class="sw' + (hex ? "" : " sw-def") + '" data-accent="' + hex + '" aria-pressed="' + ((settings().accent || "") === hex) + '" title="' + esc(name) + '" style="--sw:' + (hex || "var(--ink)") + '"><span class="sr">' + esc(name) + "</span></button>").join("") +
+        '<label class="sw sw-custom" title="Autre couleur"><input type="color" value="' + esc(settings().accent || "#7C4DEB") + '" data-accent-custom aria-label="Autre couleur"></label></div>' +
+        '<small class="muted">Les boutons principaux prennent cette couleur. Prends celle de ta marque.</small></div>' +
       '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-export>' + icon("download") + "Exporter (JSON)</button>" +
       '<label class="btn" style="cursor:pointer">' + icon("plus") + 'Importer<input type="file" accept="application/json" data-import hidden></label>' +
       (S.mode === "demo" ? '<button class="btn danger" data-reset>Réinitialiser la démo</button>' : "") + "</div></div></section>" +

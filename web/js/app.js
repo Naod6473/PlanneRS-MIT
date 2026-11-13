@@ -25,6 +25,7 @@
   }
 
   A.render = function () {
+    U.accent((S.state.settings || {}).accent);
     const r = route();
     let v;
     if (r === "more") {
@@ -267,6 +268,7 @@
       return;
     }
     if ((b = g("[data-search]"))) { e.preventDefault(); A.openSearch(); return; }
+    if ((b = g("[data-accent]"))) { const v = b.dataset.accent; if (v) S.state.settings.accent = v; else delete S.state.settings.accent; await saveSet(); return; }
     if ((b = g("[data-theme-toggle]"))) { e.preventDefault(); toggleTheme(); return; }
     if ((b = g("[data-set-add]"))) { const t = (S.state.settings.templates = S.state.settings.templates || {}); (t.sets = t.sets || []).push({ name: "", networks: A.nets().slice(0, 2) }); await saveSet(); const i = document.querySelectorAll("[data-set-name]"); if (i.length) i[i.length - 1].focus(); return; }
     if ((b = g("[data-set-del]"))) { S.state.settings.templates.sets.splice(+b.dataset.setDel, 1); await saveSet(); return; }
@@ -339,6 +341,7 @@
     if (d.notify) { st.notify[d.notify] = t.checked; return saveSet(); }
     if (d.notifyNum) { st.notify[d.notifyNum] = +t.value || 0; return saveSet(); }
     if (d.notifyTime) { if (/^\d{2}:\d{2}$/.test(t.value)) { st.notify[d.notifyTime] = t.value; return saveSet(); } return; }
+    if (t.hasAttribute("data-accent-custom")) { S.state.settings.accent = t.value; return saveSet(); }
     if (t.hasAttribute("data-ws-name")) { st.workspace.name = t.value || st.workspace.name; return saveSet(); }
     if (t.hasAttribute("data-import-csv") && t.files[0]) { const txt = await t.files[0].text(); t.value = ""; A.lastFocus = document.activeElement; A.openCsvImport(txt); return; }
     if (t.hasAttribute("data-import") && t.files[0]) {

@@ -48,7 +48,11 @@
     const title = net === "youtube" ? (A.guessTitle(cap) || d.title || "") : cap;
     const med = srcs.video ? '<video muted playsinline loop preload="metadata" src="' + esc(srcs.video) + '"' + (srcs.poster ? ' poster="' + esc(srcs.poster) + '"' : "") + "></video>"
       : srcs.images.length ? '<img src="' + esc(srcs.images[0]) + '" alt="">' : '<span class="igph">' + icon("film") + "Ajoute une vidéo</span>";
-    return '<div class="cpvert">' + med + '<div class="cpvbot"><b>' + brand(net) + " " + esc(T(net)) + "</b><p>" + esc([...title].slice(0, 150).join("")) + ([...title].length > 150 ? "…" : "") + "</p></div></div>";
+    const who = "@" + (((S.state.settings || {}).workspace || {}).name || "mon.compte").toLowerCase().replace(/[^a-z0-9]+/g, "");
+    // Colonne de boutons à droite et pied de vidéo, comme dans l'appli TikTok ou YouTube Shorts.
+    const side = '<div class="cpvside">' + ["heart", "bubble", "bookmark", "send"].map((i) => "<span>" + icon(i) + "</span>").join("") + "</div>";
+    return '<div class="cpvert cpv-' + net + '">' + med + side + '<div class="cpvbot"><b>' + brand(net) + " " + esc(who) + "</b><p>" + esc([...title].slice(0, 150).join("")) + ([...title].length > 150 ? "…" : "") + "</p>" +
+      (net === "tiktok" ? '<small class="cpvsound"><span aria-hidden="true">♪ </span>son original</small>' : "") + "</div></div>";
   }
   function preview(d, net) {
     const srcs = srcsOf(d);
@@ -171,11 +175,12 @@
     function draw() {
       warn();
       sync();
-      if (!d.networks.includes(pv)) pv = d.networks[0];
-      $(".cp-pvnets").innerHTML = d.networks.length > 1 ? d.networks.map((n) => '<button type="button" data-cppv="' + n + '" aria-pressed="' + (n === pv) + '">' + brand(n) + '<span class="lbl">' + esc(T(n)) + "</span></button>").join("") : "";
+      if (pv !== "all" && !d.networks.includes(pv)) pv = d.networks[0];
+      $(".cp-pvnets").innerHTML = d.networks.length > 1 ? '<button type="button" data-cppv="all" aria-pressed="' + (pv === "all") + '"><span class="lbl">Tous</span></button>' + d.networks.map((n) => '<button type="button" data-cppv="' + n + '" aria-pressed="' + (n === pv) + '">' + brand(n) + '<span class="lbl">' + esc(T(n)) + "</span></button>").join("") : "";
       // La vidéo déjà en lecture est gardée telle quelle : pas de clignotement à chaque lettre tapée.
       const old = $("#cp-pv video");
-      $("#cp-pv").innerHTML = pv ? preview(d, pv) : '<p class="muted">Choisis au moins un réseau.</p>';
+      $("#cp-pv").innerHTML = pv === "all" ? '<div class="cp-pvall">' + d.networks.map((n) => '<section><h4>' + brand(n) + esc(T(n)) + "</h4>" + preview(d, n) + "</section>").join("") + "</div>"
+        : pv ? preview(d, pv) : '<p class="muted">Choisis au moins un réseau.</p>';
       const v = $("#cp-pv video");
       if (v && old && old.getAttribute("src") === v.getAttribute("src")) { old.className = v.className; v.replaceWith(old); }
       else if (v) { v.loop = true; v.play().catch(() => {}); }

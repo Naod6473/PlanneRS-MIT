@@ -208,6 +208,15 @@
     });
   }
   if (window.MutationObserver) new MutationObserver(() => decorateEmpty()).observe(document.documentElement, { childList: true, subtree: true });
+  // Couleur d'accent choisie dans Réglages › Espace : boutons principaux et contour de focus.
+  const ACCENTS = [["", "Par défaut"], ["#0866FF", "Facebook"], ["#D62976", "Instagram"], ["#FF0000", "YouTube"], ["#0A66C2", "LinkedIn"], ["#E60023", "Pinterest"], ["#1185FE", "Bluesky"], ["#FE2C55", "TikTok"], ["#7C4DEB", "Violet"], ["#0E9F6E", "Vert"]];
+  function accent(hex) {
+    const r = document.documentElement.style;
+    if (!/^#[0-9a-f]{6}$/i.test(hex || "")) { ["--action", "--action-fg", "--focus"].forEach((k) => r.removeProperty(k)); return; }
+    const n = parseInt(hex.slice(1), 16), lum = (c) => { c /= 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+    const L = 0.2126 * lum(n >> 16) + 0.7152 * lum((n >> 8) & 255) + 0.0722 * lum(n & 255);
+    r.setProperty("--action", hex); r.setProperty("--action-fg", L > 0.4 ? "#14171A" : "#FFFFFF"); r.setProperty("--focus", hex);
+  }
   const NAV_TINT = { today: 1, calendar: 1, contents: 1, fabrique: 1, stats: 1, activity: 1, settings: 1 };
   // k : clé du menu (today, calendar…) ou de la tuile (st-prep, st-fix…).
   function pic(k) {
@@ -221,5 +230,5 @@
     return '<img class="' + (st ? "ic pic" : "mico") + " set-" + set + '" src="' + src + '" alt="" width="' + (st ? 36 : 28) + '" height="' + (st ? 36 : 28) + '">';
   }
 
-  window.UI = { pic, fxi, iconSet, announce, modal, unmodal, toastHome, icon, esc, safeUrl, brand, brands, status, card, look, abar, badge, toast, copy, ICONS };
+  window.UI = { pic, fxi, iconSet, accent, ACCENTS, announce, modal, unmodal, toastHome, icon, esc, safeUrl, brand, brands, status, card, look, abar, badge, toast, copy, ICONS };
 })();

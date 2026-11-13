@@ -1588,3 +1588,24 @@ input:user-invalid,textarea:user-invalid,select:user-invalid{border-color:var(--
 @keyframes fete-out{to{opacity:0;transform:translateY(40px) scale(.95)}}
 @keyframes fete-conf{0%{opacity:1;transform:translate(0,0) rotate(0)}100%{opacity:0;transform:translate(var(--dx),var(--dy)) rotate(var(--r))}}
 @media (max-width:760px){.fete{bottom:calc(76px + env(safe-area-inset-bottom,0px))}}
+
+/* Aperçus fidèles : barres d'actions, boutons des vidéos verticales, vue « Tous » */
+.npacts{display:flex;justify-content:space-between;gap:6px;padding-top:8px;border-top:1px solid var(--line);color:var(--ink3);font-size:12.5px;font-weight:600}
+.npacts span{display:inline-flex;align-items:center;gap:5px}.npacts svg.i{width:17px;height:17px}
+.npacts:not(.lab){justify-content:space-around;border-top:0;padding-top:2px}
+.cpvside{position:absolute;right:8px;bottom:84px;display:flex;flex-direction:column;gap:16px;color:#fff;z-index:1}
+.cpvside svg.i{width:26px;height:26px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}
+.cpvsound{display:block;margin-top:4px;font-size:12px;opacity:.9}
+.cp-pvall{width:100%;display:grid;gap:22px;justify-items:center}
+.cp-pvall section{width:100%;display:grid;justify-items:center;gap:8px}
+.cp-pvall h4{margin:0;justify-self:stretch;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em}
+
+/* Couleur d'accent : pastilles */
+.accent-pick{display:grid;gap:8px}.accent-pick .lbl{font-weight:600;font-size:14px}
+.swatches{display:flex;flex-wrap:wrap;gap:10px}
+.sw{width:34px;height:34px;border-radius:999px;border:0;padding:0;background:var(--sw);cursor:pointer;position:relative;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
+.sw-def{background:linear-gradient(135deg,var(--ink) 50%,var(--panel) 50%)}
+.sw[aria-pressed="true"]{box-shadow:0 0 0 2px var(--panel),0 0 0 4px var(--sw)}
+.sw-def[aria-pressed="true"]{box-shadow:0 0 0 2px var(--panel),0 0 0 4px var(--ink)}
+.sw-custom{display:inline-grid;place-items:center;background:conic-gradient(#FF0000,#FEDA75,#0E9F6E,#1185FE,#962FBF,#FF0000);overflow:hidden}
+.sw-custom input{opacity:0;width:100%;height:100%;cursor:pointer}
