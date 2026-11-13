@@ -606,9 +606,11 @@ async function checkConnections(env, today) {
       }
       await ad.test(env, cred, (c) => db.updateCred(env, id, c));
       if ((id === "instagram" || id === "facebook") && cred.token) {
-        const exp = await daily.metaExpiry(graph, env, cred.token).catch(() => null);
-        if (exp === "expired") throw new Error("Le jeton Meta a expiré.");
-        if (exp != null) next.expires = exp || undefined;
+        const tk = await daily.metaToken(graph, env, cred.token).catch(() => ({ exp: null }));
+        if (tk.exp === "expired") throw new Error("Le jeton Meta a expiré.");
+        if (tk.exp != null) next.expires = tk.exp || undefined;
+        if (tk.data) next.dataAccess = tk.data;
+        if (tk.scopes) { const miss = daily.META_NEEDS[id].filter((x) => !tk.scopes.includes(x)); if (miss.length) next.missing = miss; else delete next.missing; }
       }
       next.status = "ok"; next.checked = today;
     } catch (e) { next.status = "error"; next.detail = "Vérifié le " + today + " : " + (e.why || e.message); }
@@ -698,7 +700,7 @@ async function runWeekly(env, force) {
   if (!force && !daily.weeklyDue(now, settings, mark.day)) return null;
   if (!force) await db.putKV(env, "weekly", { day: now.slice(0, 10) });
   const s = await db.loadState(env);
-  const w = daily.weekly(s.posts, await db.getKV(env, "stats"), settings, now, mediaKey);
+  const w = daily.weekly(s.posts, await db.getKV(env, "stats"), settings, now, mediaKey, await db.accountsInfo(env).catch(() => null));
   if (!force || force === "send") await (await notifier(env, settings))({ event: "weekly", title: w.title, text: w.text });
   return w;
 }

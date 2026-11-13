@@ -876,8 +876,12 @@
       a.status === "warn" ? '<span class="st st-manual">' + icon("alert") + "À surveiller</span>" : '<span class="st st-failed">' + icon("x") + "À reconnecter</span>";
     const left = a.expires ? Math.round((C.parseYmd(a.expires) - C.parseYmd(C.nowStamp().slice(0, 10))) / 864e5) : null;
     const exp = left == null ? "" : '<small class="' + (left <= 7 ? "exp-warn" : "muted") + '">' + (left < 0 ? "Jeton expiré : reconnecte le compte" : "Jeton valable jusqu'au " + esc(C.longDate(a.expires)) + (left <= 7 ? " : pense à le renouveler" : "")) + "</small>";
-    return '<div class="acc">' + brand(c.logo === undefined ? c.id : c.logo || c.id, "lg") + "<div><b>" + esc(c.name) + "</b><small>" + esc(a.account || "") + (a.detail ? " · " + esc(a.detail) : "") + "</small>" + exp + "</div>" +
-      '<div style="display:flex;gap:8px;align-items:center">' + st + '<button class="btn" data-conn="' + c.id + '">Gérer</button></div></div>';
+    const dl = a.dataAccess ? Math.round((C.parseYmd(a.dataAccess) - C.parseYmd(C.nowStamp().slice(0, 10))) / 864e5) : null;
+    const health = (a.missing && a.missing.length ? '<small class="exp-warn">Droits manquants : <span data-noi18n>' + esc(a.missing.join(", ")) + "</span></small>" : "") +
+      (dl != null && dl <= 14 ? '<small class="exp-warn">' + (dl < 0 ? "Accès aux données Meta terminé : reconnecte-toi" : "Accès aux données Meta jusqu'au " + esc(C.longDate(a.dataAccess)) + " : reconnecte-toi pour le prolonger") + "</small>" : "");
+    const fix = (a.status === "error" || health || (left != null && left <= 7)) && A.hasWizard && A.hasWizard(c.id === "facebook" ? "instagram" : c.id) ? '<button class="btn primary" data-rewiz="' + (c.id === "facebook" ? "instagram" : c.id) + '">' + icon("undo") + "Reconnecter</button>" : "";
+    return '<div class="acc">' + brand(c.logo === undefined ? c.id : c.logo || c.id, "lg") + "<div><b>" + esc(c.name) + "</b><small>" + esc(a.account || "") + (a.detail ? " · " + esc(a.detail) : "") + "</small>" + exp + health + "</div>" +
+      '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">' + st + fix + '<button class="btn" data-conn="' + c.id + '">Gérer</button></div></div>';
   }
   function connGroup(kind, title, intro) {
     const acc = S.state.accounts || {};

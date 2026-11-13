@@ -28,6 +28,9 @@ export function connectionAlerts(accounts, today) {
   Object.entries(accounts || {}).forEach(([id, a]) => {
     if (!NAMES[id] || !a) return;
     if (a.status === "error") { out.push({ net: id, level: "error", text: nm(id) + " : connexion cassée. Reconnecte le compte dans Réglages › Comptes." }); return; }
+    if (a.missing && a.missing.length) out.push({ net: id, level: "warn", text: nm(id) + " : il manque " + (a.missing.length > 1 ? "les droits " : "le droit ") + a.missing.join(", ") + ". Refais l'assistant dans Réglages › Comptes." });
+    const da = daysLeft(a.dataAccess, today);
+    if (da != null && da <= WARN_DAYS) out.push({ net: id, level: da < 0 ? "error" : "warn", text: nm(id) + " : l'accès aux données Meta " + (da < 0 ? "a pris fin" : "prend fin " + (da === 0 ? "aujourd'hui" : da === 1 ? "demain" : "dans " + da + " jours")) + ". Reconnecte-toi une fois avec l'assistant (Réglages › Comptes) pour le prolonger de 90 jours." });
     const d = daysLeft(a.expires, today);
     if (d != null && d <= WARN_DAYS) out.push({ net: id, level: d < 0 ? "error" : "warn", text: d < 0 ? nm(id) + " : le jeton a expiré. Reconnecte le compte dans Réglages › Comptes." : nm(id) + " : le jeton expire " + (d === 0 ? "aujourd'hui" : d === 1 ? "demain" : "dans " + d + " jours") + ". Renouvelle-le dans Réglages › Comptes." });
   });
@@ -70,12 +73,19 @@ export function snapshot(state, now) {
 
 // Jeton Meta (Instagram, Facebook) : date d'expiration via debug_token. "" = n'expire pas.
 export async function metaExpiry(graphFn, env, token) {
+  return (await metaToken(graphFn, env, token)).exp;
+}
+// Droits indispensables par réseau (vérifiés chaque jour sur le jeton).
+export const META_NEEDS = { instagram: ["instagram_basic", "instagram_content_publish"], facebook: ["pages_manage_posts", "pages_read_engagement"] };
+// Jeton Meta : expiration, fin de l'accès aux données (renouvelé à chaque connexion, 90 jours) et droits accordés.
+export async function metaToken(graphFn, env, token) {
   const r = await graphFn(env, "GET", "debug_token", { input_token: token }, token);
   const d = r && r.data;
-  if (!d) return null;
-  if (d.is_valid === false) return "expired";
+  if (!d) return { exp: null };
+  if (d.is_valid === false) return { exp: "expired" };
+  const day = (t) => (t ? new Date(t * 1000).toISOString().slice(0, 10) : "");
   const t = d.data_access_expires_at && (!d.expires_at || d.expires_at === 0) ? 0 : d.expires_at;
-  return t ? new Date(t * 1000).toISOString().slice(0, 10) : "";
+  return { exp: day(t), data: day(d.data_access_expires_at), scopes: Array.isArray(d.scopes) ? d.scopes : null };
 }
 
 // Jeton Threads longue durée : on le renouvelle s'il a plus de 7 jours (il repart pour 60 jours).
@@ -98,7 +108,7 @@ export function weeklyDue(now, settings, lastDay) {
 const plural = (n, one, many) => n + " " + (n > 1 ? many : one);
 const dayName = (d) => ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"][Core.parseYmd(d).getDay()];
 
-export function weekly(posts, stats, settings, now, mediaKeyFn) {
+export function weekly(posts, stats, settings, now, mediaKeyFn, accounts) {
   const today = now.slice(0, 10), from = Core.addDays(today, -6), next1 = Core.addDays(today, 1), next7 = Core.addDays(today, 7);
   const top = (posts || []).filter((p) => !p.parent);
   const past = top.filter((p) => p.date && p.date >= from && p.date <= today);
@@ -118,5 +128,11 @@ export function weekly(posts, stats, settings, now, mediaKeyFn) {
   lines.push("Semaine prochaine : " + plural(coming.length, "post prévu", "posts prévus") + (review.length ? ", dont " + plural(review.length, "légende à valider", "légendes à valider") : "") + (manual.length ? ", " + plural(manual.length, "post à faire à la main", "posts à faire à la main") : "") + ".");
   const empty = []; for (let d = next1; d <= next7; d = Core.addDays(d, 1)) if (!coming.some((p) => p.date === d)) empty.push(dayName(d));
   if (empty.length) lines.push("Rien de prévu " + (empty.length > 1 ? "les jours suivants : " : "") + empty.join(", ") + ".");
+  // Santé des comptes : une ligne, ou le détail de ce qui cloche.
+  if (accounts) {
+    const on = Object.entries(accounts).filter(([id, a]) => NAMES[id] && a && a.status !== "manual" && a.status !== "pending");
+    const al = connectionAlerts(accounts, today);
+    if (on.length) lines.push(al.length ? "Comptes à surveiller :\n" + al.map((x) => "- " + x.text).join("\n") : "Comptes : " + plural(on.length, "compte vérifié", "comptes vérifiés") + ", tout va bien.");
+  }
   return { title: "PlanneRs · ta semaine", text: lines.join("\n") };
 }

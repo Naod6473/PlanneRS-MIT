@@ -52,3 +52,17 @@ test("expiration Meta via debug_token", async () => {
   assert.equal(await daily.metaExpiry(g({ data: { is_valid: true, expires_at: Date.UTC(2026, 11, 25) / 1000 } }), {}, "t"), "2026-12-25");
   assert.equal(await daily.metaExpiry(g({ data: { is_valid: false } }), {}, "t"), "expired");
 });
+
+test("santé des comptes : droits manquants, fin de l'accès aux données Meta, bilan du dimanche", async () => {
+  const al = daily.connectionAlerts({ instagram: { status: "ok", missing: ["instagram_content_publish"], dataAccess: "2026-11-20" } }, "2026-11-15");
+  assert.equal(al.length, 2);
+  assert.match(al[0].text, /instagram_content_publish/);
+  assert.match(al[1].text, /dans 5 jours/);
+  const tk = await daily.metaToken(async () => ({ data: { is_valid: true, expires_at: 0, data_access_expires_at: 1795000000, scopes: ["instagram_basic"] } }), {}, "T");
+  assert.equal(tk.exp, ""); assert.equal(tk.data, "2026-11-18"); assert.deepEqual(tk.scopes, ["instagram_basic"]);
+  assert.equal(await daily.metaExpiry(async () => ({ data: { is_valid: false } }), {}, "T"), "expired");
+  const ok = daily.weekly([], null, {}, "2026-11-15T19:00", null, { instagram: { status: "ok" }, threads: { status: "ok" } });
+  assert.match(ok.text, /2 comptes vérifiés, tout va bien/);
+  const bad = daily.weekly([], null, {}, "2026-11-15T19:00", null, { instagram: { status: "error" } });
+  assert.match(bad.text, /Comptes à surveiller :\n- Instagram : connexion cassée/);
+});
