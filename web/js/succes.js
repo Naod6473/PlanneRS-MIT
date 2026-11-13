@@ -58,6 +58,7 @@
     const x = cv.getContext("2d"), font = getComputedStyle(document.body).fontFamily;
     const grad = x.createLinearGradient(0, 0, W, W); grad.addColorStop(0, g.color); grad.addColorStop(1, shade(g.color, 0.55));
     x.fillStyle = grad; x.fillRect(0, 0, W, W);
+    const en = window.I18N && I18N.lang === "en", T = (fr, e) => (en ? e : fr), tt = (v) => (window.I18N ? I18N.t(v) : v);
     const r = rnd(l.n + g.g.length * 97), COL = ["#FDE047", "#FFFFFF", "#F9A8D4", "#86EFAC", "#93C5FD", "#FDBA74"];
     for (let i = 0; i < 70; i++) {
       const px = r() * W, py = r() * W, side = px < 110 || px > 970;
@@ -72,14 +73,14 @@
     x.fillStyle = "#FFFFFF"; x.textAlign = "center"; x.textBaseline = "middle";
     const num = fmt(l.n); let fs = 170; x.font = "800 " + fs + "px " + font; while (x.measureText(num).width > 400 && fs > 60) { fs -= 8; x.font = "800 " + fs + "px " + font; }
     x.fillText(num, W / 2, 455);
-    x.font = "700 46px " + font; x.fillText(WORD[g.g] || "", W / 2, 560);
+    x.font = "700 46px " + font; x.fillText(tt(WORD[g.g] || ""), W / 2, 560);
     const who = ((stats().instagram || {}).account || {}).username, ws = ((S.state.settings || {}).workspace || {}).name;
     x.globalAlpha = 0.9; x.font = "600 40px " + font; x.fillText(who ? "@" + who : ws || "", W / 2, 96); x.globalAlpha = 1;
     x.font = "800 54px " + font;
-    lines(x, C.achText(g, l.n) + " !", 900).slice(0, 2).forEach((t, i) => x.fillText(t, W / 2, 840 + i * 64));
+    lines(x, tt(C.achText(g, l.n)) + T(" !", "!"), 900).slice(0, 2).forEach((t, i) => x.fillText(t, W / 2, 840 + i * 64));
     x.globalAlpha = 0.85; x.font = "500 32px " + font;
-    if (l.at) x.fillText("Atteint le " + longDay(l.at), W / 2, 975);
-    x.font = "700 30px " + font; x.fillText("Fait avec PlanneRs", W / 2, 1030); x.globalAlpha = 1;
+    if (l.at) x.fillText(T("Atteint le ", "Reached ") + longDay(l.at), W / 2, 975);
+    x.font = "700 30px " + font; x.fillText(T("Fait avec PlanneRs", "Made with PlanneRs"), W / 2, 1030); x.globalAlpha = 1;
     return cv;
   }
 
@@ -88,7 +89,7 @@
     const d = data(), g = d.groups.find((x) => key.startsWith(x.g + ":")), l = g && g.levels.find((y) => y.key === key);
     if (!l || !l.got) return;
     const cv = await image(g, l);
-    const text = "🎉 " + C.achText(g, l.n) + " ! Merci à vous 🙏\nOrganisé avec PlanneRs, l'outil libre pour planifier ses réseaux : " + SITE;
+    const text = window.I18N && window.I18N.lang === "en" ? "🎉 " + C.achText(g, l.n) + "! Thank you 🙏\nPlanned with PlanneRs, the free tool to plan your social media: " + SITE : "🎉 " + C.achText(g, l.n) + " ! Merci à vous 🙏\nOrganisé avec PlanneRs, l'outil libre pour planifier ses réseaux : " + SITE;
     return shareImage(cv, "succes-" + g.g + "-" + l.n + ".png", text, "Partager ce succès", C.achText(g, l.n));
   }
   // Fenêtre de partage commune : l'image, le texte modifiable, le menu du téléphone, X, Facebook, LinkedIn.

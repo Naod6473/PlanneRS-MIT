@@ -5,7 +5,7 @@
   const C = window.Core;
 
   window.DEMO_SETTINGS = {
-    workspace: { name: "Espace de démo", demo: true },
+    workspace: { name: window.I18N && window.I18N.lang === "en" ? "Demo space" : "Espace de démo", demo: true },
     slots: [
       { time: "09:05", label: "Story du matin" },
       { time: "12:30", label: "Vidéo du jour" },

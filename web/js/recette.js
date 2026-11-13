@@ -99,18 +99,27 @@
     top: { title: (s) => "Mon top 3 : " + s, hook: (s) => "3 choses que j'aurais aimé savoir sur " + s + ".", items: ["N° 3 : [le plus simple]", "N° 2 : [celui qu'on oublie]", "N° 1 : [celui qui change tout]", "Bonus : [une astuce rapide]"], cap: (s) => "Mon top 3 sur " + s + ". Tu ajouterais quoi ?" },
     qa: { title: (s) => "Vous m'avez demandé : " + s, hook: (s) => "On me pose souvent cette question sur " + s + ".", items: ["La question : [telle qu'on te l'a posée]", "La réponse courte : [en une phrase]", "Le détail qui compte : [l'exemple]", "À retenir : [la phrase à garder]"], cap: (s) => "Votre question de la semaine sur " + s + ". La prochaine, c'est la tienne ?" },
   };
+  const T_EN = {
+    myth: { title: (s) => "Myth or fact: " + s, hook: (s) => "What you've been told about " + s + " is wrong.", items: ["The myth: [what everyone believes]", "The truth: [what's actually true, in one sentence]", "The proof: [a concrete example]", "What you can do: [one simple move]"], cap: (s) => "Did you believe it too? Let's sort fact from fiction on " + s + "." },
+    before: { title: (s) => s + ": before / after", hook: (s) => "Before, " + s + " took me hours.", items: ["Before: [the annoying situation]", "The click: [what changed]", "After: [the result, with a checked number]", "Do the same: [the step to copy]"], cap: (s) => "Before / after on " + s + ": the change takes one step." },
+    top: { title: (s) => "My top 3: " + s, hook: (s) => "3 things I wish I'd known about " + s + ".", items: ["No. 3: [the simplest]", "No. 2: [the one people forget]", "No. 1: [the game changer]", "Bonus: [a quick tip]"], cap: (s) => "My top 3 on " + s + ". What would you add?" },
+    qa: { title: (s) => "You asked me: " + s, hook: (s) => "I get asked this a lot about " + s + ".", items: ["The question: [as it was asked]", "The short answer: [in one sentence]", "The detail that matters: [the example]", "Remember: [the line to keep]"], cap: (s) => "Your question of the week on " + s + ". Next one's yours?" },
+  };
+  const ENDS_EN = { "Question au public": "What do you think? Tell me in the comments!", "Appel à commenter": "Tell me in the comments what you want to see next!" };
+  const isEn = (sauce) => (sauce && sauce.lang ? sauce.lang : root && root.I18N && root.I18N.lang) === "en";
   const ENDS = { "Question au public": "Et toi, tu en penses quoi ? Dis-le en commentaire !", "Appel à commenter": "Dis-moi en commentaire ce que tu veux voir la prochaine fois !" };
   function draftVersion(recipe, sauce) {
     sauce = sauce || {};
-    const s = clip(sauce.subject || (sauce.same ? sourceSubject(recipe) : "") || (recipe.from && recipe.from.title) || "ton sujet", 120).trim() || "ton sujet";
-    const angle = T[sauce.angle] ? sauce.angle : "top", t = T[angle], fmt = sauce.format === "carousel" ? "carousel" : "reel";
+    const s = clip(sauce.subject || (sauce.same ? sourceSubject(recipe) : "") || (recipe.from && recipe.from.title) || (isEn(sauce) ? "your topic" : "ton sujet"), 120).trim() || (isEn(sauce) ? "your topic" : "ton sujet");
+    const en = isEn(sauce), TT = en ? T_EN : T, EE = en ? ENDS_EN : ENDS;
+    const angle = T[sauce.angle] ? sauce.angle : "top", t = TT[angle], fmt = sauce.format === "carousel" ? "carousel" : "reel";
     const max = Math.max(10, Math.min(90, +sauce.maxSec || 30));
     const parts = (recipe.structure && recipe.structure.length ? recipe.structure : structureFor("", fmt)).slice(0, 8);
-    const end = ENDS[recipe.ending] || ENDS["Question au public"];
+    const end = EE[recipe.ending] || EE["Question au public"];
     const shots = parts.map((x, i) => {
       const last = i === parts.length - 1 && parts.length > 2;
       const line = i === 0 ? t.hook(s) : last ? end : t.items[(i - 1) % t.items.length];
-      return { dur: x.sec || 0, screen: i === 0 ? t.title(s) : last ? "Et toi ?" : line.split(" : ")[0], voice: line, visual: i === 0 ? "[hook visuel animé dès la 1re image]" : "[image ou plan]", music: i === 0 ? "[bruitage d'accroche]" : "" };
+      return { dur: x.sec || 0, screen: i === 0 ? t.title(s) : last ? (en ? "Your turn?" : "Et toi ?") : line.split(en ? ": " : " : ")[0], voice: line, visual: i === 0 ? (en ? "[animated visual hook from frame 1]" : "[hook visuel animé dès la 1re image]") : en ? "[image or shot]" : "[image ou plan]", music: i === 0 ? (en ? "[hook sound effect]" : "[bruitage d'accroche]") : "" };
     });
     if (fmt === "reel") fitDurations(shots, max); else shots.forEach((x) => { x.dur = 0; });
     return { title: t.title(s), angle, format: fmt, hook: t.hook(s), shots, caption: t.cap(s) + "\n\n" + end, draft: true };

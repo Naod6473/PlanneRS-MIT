@@ -24,8 +24,24 @@
   const DATE = /\b(?:Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday) \d{1,2}(?: (?:January|February|March|April|May|June|July|August|September|October|November|December))?\b|\b(?:Sun|Mon|Tue|Wed|Thu|Fri|Sat) \d{1,2}\b/g;
   function fill(m, dates, nums) { let i = 0, j = 0; return m.replace(/@/g, () => (dates[j++] || "")).replace(/#/g, () => (i < nums.length ? nums[i++] : "")); }
   const PREFIX = [["Configurer ", "Set up "], ["Se connecter à ", "Connect to "], ["Version pour ", "Version for "], ["Aller à ", "Go to "], ["En retard de ", "Late by "], ["Échec : ", "Failed: "]];
+  // Phrases avec un nom (réseau, titre) : motif → traduction ($1, $2… repris, traduits si possible).
+  const PAT = [
+    [/^Poster sur (.+)$/, "Post to $1"], [/^Noté : posté sur (.+)$/, "Noted: posted to $1"], [/^Copier la description et ouvrir (.+)$/, "Copy the description and open $1"],
+    [/^Ouvrir (.+) avec le texte$/, "Open $1 with the text"], [/^Texte propre à (.+)\. Laisse vide pour reprendre le texte commun\.$/, "Own text for $1. Leave empty to use the shared text."],
+    [/^Texte trop long pour (.+) \((\d+) caractères, (\d+) max\)\.?$/, "Text too long for $1 ($2 characters, $3 max)."],
+    [/^C'est parti : « (.+) » part (.+)$/, "Off it goes: “$1” goes out $2"], [/^« (.+) » est validée$/, "“$1” is approved"], [/^« (.+) » part en retouche avec ton mot$/, "“$1” goes back for changes, with your note"],
+    [/^Validée · part (.+)$/, "Approved · goes out $1"], [/^À retoucher : (.+)$/, "Needs changes: $1*"], [/^En retouche · (.+)$/, "Sent back · $1*"],
+    [/^« (.+) » : choisis le réseau\. Tu récupères le titre, la description et les médias, et le réseau s'ouvre\.$/, "“$1”: pick the network. You get the title, description and media, and the network opens."],
+    [/^ton compte « (.+) »$/, "your account “$1”"],
+  ];
+  function pat(t) {
+    for (const [re, out] of PAT) { const m = t.match(re); if (!m) continue;
+      return out.replace(/\$(\d)(\*?)/g, (_, i, star) => { const v = m[+i] || ""; return star ? v.split(", ").map((x) => (D[x] != null ? D[x] : x)).join(", ") : v; }); }
+    return null;
+  }
   function one(t) {
     if (D[t] != null) return D[t];
+    { const r = pat(t); if (r != null) return r; }
     if (t.startsWith("· ")) { const r = one(t.slice(2)); return r == null ? null : "· " + r; }
     const dates = t.match(DATE) || [], rest = t.replace(DATE, "@"), nums = rest.match(/\d+/g) || [];
     const k = rest.replace(/\d+/g, "#");

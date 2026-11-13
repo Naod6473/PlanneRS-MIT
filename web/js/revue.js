@@ -56,7 +56,7 @@
   function whenOf(p) { const e = A.eff(p); return e.date ? C.shortDay(e.date) + " " + (e.time || "") : "Sans date"; }
   function card(p) {
     const r = C.reviewOf(A.eff(p), S.state.settings);
-    const chips = r.issues.map((c) => '<span class="pl-ck ' + c.level + '" title="' + esc(c.text) + '">' + icon(c.level === "block" ? "x" : "alert") + esc(c.text.replace(/ :.*$/, "").slice(0, 46)) + "</span>").join("") +
+    const chips = r.issues.map((c) => '<span class="pl-ck ' + c.level + '" title="' + esc(c.text) + '">' + icon(c.level === "block" ? "x" : "alert") + esc((window.I18N ? window.I18N.t(c.text) : c.text).replace(/ :.*$/, "").slice(0, 46)) + "</span>").join("") +
       r.good.map((c) => '<span class="pl-ck ok">' + icon("check") + esc(c.text) + "</span>").join("");
     return '<article class="pl-card" data-plcard>' +
       '<div class="pl-media">' + media(p) +

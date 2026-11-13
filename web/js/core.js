@@ -420,7 +420,7 @@
     });
     return { groups, unlocked: [].concat(...groups.map((g) => g.levels.filter((l) => l.got).map((l) => l.key))), total: ACH.reduce((n, a) => n + a.steps.length, 0) };
   }
-  function achText(g, n) { return n.toLocaleString("fr-FR").replace(/\u202f|\u00a0/g, " ") + " " + (n > 1 ? g.unit : g.one); }
+  function achText(g, n) { const I = typeof window !== "undefined" && window.I18N; const u = n > 1 ? g.unit : g.one; return n.toLocaleString(I && I.lang === "en" ? "en-US" : "fr-FR").replace(/\u202f|\u00a0/g, " ") + " " + (I && I.lang === "en" ? I.t(u) : u); }
 
   // Équipe d'agents : un rôle par métier, avec ses consignes et qui le tient (Claude par MCP, clé API, ou toi).
   // Seuls les rôles d'écriture (script, légende) peuvent tourner tout seuls avec la clé API.

@@ -158,7 +158,7 @@
       const tags = (src.match(/(^|\s)#[\p{L}\p{N}_]+/gu) || []).map((x) => x.trim());
       const s2 = (src.replace(/(^|\s)#[\p{L}\p{N}_]+/gu, "").trim() + (tags.length ? "\n\n" + tags.slice(0, 2).join(" ") : "")).trim();
       const t = [...s2].length > max ? C.splitThread(s2, max) : s2;
-      out.push(Object.assign({}, base, { id: "t" + stamp + "a", title: (C.isThread(t) ? "Fil" : "Post") + " " + ((window.BRANDS[short] || {}).title || short) + " : " + p.title, networks: [short], caption: t }));
+      out.push(Object.assign({}, base, { id: "t" + stamp + "a", title: (C.isThread(t) ? (window.I18N && window.I18N.lang === "en" ? "Thread" : "Fil") : "Post") + " " + ((window.BRANDS[short] || {}).title || short) + (window.I18N && window.I18N.lang === "en" ? ": " : " : ") + p.title, networks: [short], caption: t }));
     }
     if (long) out.push(Object.assign({}, base, { id: "t" + stamp + "b", title: "LinkedIn : " + p.title, networks: ["linkedin"], caption: C.versionFor(src, "linkedin") }));
     return out;
