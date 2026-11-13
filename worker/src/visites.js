@@ -35,6 +35,9 @@ export function clean(body, cf, now) {
 export async function collect(request, env) {
   if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
   if (request.method !== "POST") return new Response("POST", { status: 405, headers: CORS });
+  // Seules les pages servies par l'instance (site public, démo) peuvent envoyer : un autre site est refusé.
+  const origin = request.headers.get("origin");
+  if (origin) { let h = ""; try { h = new URL(origin).hostname; } catch {} const ok = [env.PUBLIC_HOST, new URL(request.url).hostname].concat(String(env.STATS_ORIGINS || "").split(",").map((x) => x.trim())).filter(Boolean); if (!ok.includes(h)) return new Response(null, { status: 403, headers: CORS }); }
   const txt = await request.text();
   if (txt.length > MAX_BODY) return new Response(null, { status: 413, headers: CORS });
   let body; try { body = JSON.parse(txt); } catch { return new Response(null, { status: 400, headers: CORS }); }
@@ -109,6 +112,6 @@ export function summarize(rows, days, today) {
 export async function report(env, days) {
   const d = Math.max(1, Math.min(180, Math.round(+days || 30)));
   const today = new Date().toISOString().slice(0, 10), from = new Date(Date.parse(today) - (d - 1) * 864e5).toISOString().slice(0, 10);
-  const r = await env.DB.prepare("SELECT at, day, sid, src, page, type, label, value, ref, country, device, lang FROM visites WHERE day >= ? ORDER BY id LIMIT 50000").bind(from).all();
+  const r = await env.DB.prepare("SELECT at, day, sid, src, page, type, label, value, ref, country, device, lang FROM visites WHERE day >= ? ORDER BY id DESC LIMIT 50000").bind(from).all();
   return summarize(r.results || [], d, today);
 }

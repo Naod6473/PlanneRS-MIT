@@ -38,3 +38,13 @@ test("visites : tableau de bord (temps, démo, entonnoir, vidéos)", () => {
   assert.equal(s.perDay[6].site, 2);
   assert.equal(s.sessions.length, 2);
 });
+
+test("visites : un autre site ne peut pas envoyer", async () => {
+  const { collect } = await import("../worker/src/visites.js");
+  const env = { PUBLIC_HOST: "info.example.org" };
+  const body = JSON.stringify({ sid: "abcdef0123456789", ev: [{ t: "view" }] });
+  const bad = await collect(new Request("https://info.example.org/t", { method: "POST", body, headers: { origin: "https://pirate.example" } }), env);
+  assert.equal(bad.status, 403);
+  const ok = await collect(new Request("https://info.example.org/t", { method: "POST", body, headers: { origin: "https://info.example.org" } }), env);
+  assert.equal(ok.status, 204);
+});
