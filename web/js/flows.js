@@ -798,6 +798,30 @@
     return '<label>Série (facultatif)<input id="' + id + '" list="' + id + '-l" value="' + esc(p.series || "") + '" placeholder="' + esc(C.seriesOf(Object.assign({}, p, { series: "" })) || "Ex. : L\'IA, de zéro à pro") + '"><datalist id="' + id + '-l">' + A.seriesList().map((x) => '<option value="' + esc(x) + '">').join("") + "</datalist></label>";
   };
 
+  // « Recycler le meilleur » : les 5 posts qui ont le mieux marché, publiés il y a plus de 3 mois
+  // et pas déjà republiés depuis. Chacun s'ouvre dans « Republier ».
+  A.bestToRecycle = function () {
+    const t = C.ymd(new Date()), cut = C.addDays(t, -90);
+    const posts = S.state.posts || [];
+    const again = new Set(posts.filter((k) => k.repostOf && k.date && k.date >= cut).map((k) => k.repostOf));
+    return posts.filter((p) => !p.parent && !p.repostOf && p.status === "published" && p.date && p.date <= cut && !again.has(p.id) && p.format !== "story")
+      .map((p) => { const st = A.postStats ? A.postStats(p) : null; const v = st ? Object.values(st) : []; const sum = (k) => v.reduce((a, m) => a + (m[k] || 0), 0);
+        return { p, views: sum("views"), likes: sum("likes"), comments: sum("comments") }; })
+      .map((x) => Object.assign(x, { score: x.views + x.likes * 10 + x.comments * 20 }))
+      .filter((x) => x.score > 0).sort((a, b) => b.score - a.score).slice(0, 5);
+  };
+  const EN = () => (window.I18N || {}).lang === "en";
+  A.openBest = function () {
+    const list = A.bestToRecycle();
+    const fmt = (n) => n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 0 : 1).replace(".", ",") + " k" : String(n);
+    const row = (x, i) => '<div class="best-row"><span class="rk">' + (i + 1) + "</span>" + (x.p.thumb ? '<img src="' + U.safeUrl(x.p.thumb) + '" alt="">' : '<span class="noimg">' + icon("contents") + "</span>") +
+      '<span class="bt"><b data-noi18n>' + esc(x.p.title || "") + "</b><small data-noi18n>" + esc(C.longDate(x.p.date)) + " · " + (x.views ? fmt(x.views) + (EN() ? "\u00a0views · " : "\u00a0vues · ") : "") + fmt(x.likes) + (EN() ? "\u00a0likes" : "\u00a0j'aime") + "</small></span>" +
+      '<button class="btn" data-best-rc="' + esc(x.p.id) + '">' + icon("undo") + '<span class="lbl">Reprogrammer</span></button></div>';
+    openLayer('<div class="sh-top"><b>Recycler le meilleur</b><span style="flex:1"></span><button class="iconbtn" data-close aria-label="Fermer">' + icon("x") + "</button></div>" +
+      '<div class="sh-body"><p style="margin:0">Tes posts qui ont le mieux marché, publiés il y a plus de 3 mois. Ton audience a grandi depuis : beaucoup ne les ont jamais vus.</p>' +
+      (list.length ? '<div class="best-list">' + list.map(row).join("") + "</div>" : '<div class="empty" data-fx="seed">Rien à recycler pour l\'instant : il faut des posts publiés il y a plus de 3 mois, avec des chiffres.</div>') +
+      "</div>", "Recycler le meilleur");
+  };
   A.openRecycle = function (id) {
     const p = S.post(id); if (!p) return;
     const t = C.ymd(new Date());

@@ -1609,3 +1609,11 @@ input:user-invalid,textarea:user-invalid,select:user-invalid{border-color:var(--
 .sw-def[aria-pressed="true"]{box-shadow:0 0 0 2px var(--panel),0 0 0 4px var(--ink)}
 .sw-custom{display:inline-grid;place-items:center;background:conic-gradient(#FF0000,#FEDA75,#0E9F6E,#1185FE,#962FBF,#FF0000);overflow:hidden}
 .sw-custom input{opacity:0;width:100%;height:100%;cursor:pointer}
+
+/* Recycler le meilleur */
+.best-list{display:grid;gap:8px}
+.best-row{display:grid;grid-template-columns:auto 52px 1fr auto;gap:12px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+.best-row .rk{font:800 20px/1 var(--f);color:var(--ink3);width:22px;text-align:center}
+.best-row img,.best-row .noimg{width:52px;height:52px;border-radius:8px;object-fit:cover;display:grid;place-items:center;background:var(--panel2)}
+.best-row .bt{display:grid;min-width:0}.best-row .bt b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.best-row .bt small{color:var(--ink3)}
+@media (max-width:520px){.best-row{grid-template-columns:auto 44px 1fr}.best-row .btn{grid-column:1/-1}}

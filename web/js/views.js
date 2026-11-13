@@ -535,7 +535,7 @@
 
   A.views.contents = function () {
     const tools = '<div class="seg" role="group" aria-label="Affichage">' + [["board", "Tableau"], ["list", "Liste"], ["media", "Médias"]].map(([k, l]) =>
-      '<button data-cmode="' + k + '" aria-pressed="' + (A.contentsMode === k) + '">' + l + "</button>").join("") + '</div><span class="grow"></span><button class="btn primary" data-new aria-label="Nouveau post">' + icon("plus") + '<span class="lbl">Nouveau post</span></button>';
+      '<button data-cmode="' + k + '" aria-pressed="' + (A.contentsMode === k) + '">' + l + "</button>").join("") + '</div><span class="grow"></span><button class="btn" data-best>' + icon("undo") + '<span class="lbl">Recycler le meilleur</span></button><button class="btn primary" data-new aria-label="Nouveau post">' + icon("plus") + '<span class="lbl">Nouveau post</span></button>';
     const all = top().filter(shown);
     let html;
     if (!A.contentsMode) A.contentsMode = A.isMobile() ? "list" : "board";

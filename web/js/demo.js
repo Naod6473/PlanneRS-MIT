@@ -75,6 +75,13 @@
         status: past(day, "09:05") ? "published" : "scheduled",
       });
     }
+    // Archives : quelques Reels d'il y a plus de 3 mois (pour « Recycler le meilleur »).
+    [["Le levain de A à Z", "Astuce", 104], ["Pourquoi la croûte chante", "Astuce", 121], ["Notre pain de seigle", "Recette", 138], ["Un samedi au marché", "Coulisses", 152], ["La pâte feuilletée", "Recette", 167]]
+      .forEach(([title, category, ago], k) => posts.push({
+        id: "arch" + k, ref: "A" + (k + 1), title, category, format: "reel", networks: ["instagram", "facebook"],
+        date: C.addDays(today, -ago), time: "12:30", caption: caption(title), captionValidated: true, manual: false,
+        media: [{ name: "A" + (k + 1) + "-reel.mp4", type: "video" }], stage: "scheduled", status: "published",
+      }));
     // LinkedIn et X : quelques exemples.
     [1, 3].forEach((k) => posts.push({
       id: "li" + k, ref: "L" + k, title: "Ce que 20 ans de fournil nous ont appris (" + k + ")", format: "document",

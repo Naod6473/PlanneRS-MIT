@@ -268,6 +268,8 @@
       return;
     }
     if ((b = g("[data-search]"))) { e.preventDefault(); A.openSearch(); return; }
+    if ((b = g("[data-best]"))) { A.openBest(); return; }
+    if ((b = g("[data-best-rc]"))) { A.openRecycle(b.dataset.bestRc); return; }
     if ((b = g("[data-accent]"))) { const v = b.dataset.accent; if (v) S.state.settings.accent = v; else delete S.state.settings.accent; await saveSet(); return; }
     if ((b = g("[data-theme-toggle]"))) { e.preventDefault(); toggleTheme(); return; }
     if ((b = g("[data-set-add]"))) { const t = (S.state.settings.templates = S.state.settings.templates || {}); (t.sets = t.sets || []).push({ name: "", networks: A.nets().slice(0, 2) }); await saveSet(); const i = document.querySelectorAll("[data-set-name]"); if (i.length) i[i.length - 1].focus(); return; }
