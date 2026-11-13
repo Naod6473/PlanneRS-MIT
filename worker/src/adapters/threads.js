@@ -1,6 +1,6 @@
 // Threads (Meta) : jeton d'accès Threads. Les médias sont récupérés par Meta via leur adresse publique, comme Instagram.
 // Doc : https://developers.facebook.com/docs/threads/posts
-import { jsonOrThrow, limitText, notConnected, publicUrl, isVideo, sleep, PublishError } from "./common.js";
+import { jsonOrThrow, limitText, threadOf, replies, notConnected, publicUrl, isVideo, sleep, PublishError } from "./common.js";
 
 export const id = "threads";
 export const fields = [
@@ -32,8 +32,8 @@ const item = (env, m, carousel) => Object.assign(isVideo(m) ? { media_type: "VID
 export async function publish(env, post, cred, job) {
   if (!cred.token) throw notConnected("Threads");
   const uid = cred.userId || "me", tok = cred.token;
-  const text = post.caption || "";
-  limitText("Threads", text, 500);
+  const parts = threadOf(post.caption), text = parts[0];
+  parts.forEach((t) => limitText("Threads", t, 500));
   let container = job && job.container;
   if (!container) {
     const media = (post.media || []).filter((m) => m.role !== "cover" && m.role !== "guide").slice(0, 20);
@@ -51,7 +51,12 @@ export async function publish(env, post, cred, job) {
   const pub = await call("POST", uid + "/threads_publish", { creation_id: container }, tok);
   let url = "";
   try { url = (await call("GET", pub.id, { fields: "permalink" }, tok)).permalink || ""; } catch (e) { /* lien facultatif */ }
-  return { status: "ok", id: pub.id, url };
+  const more = await replies("Threads", parts, pub.id, async (t, prev) => {
+    const c = (await call("POST", uid + "/threads", { media_type: "TEXT", text: t, reply_to_id: prev }, tok)).id;
+    await waitReady(c, tok);
+    return (await call("POST", uid + "/threads_publish", { creation_id: c }, tok)).id;
+  });
+  return Object.assign({ status: "ok", id: pub.id, url }, more);
 }
 
 export async function test(env, cred) {

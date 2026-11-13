@@ -47,3 +47,21 @@ export function noVideo(net) {
 export function notConnected(net) {
   return new PublishError(net + " n'est pas connecté.", { why: "Il manque les identifiants.", todo: "Connecte " + net + " dans Réglages › Comptes.", retryable: false });
 }
+
+// Fil : un texte coupé par des lignes « --- » part en plusieurs messages, chacun en réponse au précédent (« 1/3 », « 2/3 »…).
+export function threadOf(text) {
+  const parts = String(text || "").split(/\n[ \t]*-{3,}[ \t]*(?:\n|$)/).map((x) => x.trim()).filter(Boolean);
+  return parts.length > 1 ? parts.map((x, i) => x + " " + (i + 1) + "/" + parts.length) : [String(text || "")];
+}
+
+// Publie les réponses d'un fil. Le premier message est déjà en ligne : un échec ensuite ne doit pas le republier,
+// on renvoie donc « ok » avec un avertissement plutôt qu'une erreur réessayable.
+export async function replies(net, parts, first, send) {
+  let prev = first, sent = 1;
+  for (const t of parts.slice(1)) {
+    try { prev = await send(t, prev); sent++; } catch (e) {
+      return { warning: "Fil incomplet sur " + net + " : " + sent + " message(s) sur " + parts.length + " (" + ((e && e.message) || "erreur") + "). Poste la suite à la main." };
+    }
+  }
+  return {};
+}

@@ -1,6 +1,6 @@
 // X (Twitter) : clés OAuth 1.0a de l'application + jeton d'accès de l'utilisateur (droits « Read and write »).
 // Les jetons OAuth 1.0a n'expirent pas. Doc : https://docs.x.com/x-api/posts/manage-tweets/introduction
-import { altOf, fetchMedia, jsonOrThrow, limitText, notConnected, isVideo, sleep, PublishError } from "./common.js";
+import { altOf, fetchMedia, jsonOrThrow, limitText, threadOf, replies, notConnected, isVideo, sleep, PublishError } from "./common.js";
 
 export const id = "x";
 export const fields = [
@@ -68,8 +68,8 @@ async function uploadVideo(cred, f) {
 
 export async function publish(env, post, cred) {
   if (!cred.apiKey || !cred.apiSecret || !cred.accessToken || !cred.accessSecret) throw notConnected("X");
-  const text = post.caption || "";
-  limitText("X", text, Number(cred.maxChars) || 280);
+  const parts = threadOf(post.caption), text = parts[0];
+  parts.forEach((t) => limitText("X", t, Number(cred.maxChars) || 280));
   const media = (post.media || []).filter((m) => m.role !== "cover" && m.role !== "guide");
   const ids = [];
   if (media.some(isVideo)) ids.push(await uploadVideo(cred, await fetchMedia(env, media.find(isVideo))));
@@ -82,7 +82,8 @@ export async function publish(env, post, cred) {
   const body = { text };
   if (ids.length) body.media = { media_ids: ids };
   const r = await call(cred, "POST", "tweets", { json: body });
-  return { status: "ok", id: r.data.id, url: "https://x.com/i/status/" + r.data.id };
+  const more = await replies("X", parts, r.data.id, async (t, prev) => (await call(cred, "POST", "tweets", { json: { text: t, reply: { in_reply_to_tweet_id: prev } } })).data.id);
+  return Object.assign({ status: "ok", id: r.data.id, url: "https://x.com/i/status/" + r.data.id }, more);
 }
 
 export async function test(env, cred) {

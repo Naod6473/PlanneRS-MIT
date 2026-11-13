@@ -299,6 +299,8 @@
     if ((b = g("[data-slot-suggest]"))) { S.state.settings.slots.push({ time: b.dataset.slotSuggest, label: "Bon horaire" }); S.state.settings.slotsSet = true; await saveSet(); U.toast("Créneau " + b.dataset.slotSuggest + " ajouté"); return; }
     if ((b = g("[data-csv-model]"))) { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["\uFEFF" + A.csvTemplate], { type: "text/csv" })); a.download = "planning-modele.csv"; a.click(); return; }
     if ((b = g("[data-slot-add]"))) { S.state.settings.slots.push({ time: "20:00", label: "Nouveau créneau" }); await saveSet(); return; }
+    if ((b = g("[data-tslot-add]"))) { const nets = A.nets(); (S.state.settings.textSlots = S.state.settings.textSlots || []).push({ net: nets.includes("linkedin") ? "linkedin" : ["x", "bluesky", "threads", "mastodon", "facebook"].find((n) => nets.includes(n)) || "linkedin", days: [2, 4], time: "08:30" }); await saveSet(); return; }
+    if ((b = g("[data-tslot-del]"))) { S.state.settings.textSlots.splice(+b.dataset.tslotDel, 1); await saveSet(); return; }
     if ((b = g("[data-slot-del]"))) { S.state.settings.slots.splice(+b.dataset.slotDel, 1); await saveSet(); return; }
     if ((b = g("[data-chk-add]"))) { (S.state.settings.customChecks = S.state.settings.customChecks || []).push({ label: "Mention du crédit absente", contains: "Crédit" }); await saveSet(); return; }
     if ((b = g("[data-chk-del]"))) { S.state.settings.customChecks.splice(+b.dataset.chkDel, 1); await saveSet(); return; }
@@ -342,6 +344,9 @@
     if (t.matches("[data-tpl-sig]")) { (st.templates = st.templates || {}).signature = t.value; return S.saveSettings(st); }
     if (d.tplName != null) { st.templates.tags[+d.tplName].name = t.value.trim(); return S.saveSettings(st); }
     if (d.tplText != null) { st.templates.tags[+d.tplText].text = t.value.trim(); return S.saveSettings(st); }
+    if (d.tslotNet != null) { st.textSlots[+d.tslotNet].net = t.value; return saveSet(); }
+    if (d.tslotTime != null) { st.textSlots[+d.tslotTime].time = t.value; return S.saveSettings(st); }
+    if (d.tslotDay != null) { const x = st.textSlots[+d.tslotDay], k = +t.value; x.days = (x.days || []).filter((y) => y !== k); if (t.checked) x.days.push(k); x.days.sort(); return S.saveSettings(st); }
     if (d.slotTime != null) { st.slots[+d.slotTime].time = t.value; return saveSet(); }
     if (d.slotLabel != null) { st.slots[+d.slotLabel].label = t.value; return saveSet(); }
     if (d.ruleMnet != null) { st.rules.manualNets = A.nets().filter((n) => (n === t.value ? t.checked : (st.rules.manualNets || []).includes(n))); return saveSet(); }

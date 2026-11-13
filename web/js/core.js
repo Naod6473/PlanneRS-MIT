@@ -131,7 +131,62 @@
     }
     return t;
   }
-  function textOut(p, net, settings) { return utm(capFor(p, net), net, p, settings); }
+  // ---- Posts texte : fils, versions par réseau, coupure « voir plus ».
+  // Un fil = des messages séparés par une ligne « --- ». Seuls ces réseaux publient un fil ; ailleurs, les messages sont recollés.
+  const THREAD_NETS = { x: 1, bluesky: 1, threads: 1, mastodon: 1 };
+  const SEP = /\n[ \t]*-{3,}[ \t]*(?:\n|$)/;
+  const isThread = (t) => SEP.test("\n" + String(t || "") + "\n") && threadParts(t).length > 1;
+  function threadParts(t, number) {
+    const parts = String(t || "").split(/\n[ \t]*-{3,}[ \t]*(?:\n|$)/).map((x) => x.trim()).filter(Boolean);
+    return number && parts.length > 1 ? parts.map((x, i) => x + " " + (i + 1) + "/" + parts.length) : parts;
+  }
+  const unthread = (t) => threadParts(t).join("\n\n");
+  // Découpe un long texte en messages de max caractères (numéro compris), aux fins de paragraphe, de phrase, sinon de mot.
+  function splitThread(t, max) {
+    const room = (max || 280) - 6, out = [];
+    const chunks = [];
+    unthread(t).split(/\n{2,}/).forEach((para) => { (para.match(/[^.!?…]+[.!?…]+["»)]?\s*|[^.!?…]+$/g) || [para]).forEach((x) => chunks.push(x.trim())); chunks.push("\n"); });
+    let cur = "";
+    const push = () => { if (cur.trim()) out.push(cur.trim()); cur = ""; };
+    for (const c of chunks) {
+      if (c === "\n") { if ([...cur].length > room * 0.6) push(); else if (cur) cur += "\n\n"; continue; }
+      if ([...(cur + (cur && !/\n$/.test(cur) ? " " : "") + c)].length <= room) { cur += (cur && !/\n$/.test(cur) ? " " : "") + c; continue; }
+      push();
+      if ([...c].length <= room) { cur = c; continue; }
+      c.split(/\s+/).forEach((w) => { if ([...(cur + " " + w)].length > room) push(); cur += (cur ? " " : "") + w; });
+    }
+    push();
+    return out.join("\n---\n");
+  }
+  // Ce qu'on voit avant « … voir plus » (environ) : LinkedIn ~210 caractères, Instagram ~125, Facebook ~480.
+  const FOLD = { linkedin: 210, instagram: 125, facebook: 480 };
+  function foldOf(t, net) { const n = FOLD[net]; const a = [...String(t || "")]; return n && a.length > n ? { shown: a.slice(0, n).join(""), hidden: a.length - n } : null; }
+  // Versions par réseau sans IA : X (court, 2 hashtags au plus) et LinkedIn (accroche, lignes aérées, question, 3 hashtags au plus).
+  function tagsOf(t) { return (String(t || "").match(/#[\p{L}\p{N}_]+/gu) || []); }
+  function plain(t) { return unthread(t).replace(/(^|\s)#[\p{L}\p{N}_]+/gu, "").replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim(); }
+  function sentences(t) { return (plain(t).replace(/\n+/g, " ").match(/[^.!?…]+[.!?…]+["»)]?|[^.!?…]+$/g) || []).map((x) => x.trim()).filter(Boolean); }
+  function versionFor(t, net) {
+    const tags = tagsOf(t), ss = sentences(t);
+    if (net === "linkedin") {
+      const q = /\?\s*$/.test(ss[ss.length - 1] || "") && ss.length > 1 ? ss[ss.length - 1] : null; // la question de fin, si le texte en a une
+      const body = ss.filter((x) => x !== q);
+      const cta = q || (/comment|partage|dis-(nous|moi)|écris|abonne|suis-nous|\?/i.test(ss.slice(-2).join(" ")) ? "" : "Et vous, qu'en pensez-vous ?");
+      return [body[0] || "", "", ...body.slice(1).map((x) => x + "\n"), cta, "", tags.slice(0, 3).join(" ")].join("\n").replace(/\n{3,}/g, "\n\n").trim();
+    }
+    const max = TEXT_MAX[net] || 280, tg = tags.slice(0, 2).join(" ");
+    let out = "";
+    for (const x of ss) { const n = (out ? out + " " : "") + x; if ([...(n + (tg ? " " + tg : ""))].length > max) break; out = n; }
+    if (!out && ss[0]) out = [...ss[0]].slice(0, max - (tg ? tg.length + 2 : 1) - 1).join("") + "…";
+    return (out + (tg ? "\n\n" + tg : "")).trim();
+  }
+  // Créneaux texte (ex. LinkedIn mardi et jeudi 08:30) : jours 1 = lundi … 7 = dimanche.
+  const isTextPost = (p) => p.format === "text" || p.format === "document" || !(p.media || []).some((m) => m.role !== "guide" && m.role !== "cover");
+  function textSlotsFor(p, week, textSlots) {
+    const out = [];
+    (textSlots || []).filter((t) => t.time && (p.networks || []).includes(t.net)).forEach((t) => (t.days || []).forEach((k) => out.push({ date: addDays(week, k - 1), time: t.time.slice(0, 5), net: t.net })));
+    return out.sort((x, y) => (x.date + x.time).localeCompare(y.date + y.time));
+  }
+  function textOut(p, net, settings) { const t = capFor(p, net); return utm(THREAD_NETS[net] ? t : isThread(t) ? unthread(t) : t, net, p, settings); }
 
   function checks(p, settings) {
     const out = [];
@@ -150,7 +205,7 @@
     if (capFor(p, "instagram").length > 2200 && nets.includes("instagram"))
       out.push({ level: "block", text: "Légende trop longue pour Instagram (2 200 caractères max)." });
     [["x", "X", 280], ["bluesky", "Bluesky", 300], ["threads", "Threads", 500], ["mastodon", "Mastodon", 500], ["linkedin", "LinkedIn", 3000]].forEach(([id, name, max]) => {
-      const len = [...capFor(p, id)].length;
+      const t = capFor(p, id), len = THREAD_NETS[id] && isThread(t) ? Math.max(...threadParts(t, true).map((x) => [...x].length)) : [...(isThread(t) ? unthread(t) : t)].length;
       if (nets.includes(id) && p.format !== "story" && len > max) out.push({ level: "block", text: "Texte trop long pour " + name + " (" + len + " caractères, " + max + " max)." });
     });
     if (p.linkCheck && p.linkCheck.bad && p.linkCheck.bad.length && p.status !== "published")
@@ -176,7 +231,9 @@
     const out = [], nets = p.networks || [];
     const ms = (p.media || []).filter((m) => m.role !== "guide" && m.role !== "cover");
     const isV = (m) => m.type === "video" || /\.(mp4|mov|webm|m4v)(\?|$)/i.test(m.name || m.url || "");
-    const vids = ms.filter(isV), imgs = ms.filter((m) => !isV(m));
+    const isD = (m) => m.type === "document" || /\.pdf(\?|$)/i.test(m.name || m.url || "");
+    const vids = ms.filter(isV), docs = ms.filter(isD), imgs = ms.filter((m) => !isV(m) && !isD(m));
+    if (docs.length && nets.some((n) => n !== "linkedin")) { out.push({ level: "block", text: "Le PDF (carrousel) ne part que sur LinkedIn : retire les autres réseaux, ou fais-en un post à part." }); }
     const fmt = (s) => s >= 60 ? Math.floor(s / 60) + " min" + (s % 60 ? " " + Math.round(s % 60) + " s" : "") : Math.round(s * 10) / 10 + " s";
     ["tiktok", "youtube"].forEach((n) => { if (nets.includes(n) && ms.length && !vids.length) out.push({ level: "block", text: MNAMES[n] + " publie des vidéos seulement : ajoute une vidéo, ou retire " + MNAMES[n] + "." }); });
     vids.forEach((m) => nets.forEach((n) => {
@@ -433,6 +490,6 @@
     return { date: y + "-" + pad(+mo) + "-" + pad(+d), time };
   }
   const api = { parseWhen, evergreen, repostOf, STATUS, FORMATS, STAGES, STEPS, step, alertOf, pad, ymd, parseYmd, addDays, mondayOf, toMin, at, longDate, shortDay, MONTHS, DAYS, setLang,
-    displayStatus, missed, willSend, hashtags, checks, mediaChecks, slotOf, nowStamp, fold, seriesOf, matchQuery, parseCsv, toCsv, manualNets, autoNets, pendingManual, prefillUrl, titleFor, capFor, TEXT_MAX, utm, textOut, PROD_STEPS, inFabrique, prodOf, CREW, CREW_WHO, crewOf, crewWork, reviewPile, reviewOf, needsFix, achievements, achText };
+    displayStatus, missed, willSend, hashtags, checks, mediaChecks, slotOf, nowStamp, fold, seriesOf, matchQuery, parseCsv, toCsv, manualNets, autoNets, pendingManual, prefillUrl, titleFor, capFor, TEXT_MAX, utm, textOut, THREAD_NETS, isThread, threadParts, unthread, splitThread, foldOf, versionFor, isTextPost, textSlotsFor, PROD_STEPS, inFabrique, prodOf, CREW, CREW_WHO, crewOf, crewWork, reviewPile, reviewOf, needsFix, achievements, achText };
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.Core = api;
 })(typeof self !== "undefined" ? self : this);

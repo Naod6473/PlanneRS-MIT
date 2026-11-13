@@ -32,14 +32,25 @@
     const ready = S.state.posts.filter((p) => !p.date && p.status === "ready" && !p.parent);
     const green = C.evergreen(S.state.posts, C.ymd(new Date()));
     if (!ready.length && !green.length) { U.toast("Aucun post dans « Prêts à programmer »"); return; }
-    const free = A.freeSlots(A.week);
-    if (!free.length) { U.toast("Plus de créneau libre cette semaine : passe à la semaine suivante"); return; }
+    const free = A.freeSlots(A.week), ts = S.state.settings.textSlots || [], now = C.nowStamp();
+    const taken = new Set(S.state.posts.filter((p) => p.date && p.time && !p.parent && p.status !== "draft").map((p) => p.date + " " + p.time.slice(0, 5)));
     // D'abord les posts prêts ; les créneaux qui restent reçoivent une reprise d'un contenu intemporel (2 au plus par semaine).
     const extra = green.slice(0, Math.min(2, Math.max(0, free.length - ready.length))).map((p) => Object.assign({ green: true }, p));
-    const plan = ready.concat(extra).slice(0, free.length).map((p, i) => ({ p, s: free[i] })).sort((x, y) => (x.s.date + x.s.time).localeCompare(y.s.date + y.s.time));
+    // Un post texte prend d'abord un créneau texte de son réseau, sinon un créneau habituel.
+    const plan = [];
+    let fi = 0;
+    ready.concat(extra).forEach((p) => {
+      let s = ts.length && C.isTextPost(p) ? C.textSlotsFor(p, A.week, ts).find((x) => x.date + "T" + x.time > now && !taken.has(x.date + " " + x.time)) : null;
+      if (s) s = Object.assign({ text: true }, s);
+      else { while (fi < free.length && taken.has(free[fi].date + " " + free[fi].time)) fi++; s = free[fi++]; }
+      if (!s) return;
+      taken.add(s.date + " " + s.time); plan.push({ p, s });
+    });
+    if (!plan.length) { U.toast("Plus de créneau libre cette semaine : passe à la semaine suivante"); return; }
+    plan.sort((x, y) => (x.s.date + x.s.time).localeCompare(y.s.date + y.s.time));
     A.openLayer('<div class="sh-top"><b>Remplir la semaine</b><span style="flex:1"></span><button class="iconbtn" data-close aria-label="Fermer">' + icon("x") + "</button></div>" +
       '<div class="sh-body"><p style="margin:0">' + plan.length + " post" + (plan.length > 1 ? "s" : "") + " dans les créneaux libres" + (A.bestTimes && A.bestTimes() ? ", les meilleurs horaires d'abord" : "") + ". Décoche ceux à garder de côté.</p>" +
-      '<div class="fill-list">' + plan.map((x, i) => '<label class="fill-row"><input type="checkbox" data-fill-i="' + i + '" checked><span class="mono">' + esc(C.shortDay(x.s.date)) + " · " + x.s.time + "</span><b data-noi18n>" + esc(x.p.title) + "</b>" +
+      '<div class="fill-list">' + plan.map((x, i) => '<label class="fill-row"><input type="checkbox" data-fill-i="' + i + '" checked><span class="mono">' + esc(C.shortDay(x.s.date)) + " · " + x.s.time + "</span><b data-noi18n>" + esc(x.p.title) + "</b>" + (x.s.text ? '<span class="st"' + U.tint(x.s.net) + ">" + U.tintLogo(x.s.net) + "Créneau texte</span>" : "") +
         (x.p.green ? '<span class="st st-scheduled">' + icon("undo") + "Reprise intemporelle</span>" : x.p.captionValidated ? "" : '<span class="st st-manual">Texte à valider</span>') + "</label>").join("") + "</div>" +
       (extra.length ? '<p class="muted" style="margin:0;font-size:13px">Les reprises intemporelles sont des copies de posts déjà publiés il y a plus de 2 mois : leur texte sera à relire et valider.</p>' : "") +
       (ready.length > plan.length ? '<p class="muted" style="margin:0;font-size:13px">' + (ready.length - plan.length) + " post(s) restent en attente : plus de créneau libre cette semaine.</p>" : "") +

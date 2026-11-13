@@ -8,7 +8,8 @@
   const layer = () => document.getElementById("layer");
   const T = (n) => (window.BRANDS[n] ? window.BRANDS[n].title : n);
   const isVid = (m) => m.type === "video" || /\.(mp4|mov|webm|m4v)(\?|$)/i.test(m.name || m.url || "");
-  const isImg = (m) => !isVid(m) && (/^image/.test(m.type || "image")) && m.role !== "guide";
+  const isDoc = (m) => m.type === "document" || /\.pdf(\?|$)/i.test(m.name || m.url || "");
+  const isImg = (m) => !isVid(m) && !isDoc(m) && (/^image/.test(m.type || "image")) && m.role !== "guide";
   const driveThumb = (u) => { const id = (/drive\.google\.com\/.*(?:id=|\/d\/)([\w-]{20,})/.exec(u || "") || [])[1]; return id ? "https://drive.google.com/thumbnail?id=" + id + "&sz=w800" : u; };
 
   // Format déduit des médias tant que la personne ne l'a pas choisi.
@@ -26,6 +27,7 @@
   A.guessFormat = function (media) {
     const ms = (media || []).filter((m) => m.role !== "guide" && m.role !== "cover");
     if (ms.some(isVid)) return "reel";
+    if (ms.some(isDoc)) return "document";
     const n = ms.filter(isImg).length;
     return n > 1 ? "carousel" : n === 1 ? "image" : "text";
   };
@@ -86,6 +88,7 @@
           (sets.length ? '<span class="cp-sets">' + sets.map((g, i) => '<button type="button" class="chip sm" data-cpset="' + i + '">' + esc(g.name) + "</button>").join("") + "</span>" : "") + "</div>" +
         '<div class="cp-box"><div class="cp-capt" role="tablist" aria-label="Texte par réseau"></div>' +
           '<textarea id="cp-text" class="cp-text" placeholder="Écris ton texte ici…" aria-label="Texte du post"></textarea>' +
+          '<div class="cp-assist" id="cp-assist"></div>' +
           '<p class="muted cp-hint" id="cp-hint" hidden></p>' +
           '<div class="cp-media" id="cp-media"></div><ul class="cp-warn" id="cp-warn" hidden></ul>' +
           '<div class="cp-tools"><button type="button" class="btn sm" data-cp="media">' + icon("image") + "Insérer un média</button>" +
@@ -94,7 +97,7 @@
             '<button type="button" class="btn sm quiet" data-cp="rewrite" id="cp-rw" hidden>' + icon("spark") + "Réécrire avec Claude</button>" +
             '<button type="button" class="btn sm quiet" data-cp="adapt" id="cp-ad" hidden>' + icon("spark") + "Adapter pour chaque réseau</button>" +
             '<span class="grow"></span><span class="cp-count" id="cp-count"></span></div>' +
-          '<div class="cp-add" id="cp-add" hidden><label class="btn sm">' + icon("download") + 'Depuis l\'appareil<input type="file" id="cp-file" accept="image/*,video/*" multiple hidden></label>' +
+          '<div class="cp-add" id="cp-add" hidden><label class="btn sm">' + icon("download") + 'Depuis l\'appareil<input type="file" id="cp-file" accept="image/*,video/*,application/pdf" multiple hidden></label>' +
             '<button type="button" class="btn sm" data-cp="lib">' + icon("contents") + "Bibliothèque</button>" +
             '<input type="url" id="cp-url" pattern="https://.+" aria-describedby="cp-url-err" placeholder="ou colle le lien d\'une image ou d\'une vidéo (https://…)"><button type="button" class="btn sm" data-cp="addurl">Ajouter</button><span class="ferr" id="cp-url-err">Un lien qui commence par https://</span></div>' +
           '<div class="cp-lib" id="cp-lib" hidden><input type="search" id="cp-libq" placeholder="Chercher un média (nom du fichier ou titre du post)" aria-label="Chercher dans la bibliothèque"><div class="cp-libgrid" id="cp-libgrid"></div></div>' +
@@ -154,11 +157,74 @@
     }
     function count() {
       const lims = (cur ? [cur] : d.networks).map((n) => C.TEXT_MAX[n]).filter(Boolean);
-      const max = lims.length ? Math.min.apply(null, lims) : 0, len = [...text.value].length;
+      const max = lims.length ? Math.min.apply(null, lims) : 0;
+      const fil = C.isThread(text.value) && (cur ? [cur] : d.networks).some((n) => C.THREAD_NETS[n]);
+      const len = fil ? Math.max.apply(null, C.threadParts(text.value, true).map((x) => [...x].length)) : [...text.value].length;
       const c = $("#cp-count");
-      c.textContent = (max ? len + " / " + max : len + " caractères") + " · " + C.hashtags(text.value) + " #";
+      c.textContent = (fil ? "Fil de " + C.threadParts(text.value).length + " messages · le plus long : " : "") + (max ? len + " / " + max : len + " caractères") + " · " + C.hashtags(text.value) + " #";
       c.classList.toggle("over", !!(max && len > max));
-      c.title = max ? "Limite la plus courte des réseaux choisis" : "";
+      c.title = fil ? "Chaque message du fil doit tenir dans la limite" : max ? "Limite la plus courte des réseaux choisis" : "";
+      assist();
+    }
+    // Aides pour les posts texte : coupure « voir plus », fil, version par réseau, phrase en image, carrousel PDF.
+    function assist() {
+      const box = $("#cp-assist"); if (!box) return;
+      const t = text.value, nets = cur ? [cur] : d.networks, out = [];
+      if (story() || !t.trim()) { box.innerHTML = ""; return; }
+      const folds = nets.map((n) => [n, C.foldOf(C.unthread(t), n)]).filter((x) => x[1]);
+      if (folds.length) {
+        const src = C.unthread(t);
+        folds.slice(0, 3).forEach(([n, f], k) => {
+          let shown = f.shown; if (/\S$/.test(shown) && /^\S/.test(src.slice(shown.length))) shown = shown.replace(/\S+$/, "");
+          const tail = [...shown.replace(/\s+/g, " ").trim()].slice(-26).join("");
+          out.push('<span class="cpa-fold" title="Ce qui s\'affiche avant « voir plus »"' + U.tint(n) + ">" + U.tintLogo(n) + (k ? "" : "<span>« Voir plus » après</span>") + "<q data-noi18n>…" + esc(tail) + "</q></span>");
+        });
+      }
+      const tn = nets.filter((n) => C.THREAD_NETS[n]);
+      if (C.isThread(t)) {
+        const k = C.threadParts(t).length;
+        out.push('<span class="cpa-info">' + icon("dup") + k + " messages" + (tn.length ? "" : " · recollés à l'envoi") + "</span>");
+        out.push('<button type="button" class="btn sm quiet" data-cpx="unthread">Recoller</button>');
+      } else if (tn.length) {
+        const max = Math.min.apply(null, tn.map((n) => C.TEXT_MAX[n]));
+        if ([...t].length > max) out.push('<button type="button" class="btn sm"' + U.tint(tn[0]) + ' data-cpx="thread" data-max="' + max + '">' + U.tintLogo(tn[0]) + "Découper en fil</button>");
+      }
+      if (!cur && d.networks.length) ["x", "linkedin", "bluesky", "threads", "mastodon"].filter((n) => d.networks.includes(n)).forEach((n) => {
+        out.push('<button type="button" class="btn sm quiet" data-cpx="ver" data-net="' + n + '" title="Version sans IA : longueur, aération et hashtags adaptés au réseau">' + brand(n) + "Version " + esc(T(n)) + "</button>");
+      });
+      out.push('<button type="button" class="btn sm quiet" data-cpx="quote" title="La première phrase (ou le texte sélectionné) en grand, en image 1080 × 1350">' + icon("image") + "Phrase en image</button>");
+      if (d.networks.includes("linkedin") && A.carouselPages(t).length >= 3) out.push('<button type="button" class="btn sm"' + U.tint("linkedin") + ' data-cpx="pdf" title="Une page par paragraphe, en PDF : LinkedIn l\'affiche en carrousel">' + U.tintLogo("linkedin") + "Carrousel PDF</button>");
+      box.innerHTML = out.join("");
+    }
+    async function assistAct(b) {
+      const act = b.dataset.cpx, set1 = (v) => { text.value = v; text.dispatchEvent(new Event("input")); };
+      if (act === "thread") { set1(C.splitThread(text.value, +b.dataset.max)); U.toast("Texte découpé en " + C.threadParts(text.value).length + " messages : ajuste les coupures (lignes ---) si besoin"); return; }
+      if (act === "unthread") { set1(C.unthread(text.value)); return; }
+      if (act === "ver") {
+        const n = b.dataset.net, v = C.versionFor(drafts[""] || text.value, n);
+        if (d.networks.length > 1) { drafts[n] = v; setTab(n); touch(); U.toast("Version prête dans son onglet : relis-la"); }
+        else set1(v);
+        return;
+      }
+      const sign = (S.state.settings.workspace || {}).name || "";
+      const main = cur || d.networks[0];
+      if (act === "quote") {
+        const sel = text.value.slice(text.selectionStart, text.selectionEnd).trim();
+        const phrase = sel || A.firstSentence(text.value);
+        if (!phrase) { U.toast("Écris d'abord une phrase"); return; }
+        const f = await A.canvasFile(A.quoteImage(phrase, main, sign), "phrase-" + Date.now().toString(36) + ".jpg");
+        await addFiles([f], null, true); if (autoFormat) $("#cp-format").value = A.guessFormat(d.media);
+        U.toast("Image ajoutée au post" + (sel ? "" : " (astuce : sélectionne une autre phrase pour la changer)"));
+        return;
+      }
+      if (act === "pdf") {
+        b.disabled = true;
+        try {
+          const r = await A.carouselPdf(text.value, "linkedin", sign, "carrousel-" + Date.now().toString(36) + ".pdf");
+          await addFiles([r.file], r.cover, true);
+          U.toast("Carrousel de " + r.pages + " pages ajouté : il part sur LinkedIn");
+        } finally { b.disabled = false; }
+      }
     }
     function sync() {
       drafts[cur] = text.value;
@@ -187,7 +253,7 @@
       $("#cp-fcl").hidden = story() || !d.networks.some((n) => n === "instagram" || n === "facebook");
     }
     function media() {
-      $("#cp-media").innerHTML = (d.media || []).map((m, i) => '<span class="cp-thumb">' + (isVid(m) ? (srcOf(m) ? '<video class="cp-vid" muted playsinline preload="metadata" src="' + esc(srcOf(m)) + '#t=1"></video>' : '<span class="cp-vid">' + icon("film") + "</span>") : srcOf(m) ? '<img src="' + esc(driveThumb(srcOf(m))) + '" alt="">' : '<span class="cp-vid">' + icon("image") + "</span>") +
+      $("#cp-media").innerHTML = (d.media || []).map((m, i) => '<span class="cp-thumb">' + (isDoc(m) ? (m.cover || m._cover ? '<img src="' + esc(m.cover || m._cover) + '" alt=""><b class="cp-doc">PDF</b>' : '<span class="cp-vid">' + icon("contents") + "</span>") : isVid(m) ? (srcOf(m) ? '<video class="cp-vid" muted playsinline preload="metadata" src="' + esc(srcOf(m)) + '#t=1"></video>' : '<span class="cp-vid">' + icon("film") + "</span>") : srcOf(m) ? '<img src="' + esc(driveThumb(srcOf(m))) + '" alt="">' : '<span class="cp-vid">' + icon("image") + "</span>") +
         '<small title="' + esc(m.name || "") + '">' + esc(m.name || "média") + '</small><button type="button" class="iconbtn" data-cpdel="' + i + '" aria-label="Retirer ' + esc(m.name || "le média") + '">' + icon("x") + "</button></span>").join("");
       if (autoFormat) { $("#cp-format").value = A.guessFormat(d.media); }
       draw();
@@ -259,6 +325,7 @@
       }
       if ((b = e.target.closest("[data-cpdel]"))) { d.media.splice(+b.dataset.cpdel, 1); touch(); media(); return; }
       if ((b = e.target.closest("[data-cpview]"))) { L.dataset.view = b.dataset.cpview; L.querySelectorAll("[data-cpview]").forEach((x) => x.setAttribute("aria-pressed", String(x === b))); if (b.dataset.cpview === "pv") draw(); return; }
+      if ((b = e.target.closest("[data-cpx]"))) return assistAct(b);
       if (!(b = e.target.closest("[data-cp]"))) return;
       const act = b.dataset.cp;
       if (act === "media") { const a = $("#cp-add"); a.hidden = !a.hidden; if (!a.hidden) $("#cp-url").focus(); return; }
@@ -298,12 +365,13 @@
     }
     L.addEventListener("input", (e) => { if (e.target.id === "cp-libq") lib(); });
 
-    async function addFiles(files) {
-      files = files.filter((f) => /^(image|video)\//.test(f.type));
-      if (!files.length) { U.toast("Choisis une image ou une vidéo"); return; }
+    async function addFiles(files, cover, quiet) {
+      files = files.filter((f) => /^(image|video)\//.test(f.type) || f.type === "application/pdf");
+      if (!files.length) { U.toast("Choisis une image, une vidéo ou un PDF"); return; }
+      const kind = (f) => (/^video/.test(f.type) ? "video" : f.type === "application/pdf" ? "document" : "image");
       if (S.mode !== "api") {
-        files.forEach((f) => d.media.push({ name: f.name, type: /^video/.test(f.type) ? "video" : "image", url: URL.createObjectURL(f), local: true, size: f.size, mime: f.type }));
-        touch(); media(); U.toast("Mode démo : le fichier reste dans ce navigateur"); return;
+        files.forEach((f) => d.media.push(Object.assign({ name: f.name, type: kind(f), url: URL.createObjectURL(f), local: true, size: f.size, mime: f.type }, cover && kind(f) === "document" ? { cover: cover } : {})));
+        touch(); media(); if (!quiet) U.toast("Mode démo : le fichier reste dans ce navigateur"); return;
       }
       if (!A.canDeposit()) { U.toast(A.depositHint); return; }
       const dest = (d.folder && !/^https?:/.test(d.folder) ? d.folder : (set.drive && set.drive.inbox) || "PlanneRs/depots");
@@ -311,7 +379,9 @@
       for (const f of files) {
         try {
           const r = await A.deposit(f, dest, (f2) => { bar.firstChild.style.width = Math.round(f2 * 100) + "%"; });
-          d.media.push(A.depositMedia(r, f, { _pv: URL.createObjectURL(f), size: f.size, mime: f.type }));
+          const dm = A.depositMedia(r, f, kind(f) === "document" ? { size: f.size, mime: f.type } : { _pv: URL.createObjectURL(f), size: f.size, mime: f.type });
+          if (kind(f) === "document") { dm.type = "document"; if (cover) dm._cover = cover; }
+          d.media.push(dm);
           if (!d.folder) d.folder = dest;
           if (r.where && !r.url && !d.store) d.store = r.where;
           touch(); media();

@@ -149,6 +149,7 @@ export async function sendPost(p, deps, rules, summary, onlyNets, partial) {
       }
       p.results[n] = { status: "ok", url: r.url || "", id: r.id || "" };
       if (r.draft) p.results[n].draft = true;
+      if (r.warning) { p.results[n].warning = r.warning; await deps.log({ at: now, level: "error", text: r.warning, postId: p.id }); }
       if (p.job) delete p.job[n];
       if (primary && r.url) p.url = r.url;
       await deps.log({ at: now, level: "ok", text: (r.draft ? "Envoyé dans les brouillons " + netName(n) + " (à publier depuis l'appli) : " : "Publié sur " + netName(n) + " : ") + p.title, postId: p.id });

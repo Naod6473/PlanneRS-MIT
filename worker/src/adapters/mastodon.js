@@ -1,6 +1,6 @@
 // Mastodon (et compatibles) : adresse de l'instance + jeton d'application.
 // Doc : https://docs.joinmastodon.org/methods/statuses/#create
-import { altOf, fetchMedia, jsonOrThrow, limitText, notConnected, sleep, PublishError } from "./common.js";
+import { altOf, fetchMedia, jsonOrThrow, limitText, threadOf, replies, notConnected, sleep, PublishError } from "./common.js";
 
 export const id = "mastodon";
 export const fields = [
@@ -13,8 +13,8 @@ const base = (cred) => { const u = String(cred.instance || "").trim().replace(/\
 export async function publish(env, post, cred) {
   if (!cred.instance || !cred.token) throw notConnected("Mastodon");
   const auth = { authorization: "Bearer " + cred.token };
-  const text = post.caption || "";
-  limitText("Mastodon", text, Number(cred.maxChars) || 500);
+  const parts = threadOf(post.caption), text = parts[0];
+  parts.forEach((t) => limitText("Mastodon", t, Number(cred.maxChars) || 500));
   const ids = [];
   for (const m of (post.media || []).filter((x) => x.role !== "cover" && x.role !== "guide").slice(0, 4)) {
     const f = await fetchMedia(env, m);
@@ -37,7 +37,11 @@ export async function publish(env, post, cred) {
     headers: Object.assign({ "content-type": "application/json", "idempotency-key": "planners-" + post.id + "-" + (post.date || "") + (post.time || "") }, auth),
     body: JSON.stringify({ status: text, media_ids: ids, visibility: "public", language: "fr" }),
   }));
-  return { status: "ok", id: r.id, url: r.url || "" };
+  const more = await replies("Mastodon", parts, r.id, async (t, prev) => (await jsonOrThrow("Mastodon", await fetch(base(cred) + "/api/v1/statuses", {
+    method: "POST", headers: Object.assign({ "content-type": "application/json", "idempotency-key": "planners-" + post.id + "-" + prev }, auth),
+    body: JSON.stringify({ status: t, in_reply_to_id: prev, visibility: "public", language: "fr" }),
+  }))).id);
+  return Object.assign({ status: "ok", id: r.id, url: r.url || "" }, more);
 }
 
 export async function test(env, cred) {

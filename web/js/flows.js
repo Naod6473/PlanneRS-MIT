@@ -182,6 +182,7 @@
     if (!done) foot += '<button class="btn" data-act="compose">' + icon("pen") + "Modifier</button>";
     foot += '<span style="flex:1"></span><details class="moremenu"><summary class="btn quiet" aria-label="Plus d\'actions">' + icon("more") + '<span class="lbl2">Plus</span></summary><div class="mm-list" role="menu">' +
       '<button class="btn quiet" role="menuitem" data-act="dup">' + icon("dup") + "Dupliquer</button>" +
+      (A.textsFromVideo && A.textsFromVideo(p, true) ? '<button class="btn quiet" role="menuitem" data-act="texts" title="Un fil pour X et un post LinkedIn, à partir du script ou de la légende">' + icon("pen") + "Une vidéo, trois textes</button>" : "") +
       (done ? "" : '<button class="btn quiet" role="menuitem" data-act="share">' + icon("send") + "Lien de validation client</button>") +
       (p.date && !p.parent ? '<button class="btn quiet" role="menuitem" data-act="repeat">' + icon("calendar") + "Répéter…</button>" : "") +
       (done ? "" : '<button class="btn quiet danger" role="menuitem" data-act="del">' + icon("trash") + "Supprimer</button>") + "</div></details>";
@@ -326,6 +327,12 @@
         c.id = "c" + Date.now().toString(36); c.status = "ready"; c.date = null; c.time = null; c.captionValidated = false;
         delete c.results; delete c.failure; delete c.url; c.title = p.title + " (copie)"; c.stage = "ready";
         await S.savePosts([c]); U.toast("Copie ajoutée dans « Prêts à programmer »"); A.closeLayer(); A.render(); A.openPost(c.id); return;
+      }
+      case "texts": {
+        const made = A.textsFromVideo(p);
+        await S.savePosts(made);
+        U.toast(made.length > 1 ? made.length + " posts texte ajoutés dans « Prêts à programmer » : relis-les" : "Post texte ajouté dans « Prêts à programmer » : relis-le");
+        A.closeLayer(); A.render(); A.openPost(made[0].id); return;
       }
       case "repeat": A.openRepeat(p.id); return;
       case "recycle": A.openRecycle(p.id); return;

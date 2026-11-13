@@ -71,3 +71,37 @@ test("LinkedIn : texte échappé, image, post", async () => {
   assert.equal(r.url, "https://www.linkedin.com/feed/update/urn:li:share:5/");
   assert.equal(JSON.parse(calls.at(-1).opts.body).content.media.id, "urn:li:image:1");
 });
+
+test("Fil : X publie chaque message en réponse au précédent", async () => {
+  let n = 0;
+  const calls = route([[/2\/tweets$/, () => J({ data: { id: "t" + (++n) } })]]);
+  const r = await x.publish(env, post({ media: [], caption: "Un.\n---\nDeux.\n---\nTrois." }), { apiKey: "a", apiSecret: "b", accessToken: "c", accessSecret: "d" });
+  assert.equal(r.url, "https://x.com/i/status/t1");
+  const bodies = calls.map((c) => JSON.parse(c.opts.body));
+  assert.deepEqual(bodies.map((b) => b.text), ["Un. 1/3", "Deux. 2/3", "Trois. 3/3"]);
+  assert.equal(bodies[2].reply.in_reply_to_tweet_id, "t2");
+});
+
+test("Fil : une réponse refusée n'annule pas le premier message", async () => {
+  let n = 0;
+  route([[/2\/tweets$/, () => (++n === 1 ? J({ data: { id: "t1" } }) : J({ detail: "non" }, 403))]]);
+  const r = await x.publish(env, post({ media: [], caption: "Un.\n---\nDeux." }), { apiKey: "a", apiSecret: "b", accessToken: "c", accessSecret: "d" });
+  assert.equal(r.status, "ok");
+  assert.match(r.warning, /Fil incomplet sur X : 1 message/);
+});
+
+test("Fil : Bluesky, Mastodon et Threads chaînent les réponses", async () => {
+  let k = 0;
+  let calls = route([[/createSession/, () => J({ accessJwt: "jwt", did: "did:plc:1", handle: "moi" })], [/createRecord/, () => J({ uri: "at://x/p/" + (++k), cid: "c" + k })]]);
+  await bluesky.publish(env, post({ media: [], caption: "A\n---\nB" }), { identifier: "moi", appPassword: "x" });
+  const rec = JSON.parse(calls.at(-1).opts.body).record;
+  assert.equal(rec.text, "B 2/2"); assert.equal(rec.reply.root.uri, "at://x/p/1");
+  k = 0;
+  calls = route([[/statuses/, () => J({ id: "s" + (++k) })]]);
+  await mastodon.publish(env, post({ media: [], caption: "A\n---\nB" }), { instance: "m.social", token: "t" });
+  assert.equal(JSON.parse(calls.at(-1).opts.body).in_reply_to_id, "s1");
+  k = 0;
+  calls = route([[/threads_publish/, () => J({ id: "P" + (++k) })], [/\/me\/threads/, () => J({ id: "C" + k })], [/\?/, () => J({ status: "FINISHED" })]]);
+  await threads.publish(env, post({ media: [], caption: "A\n---\nB" }), { token: "t" });
+  assert.ok(calls.some((c) => /reply_to_id=P1/.test(String(c.opts.body))));
+});

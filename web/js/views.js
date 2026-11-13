@@ -24,6 +24,19 @@
   const today = () => C.ymd(new Date());
   const settings = () => S.state.settings;
   const slots = () => settings().slots || [];
+  // Créneaux des posts texte : un réseau, des jours, une heure. « Remplir la semaine » y place d'abord les posts sans média.
+  const TEXT_NETS = ["linkedin", "x", "bluesky", "threads", "mastodon", "facebook"];
+  const DAYL = [["1", "L", "Lundi"], ["2", "M", "Mardi"], ["3", "M", "Mercredi"], ["4", "J", "Jeudi"], ["5", "V", "Vendredi"], ["6", "S", "Samedi"], ["7", "D", "Dimanche"]];
+  function textSlotsPanel() {
+    const nets = A.nets().filter((n) => TEXT_NETS.includes(n));
+    if (!nets.length) return "";
+    const ts = settings().textSlots || [], EN = (window.I18N || {}).lang === "en";
+    return '<section class="panel"><h2>Créneaux des posts texte</h2><p>Un post sans vidéo n\'a pas les mêmes bons moments : par exemple LinkedIn le mardi et le jeudi à 08:30. « Remplir la semaine » y place d\'abord les posts texte.</p><div class="form" id="tslots">' +
+      ts.map((t, i) => '<div class="tslotrow"' + U.tint(t.net) + '><select data-tslot-net="' + i + '" aria-label="Réseau">' + nets.map((n) => '<option value="' + n + '"' + (n === t.net ? " selected" : "") + ">" + esc((window.BRANDS[n] || {}).title || n) + "</option>").join("") + "</select>" +
+        '<span class="tdays" role="group" aria-label="Jours">' + DAYL.map(([k, l, full]) => '<label class="tday" title="' + full + '"><input type="checkbox" data-tslot-day="' + i + '" value="' + k + '"' + ((t.days || []).includes(+k) ? " checked" : "") + '><span aria-hidden="true" data-noi18n>' + (EN ? "MTWTFSS"[+k - 1] : l) + '</span><span class="sr">' + full + "</span></label>").join("") + "</span>" +
+        '<input type="time" value="' + esc(t.time || "08:30") + '" data-tslot-time="' + i + '" aria-label="Heure"><button class="iconbtn" data-tslot-del="' + i + '" aria-label="Supprimer ce créneau texte">' + icon("trash") + "</button></div>").join("") +
+      '<div><button class="btn" data-tslot-add>' + icon("plus") + "Ajouter un créneau texte</button></div></div></section>";
+  }
   A.isMobile = () => window.matchMedia("(max-width:760px)").matches;
 
   // Post « effectif » : avec les changements en attente appliqués.
@@ -984,7 +997,7 @@
     },
     slots: () => bestSlots() + '<section class="panel"><h2>Créneaux types</h2><p>Ils forment les lignes du calendrier. Un post déposé sur un créneau prend son heure.</p><div class="form" id="slots">' +
       slots().map((s, i) => '<div class="slotrow"><input type="time" value="' + s.time + '" data-slot-time="' + i + '" aria-label="Heure"><input value="' + esc(s.label) + '" data-slot-label="' + i + '" aria-label="Nom du créneau"><button class="iconbtn" data-slot-del="' + i + '" aria-label="Supprimer ce créneau">' + icon("trash") + "</button></div>").join("") +
-      '<div><button class="btn" data-slot-add>' + icon("plus") + "Ajouter un créneau</button></div></div></section>",
+      '<div><button class="btn" data-slot-add>' + icon("plus") + "Ajouter un créneau</button></div></div></section>" + textSlotsPanel(),
     templates: () => {
       const t = settings().templates || {}, tags = t.tags || [];
       return '<section class="panel"><h2>Signature</h2><p>Le texte que tu ajoutes souvent en fin de légende (appel à l\'action, lien, mention). Un bouton l\'insère dans la légende.</p><div class="form">' +

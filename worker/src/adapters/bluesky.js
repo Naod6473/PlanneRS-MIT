@@ -1,6 +1,6 @@
 // Bluesky (protocole AT) : identifiant + mot de passe d'application.
 // Doc : https://docs.bsky.app/docs/advanced-guides/posts
-import { altOf, fetchMedia, jsonOrThrow, limitText, noVideo, notConnected, isVideo, PublishError } from "./common.js";
+import { altOf, fetchMedia, jsonOrThrow, limitText, threadOf, replies, noVideo, notConnected, isVideo, PublishError } from "./common.js";
 
 export const id = "bluesky";
 export const fields = [
@@ -37,8 +37,8 @@ export function facets(text) {
 }
 
 export async function publish(env, post, cred) {
-  const text = post.caption || "";
-  limitText("Bluesky", text, 300);
+  const parts = threadOf(post.caption), text = parts[0];
+  parts.forEach((t) => limitText("Bluesky", t, 300));
   const media = (post.media || []).filter((m) => m.role !== "cover" && m.role !== "guide");
   if (media.some(isVideo)) throw noVideo("Bluesky");
   const s = await session(cred);
@@ -58,7 +58,14 @@ export async function publish(env, post, cred) {
     body: JSON.stringify({ repo: s.did, collection: "app.bsky.feed.post", record }),
   }));
   const rkey = String(r.uri || "").split("/").pop();
-  return { status: "ok", id: r.uri, url: "https://bsky.app/profile/" + s.handle + "/post/" + rkey };
+  const root = { uri: r.uri, cid: r.cid };
+  const more = await replies("Bluesky", parts, root, async (t, parent) => {
+    const rec = { $type: "app.bsky.feed.post", text: t, createdAt: new Date().toISOString(), langs: ["fr"], reply: { root, parent } };
+    const f = facets(t); if (f.length) rec.facets = f;
+    const x = await jsonOrThrow("Bluesky", await fetch(base(cred) + "/xrpc/com.atproto.repo.createRecord", { method: "POST", headers: Object.assign({ "content-type": "application/json" }, auth), body: JSON.stringify({ repo: s.did, collection: "app.bsky.feed.post", record: rec }) }));
+    return { uri: x.uri, cid: x.cid };
+  });
+  return Object.assign({ status: "ok", id: r.uri, url: "https://bsky.app/profile/" + s.handle + "/post/" + rkey }, more);
 }
 
 export async function test(env, cred) {
