@@ -466,6 +466,7 @@
     await S.savePosts([p]); await S.log({ level: "change", text: "Nouvelle idée : " + p.title, postId: p.id });
     return p;
   }
+  A.addIdea = addIdea;
   A.rootFolderUrl = function () {
     const st = S.state.settings || {};
     const id = (st.connectDefaults && st.connectDefaults.gdrive && st.connectDefaults.gdrive.rootFolderId) || (st.drive && st.drive.rootFolderId);
@@ -473,6 +474,7 @@
   };
   A.quick = function (kind, file) {
     if (kind === "new") return A.newPost();
+    if (kind === "week") return A.openWeekFlow();
     if (kind === "folder") { const u = A.rootFolderUrl(); if (u) window.open(u, "_blank", "noopener"); else U.toast("Aucun dossier Drive relié (Réglages › Stockage)"); return; }
     if (kind === "hole") {
       const k = A.kpiData(), t = C.ymd(new Date());

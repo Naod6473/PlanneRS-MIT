@@ -224,7 +224,7 @@
     return out + "</div>";
   }
   function quickBar() {
-    const main = [["video", "film", "Ajouter une vidéo"], ["photo", "image", "Ajouter une photo"], ["idea", "bulb", "Proposer une idée"], ["link", "link", "Coller un lien d'actu"]];
+    const main = [["week", "spark", "Une semaine en 10 minutes"], ["video", "film", "Ajouter une vidéo"], ["photo", "image", "Ajouter une photo"], ["idea", "bulb", "Proposer une idée"], ["link", "link", "Coller un lien d'actu"]];
     const more = [["hole", "calendar", "Remplir le prochain jour vide"], ["folder", "folder", "Dossier Drive du projet"]].concat(A.canDictate ? [["voice", "mic", "Dicter une idée"]] : []);
     const b = ([k, ic, l]) => '<button class="qb" data-quick="' + k + '">' + icon(ic) + "<span>" + l + "</span></button>";
     return '<section class="quick" aria-labelledby="h-quick"><h2 class="sec-h" id="h-quick"><span>Raccourcis</span>' + (A.isMobile() ? "" : "<span>Dépose un fichier sur la page pour l'ajouter</span>") + '</h2><div class="qgrid">' +
@@ -355,6 +355,7 @@
         '<button data-calmode="' + k + '" aria-pressed="' + (A.calMode === k) + '">' + l + "</button>").join("") + "</div>" +
       '<span class="grow"></span>' + (mode === "week" || mode === "month" ? '<div class="seg small-seg" role="group" aria-label="Densité"><button data-caldense="1" aria-pressed="' + !!A.calCompact + '">Compact</button><button data-caldense="0" aria-pressed="' + !A.calCompact + '">Détaillé</button></div>' : "") + netMenu() +
       (mode === "agenda" && top().some((p) => !p.date && p.status === "ready") ? '<button class="btn" data-fillweek aria-label="Remplir la semaine">' + icon("spark") + '<span class="lbl">Remplir la semaine</span></button>' : "") +
+      '<button class="btn" data-quick="week" title="Une semaine en 10 minutes">' + icon("spark") + '<span class="lbl">Semaine express</span></button>' +
       '<button class="btn primary desk" data-new>' + icon("plus") + "Nouveau post</button>";
     let html;
     if (mode === "agenda") html = agenda();

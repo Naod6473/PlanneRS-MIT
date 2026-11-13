@@ -1617,3 +1617,26 @@ input:user-invalid,textarea:user-invalid,select:user-invalid{border-color:var(--
 .best-row img,.best-row .noimg{width:52px;height:52px;border-radius:8px;object-fit:cover;display:grid;place-items:center;background:var(--panel2)}
 .best-row .bt{display:grid;min-width:0}.best-row .bt b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.best-row .bt small{color:var(--ink3)}
 @media (max-width:520px){.best-row{grid-template-columns:auto 44px 1fr}.best-row .btn{grid-column:1/-1}}
+
+/* Une semaine en 10 minutes */
+.wf{display:flex;flex-direction:column;gap:14px}
+.wf-sub{margin:0;display:flex;justify-content:space-between;color:var(--ink2);font-size:14px}
+.wf-t{font-weight:700;color:var(--ink)}
+.wf-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.wf-bar i{height:6px;border-radius:3px;background:var(--line)}
+.wf-bar i.ok{background:var(--action)}
+.wf-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.wf-step{display:flex;gap:12px;align-items:flex-start;padding:12px;border:1px solid var(--line);border-radius:12px}
+.wf-step.on{border-color:var(--action);box-shadow:0 0 0 1px var(--action)}
+.wf-n{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:800;background:var(--line);color:var(--ink)}
+.wf-step.on .wf-n,.wf-step.done .wf-n{background:var(--action);color:var(--action-fg)}
+.wf-n svg{width:16px;height:16px}
+.wf-b{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.wf-b small{color:var(--ink2);font-size:13px}
+.wf-step.done .wf-b b{color:var(--ink2)}
+.wf-form{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+.wf-form textarea{width:100%;font:inherit;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);resize:vertical}
+.wf-form .row{display:flex;gap:8px;flex-wrap:wrap}
+.wf-title{font-weight:700}
+.wf-b > .btn{align-self:flex-start;margin-top:6px}
+.wf-done{padding:16px;border-radius:12px;background:var(--action);color:var(--action-fg);font-weight:800;font-size:18px;text-align:center}
