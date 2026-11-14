@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PlanneRs · planifier ses réseaux, gratuitement</title>
+<meta name="description" content="PlanneRs : planifie, valide et publie tes posts Instagram, Facebook, Threads, LinkedIn, X, Bluesky et plus. Libre (MIT), installé chez toi sur Cloudflare, 0 € par mois.">
+<meta property="og:title" content="PlanneRs · planifier ses réseaux, gratuitement">
+<meta property="og:description" content="Libre, gratuit, collaboratif. Planifie, valide et publie tes posts sur tous tes réseaux depuis un seul écran.">
+<meta property="og:image" content="img/calendrier.jpg">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="favicon.png">
+<meta name="theme-color" content="#000000">
+<meta name="planners-stats" content=""><!-- adresse de réception du suivi des visites (…/t), remplie au déploiement ; vide = aucun suivi -->
+<script defer src="suivi.js"></script>
+<style>
+/* DA de l'ouverture : scène noire, aplats aux vraies couleurs des réseaux, gros mots en noir épais. Pas de flou, pas de lueur. */
+:root {
+  --bg: #000; --panel: #111214; --ink: #FFF; --ink2: #A9ADB3; --line: #26282C;
+  --yt: #FF0000; --fb: #0866FF; --li: #0A66C2; --tt: #FE2C55; --pin: #E60023;
+  --ig: linear-gradient(90deg, #FEDA75, #FA7E1E 25%, #D62976 50%, #962FBF 75%, #4F5BD5);
+  --heavy: 900 1em/0.98 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 17px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; -webkit-font-smoothing: antialiased; }
+img { max-width: 100%; height: auto; display: block; }
+a { color: inherit; }
+.wrap { max-width: 1160px; margin: 0 auto; padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; letter-spacing: -0.035em; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(56px, 11vw, 148px); line-height: .92; font-weight: 900; }
+h2 { font-size: clamp(38px, 6vw, 76px); line-height: .98; font-weight: 900; }
+h3 { font-size: 21px; line-height: 1.2; font-weight: 800; letter-spacing: -0.01em; }
+p { margin: 0; color: var(--ink2); }
+.eyebrow { font-size: 14px; font-weight: 700; letter-spacing: .02em; color: var(--ink); opacity: .7; }
+
+/* En-tête */
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10; background: #000; border-bottom: 1px solid var(--line); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: #000; }
+.top .wrap { display: flex; align-items: center; gap: 16px; min-height: 64px; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 900; font-size: 22px; letter-spacing: -0.02em; color: var(--ink); text-decoration: none; }
+.brand img { width: 34px; height: 34px; border-radius: 9px; }
+.top nav { margin-left: auto; display: flex; gap: 22px; align-items: center; font-size: 15px; font-weight: 600; }
+.top nav a { color: var(--ink2); text-decoration: none; }
+.top nav a:hover { color: var(--ink); }
+@media (max-width: 720px) { .top nav .hide-s { display: none; } }
+
+/* Boutons */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 52px; padding: 0 24px; border-radius: 999px; font-weight: 800; font-size: 16px; text-decoration: none; border: 2px solid currentColor; color: var(--ink); background: transparent; }
+.btn:hover { background: rgba(255,255,255,.08); }
+.btn.primary, .btn.acc { background: #FFF; color: #000; border-color: #FFF; }
+.btn.primary:hover, .btn.acc:hover { background: #E8E8E8; }
+.btn svg { width: 18px; height: 18px; }
+.top .btn { min-height: 40px; padding: 0 18px; font-size: 15px; }
+
+/* Héros : les mots s'empilent, le paquet de cartes des réseaux */
+.hero { padding-block: clamp(48px, 9vw, 112px) 56px; }
+.hero .grid { display: grid; gap: 48px; }
+.hero h1 span { display: block; }
+.hero h1 span:nth-child(2) { color: #FFF; }
+.hero h1 em { font-style: normal; display: inline-block; margin-top: .12em; padding: .06em .18em .1em; border-radius: .16em; background: var(--fb); }
+.hero .lead { font-size: clamp(18px, 2vw, 22px); max-width: 36em; margin-top: 28px; color: #D4D6DA; }
+.hero .cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
+.hero .facts { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 26px; font-size: 15px; color: var(--ink2); padding: 0; list-style: none; }
+.hero .facts li::before { content: "✓"; color: #FFF; font-weight: 900; margin-right: 6px; }
+.deck { display: flex; flex-wrap: wrap; gap: 12px; padding: 0; margin: 0; list-style: none; }
+.deck li { flex: 1 1 140px; min-height: 120px; border-radius: 20px; padding: 18px; display: flex; align-items: flex-end; font-weight: 900; font-size: clamp(20px, 2.2vw, 28px); letter-spacing: -0.02em; color: #FFF; animation: land .6s cubic-bezier(.2,.8,.2,1) both; }
+.deck li:nth-child(1) { background: var(--ig); animation-delay: .05s; }
+.deck li:nth-child(2) { background: var(--fb); animation-delay: .15s; }
+.deck li:nth-child(3) { background: var(--yt); animation-delay: .25s; }
+.deck li:nth-child(4) { background: var(--li); animation-delay: .35s; }
+.deck li:nth-child(5) { background: var(--tt); animation-delay: .45s; }
+.deck li:nth-child(6) { background: #FFF; color: #000; animation-delay: .55s; font-size: clamp(16px, 1.6vw, 20px); line-height: 1.15; }
+@keyframes land { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+.shot { border-radius: 20px; overflow: hidden; border: 1px solid var(--line); background: var(--panel); margin: 0; }
+
+/* Aplats pleine largeur */
+.flood { padding-block: clamp(56px, 8vw, 104px); color: #FFF; }
+.flood p { color: rgba(255,255,255,.88); }
+.flood.fb { background: var(--fb); }
+.flood.ig { background: linear-gradient(120deg, #FA7E1E, #D62976 45%, #962FBF 80%, #4F5BD5); }
+.flood.yt { background: var(--yt); }
+.flood .eyebrow { opacity: .85; }
+
+/* Le prix */
+.price .box { display: grid; gap: 36px; align-items: center; }
+@media (min-width: 860px) { .price .box { grid-template-columns: 1.1fr 1fr; } }
+.meter { display: grid; gap: 16px; }
+.meter .row { display: grid; grid-template-columns: 9.5em 1fr auto; align-items: center; gap: 12px; font-size: 15px; font-weight: 700; }
+.meter .track { height: 16px; border-radius: 99px; background: rgba(0,0,0,.25); overflow: hidden; }
+.meter .fill { height: 100%; border-radius: 99px; background: rgba(255,255,255,.55); }
+.meter .row.us .fill { background: #FFF; width: 2%; }
+.meter .row.us b { font-size: 22px; font-weight: 900; }
+.meter small { color: rgba(255,255,255,.85); font-size: 13px; font-weight: 500; }
+
+/* Fonctions */
+.sec { padding-block: clamp(56px, 8vw, 104px); }
+.sec .head { max-width: 50em; display: grid; gap: 16px; margin-bottom: 40px; }
+.cards { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); }
+.card { background: var(--panel); border-radius: 20px; padding: 26px; display: grid; gap: 10px; align-content: start; border-top: 8px solid var(--c, #FFF); }
+.card:nth-child(6n+1) { --c: #D62976; } .card:nth-child(6n+2) { --c: var(--fb); } .card:nth-child(6n+3) { --c: var(--yt); }
+.card:nth-child(6n+4) { --c: var(--li); } .card:nth-child(6n+5) { --c: var(--tt); } .card:nth-child(6n+6) { --c: #FFF; }
+.card .ic { display: none; }
+.card p { font-size: 16px; }
+.nets { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; padding: 0; list-style: none; }
+.nets li { font-size: 13px; font-weight: 800; padding: 4px 10px; border-radius: 99px; background: #FFF; color: #000; }
+
+.duo { display: grid; gap: 36px; align-items: center; }
+@media (min-width: 900px) { .duo { grid-template-columns: 1fr 1.25fr; } .duo.rev > :first-child { order: 2; } }
+.duo ul { margin: 22px 0 0; padding: 0; list-style: none; display: grid; gap: 12px; }
+.duo li { padding-left: 30px; position: relative; color: #D4D6DA; }
+.duo li::before { content: ""; position: absolute; left: 2px; top: .5em; width: 14px; height: 14px; border-radius: 4px; background: var(--yt); }
+
+/* Collaboratif */
+.collab { display: grid; gap: 32px; }
+.collab .three { display: grid; gap: 24px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); }
+.collab .three div { border-top: 3px solid #FFF; padding-top: 16px; display: grid; gap: 6px; }
+.collab .btn { justify-self: start; background: #FFF; color: #000; border-color: #FFF; }
+
+/* Installation */
+.steps { counter-reset: s; display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); padding: 0; list-style: none; margin: 0; }
+.steps li { counter-increment: s; background: var(--panel); border-radius: 20px; padding: 26px; display: grid; gap: 8px; }
+.steps li::before { content: counter(s) "."; font-weight: 900; font-size: 56px; letter-spacing: -0.04em; color: #FFF; line-height: 1; }
+code { font-size: 14px; background: var(--panel); padding: 2px 6px; border-radius: 6px; border: 1px solid var(--line); overflow-wrap: anywhere; color: #FFF; }
+
+/* Questions */
+.faq { display: grid; gap: 10px; max-width: 860px; }
+.faq details { background: var(--panel); border-radius: 16px; padding: 20px 24px; }
+.faq summary { cursor: pointer; font-weight: 800; font-size: 19px; list-style: none; display: flex; justify-content: space-between; gap: 16px; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "+"; font-size: 26px; font-weight: 900; line-height: 1; }
+.faq details[open] summary::after { content: "–"; }
+.faq details p { margin-top: 10px; }
+.faq a { text-decoration: underline; }
+
+.final .wrap { text-align: center; display: grid; gap: 22px; justify-items: center; }
+.final h2 { font-size: clamp(48px, 9vw, 120px); }
+.final .cta { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+.final .btn { border-color: #FFF; color: #FFF; }
+.final .btn.acc { background: #FFF; color: #000; }
+footer { border-top: 1px solid var(--line); padding-block: 28px; font-size: 14px; color: var(--ink2); }
+footer .wrap { display: flex; flex-wrap: wrap; gap: 10px 24px; justify-content: space-between; }
+:focus-visible { outline: 3px solid #FFF; outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .deck li { animation: none; } }
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="brand" href="#"><img src="img/logo.png" alt="" width="34" height="34">PlanneRs</a>
+  <nav>
+    <a class="hide-s" href="#fonctions">Fonctions</a>
+    <a class="hide-s" href="#installer">Installer</a>
+    <a class="hide-s" href="#questions">Questions</a>
+    <a class="btn primary" href="demo/">Essayer la démo</a>
+  </nav>
+</div></header>
+
+<main>
+<section class="hero" data-sec="hero"><div class="wrap grid">
+  <div>
+    <span class="eyebrow">Libre · gratuit · collaboratif</span>
+    <h1 style="margin-top:18px"><span>Planifie.</span><span>Valide.</span><span>Publie.</span><em>0 € par mois.</em></h1>
+    <p class="lead">PlanneRs planifie, fait valider et publie tes posts sur Instagram, Facebook, Threads, LinkedIn, X, Bluesky et plus. Pas d'abonnement : tu l'installes en quelques minutes sur ton propre compte Cloudflare, et tes données restent chez toi.</p>
+    <div class="cta">
+      <a class="btn acc" href="demo/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 4 13 8-13 8V4Z"/></svg>Essayer la démo</a>
+      <a class="btn" href="https://deploy.workers.cloudflare.com/?url=https://github.com/Naod6473/PlanneRS-MIT">Installer gratuitement</a>
+      <a class="btn" href="https://github.com/Naod6473/PlanneRS-MIT">Code source</a>
+    </div>
+    <ul class="facts"><li>Licence MIT</li><li>Sans compte chez nous</li><li>Interface en français et en anglais</li></ul>
+  </div>
+  <ul class="deck" aria-label="Réseaux pris en charge"><li>Instagram</li><li>Facebook</li><li>YouTube</li><li>LinkedIn</li><li>TikTok</li><li>Threads · X · Bluesky</li></ul>
+  <figure class="shot"><img src="img/calendrier.jpg" alt="Le calendrier de PlanneRs : une semaine de posts par créneau, avec leur statut (publié, programmé, à valider)." width="1600" height="1000"></figure>
+</div></section>
+
+<section class="price flood fb" data-sec="prix"><div class="wrap"><div class="box">
+  <div style="display:grid;gap:14px">
+    <span class="eyebrow">Le prix</span>
+    <h2>Les outils de planification se paient chaque mois. Pas celui-ci.</h2>
+    <p>Les offres payantes facturent souvent au nombre de comptes, de posts ou de membres de l'équipe. PlanneRs tourne sur l'offre gratuite de Cloudflare : un Worker et une petite base de données, largement suffisants pour une personne ou une petite équipe.</p>
+  </div>
+  <div class="meter" role="img" aria-label="Coût mensuel : les outils payants coûtent plusieurs dizaines d'euros par mois, PlanneRs 0 euro.">
+    <div class="row"><span>Outil payant, solo</span><span class="track"><span class="fill" style="width:38%;display:block"></span></span><small>€€</small></div>
+    <div class="row"><span>Outil payant, équipe</span><span class="track"><span class="fill" style="width:92%;display:block"></span></span><small>€€€€</small></div>
+    <div class="row us"><b>PlanneRs</b><span class="track"><span class="fill" style="display:block"></span></span><b>0 €</b></div>
+    <small>Ordres de grandeur. PlanneRs : gratuit dans les limites de l'offre gratuite de Cloudflare.</small>
+  </div>
+</div></div></section>
+
+<section class="sec" id="fonctions"><div class="wrap">
+  <div class="head"><span class="eyebrow">Fonctions</span><h2>Ce que font les outils payants. Et un peu plus.</h2><p>Pensé pour les créateurs, les commerces et les petites équipes qui publient tous les jours.</p></div>
+  <div class="cards">
+    <article class="card"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span><h3>Un calendrier par créneaux</h3><p>Tes horaires habituels en lignes, les jours en colonnes. Glisse un post pour le déplacer, « Remplir la semaine » place les posts prêts aux meilleures heures.</p></article>
+    <article class="card"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></span><h3>Rien ne part sans validation</h3><p>Chaque légende est relue et validée. Revue en pile sur téléphone : à droite c'est bon, à gauche on retouche. Ton client peut valider par un simple lien.</p></article>
+    <article class="card"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7Z"/></svg></span><h3>Publication automatique</h3><p>À l'heure prévue, sur chaque réseau connecté, avec un texte adapté à chacun. Un échec s'explique en trois lignes : quoi, pourquoi, que faire.</p><ul class="nets"><li>Instagram</li><li>Facebook</li><li>Threads</li><li>LinkedIn</li><li>X</li><li>Bluesky</li><li>Mastodon</li><li>Pinterest</li></ul></article>
+    <article class="card"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg></span><h3>Ou à la main, en un geste</h3><p>Pas envie de créer une app chez Meta ? Planifie et valide dans PlanneRs : à l'heure dite, un rappel, et le partage du téléphone s'ouvre avec la vidéo et le texte copié.</p></article>
+    <article class="card"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M6 6l2 2M16 16l2 2M6 18l2-2M16 8l2-2"/></svg></span><h3>Ma version</h3><p>Une publication a cartonné ailleurs ? Garde sa recette (accroche, rythme, fin), jamais son contenu, et refais-la à ta façon. Une note d'originalité bloque le copier-coller.</p></article>
+    <article class="card"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 19V5M10 19v-8M16 19V9M22 19H2"/></svg></span><h3>Stats qui servent</h3><p>Vues, abonnés, meilleurs horaires, hashtags qui marchent, posts à republier, et un bilan du mois en image à partager.</p></article>
+    <article class="card"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></span><h3>Une équipe IA, si tu veux</h3><p>Claude, ChatGPT ou Codex se branchent par MCP : préparer des posts, écrire les scripts, proposer le texte alternatif des images. Toujours relus par toi.</p></article>
+    <article class="card"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg></span><h3>Tu changes d'outil en 2 minutes</h3><p>L'import CSV lit les exports de Buffer, Later, Metricool et Hootsuite : dates, textes, réseaux et médias.</p></article>
+    <article class="card"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span><h3>Tes données chez toi</h3><p>Ton planning vit dans ta base Cloudflare, tes identifiants sont chiffrés, et aucune donnée n'est envoyée aux auteurs du logiciel.</p></article>
+  </div>
+</div></section>
+
+<section class="sec" data-sec="chiffres"><div class="wrap duo rev">
+  <div>
+    <span class="eyebrow">Suivre ce qui marche</span>
+    <h2 style="margin-top:12px">Tes chiffres, sans tableur.</h2>
+    <ul>
+      <li>Relevé chaque matin pour Instagram et Facebook.</li>
+      <li>Les meilleurs horaires deviennent tes créneaux en un clic.</li>
+      <li>Les contenus intemporels reviennent tout seuls combler les trous.</li>
+      <li>Un bilan du dimanche soir, et la santé de tes comptes.</li>
+    </ul>
+  </div>
+  <figure class="shot"><img src="img/stats.jpg" alt="L'écran Stats de PlanneRs : abonnés, vues et classement des publications." width="1600" height="1000" loading="lazy"></figure>
+</div></section>
+
+<section class="flood ig" data-sec="collaboratif"><div class="wrap"><div class="collab">
+  <span class="eyebrow">Collaboratif</span>
+  <h2>Un outil qui s'améliore avec ceux qui l'utilisent.</h2>
+  <div class="three">
+    <div><h3>Code ouvert</h3><p>Licence MIT : tu peux lire, modifier, réutiliser. Chaque amélioration profite à tout le monde.</p></div>
+    <div><h3>Bibliothèque de recettes</h3><p>Partage les formats qui marchent chez toi, la forme seulement. Les meilleures recettes arrivent dans toutes les installations.</p></div>
+    <div><h3>Tes idées comptent</h3><p>Un manque, un bug, une envie : propose-le sur GitHub. Les demandes les plus utiles passent en premier.</p></div>
+  </div>
+  <a class="btn" href="https://github.com/Naod6473/PlanneRS-MIT/issues">Proposer une idée</a>
+</div></div></section>
+
+<section class="sec" id="installer"><div class="wrap">
+  <div class="head"><span class="eyebrow">Installer</span><h2>En ligne en quelques minutes.</h2><p>Il faut un compte Cloudflare (gratuit) et un compte GitHub (gratuit). Aucun serveur à louer.</p></div>
+  <ol class="steps">
+    <li><h3>Clique sur « Installer »</h3><p>Le bouton copie PlanneRs sur ton GitHub, crée la base et met le site en ligne sur ton compte Cloudflare.</p></li>
+    <li><h3>Choisis ta clé</h3><p>Une longue phrase au hasard, qui chiffre les identifiants de tes comptes. Garde-la de côté.</p></li>
+    <li><h3>Protège l'accès</h3><p>Cloudflare Access (gratuit) : toi seul, ou ton équipe, avec ton adresse e-mail. Le guide te prend par la main.</p></li>
+  </ol>
+  <p style="margin-top:20px">Tu préfères un terminal ? <code>npx github:Naod6473/PlanneRS-MIT</code> fait tout en une commande. <a href="https://github.com/Naod6473/PlanneRS-MIT/blob/main/docs/demarrage/installation.md">Le guide complet</a>.</p>
+</div></section>
+
+<section class="sec" id="questions"><div class="wrap">
+  <div class="head"><span class="eyebrow">Questions</span><h2>Ce qu'on nous demande.</h2></div>
+  <div class="faq">
+    <details><summary>C'est vraiment gratuit ?</summary><p>Oui. Le logiciel est sous licence MIT, et il tourne sur l'offre gratuite de Cloudflare, qui couvre largement une personne ou une petite équipe. Seuls des usages très intensifs (ou l'IA avec ta propre clé Claude, facultative) peuvent coûter quelque chose, chez le fournisseur concerné.</p></details>
+    <details><summary>Faut-il savoir coder ?</summary><p>Non. Le bouton d'installation et l'assistant pas à pas suffisent. La connexion Instagram se fait en collant un jeton, ou avec « Se connecter avec Facebook » : PlanneRs retrouve tout seul ta Page et ton compte.</p></details>
+    <details><summary>Et si je ne veux pas créer d'application Meta ?</summary><p>Choisis « Poster à la main » : tu planifies et valides dans PlanneRs, puis à l'heure prévue tu reçois un rappel, et ton téléphone ouvre Instagram avec la vidéo et le texte prêts. Tu pourras brancher l'API plus tard sans rien perdre.</p></details>
+    <details><summary>Où sont mes données ?</summary><p>Dans ta base Cloudflare, sur ton compte. Les identifiants des réseaux sont chiffrés avec ta clé. Les auteurs de PlanneRs n'y ont pas accès.</p></details>
+    <details><summary>TikTok et YouTube ?</summary><p>Les connecteurs existent ; ils demandent une validation par chaque plateforme pour publier automatiquement. En attendant, la publication à la main en un geste marche très bien.</p></details>
+    <details><summary>Comment proposer une amélioration ?</summary><p>Ouvre une demande sur <a href="https://github.com/Naod6473/PlanneRS-MIT/issues">GitHub</a>. Pour partager une recette de contenu, utilise « Partager » dans Ma version : elle est relue, puis ajoutée à la bibliothèque commune.</p></details>
+  </div>
+</div></section>
+
+<section class="final flood yt" data-sec="fin"><div class="wrap">
+  <h2>Essaie, c'est gratuit.</h2>
+  <p>La démo tourne dans ton navigateur, avec des données d'exemple. Rien n'est publié.</p>
+  <div class="cta"><a class="btn acc" href="demo/">Ouvrir la démo</a><a class="btn" href="https://deploy.workers.cloudflare.com/?url=https://github.com/Naod6473/PlanneRS-MIT">Installer gratuitement</a></div>
+</div></section>
+</main>
+
+<footer><div class="wrap">
+  <span>PlanneRs · logiciel libre sous licence MIT</span>
+  <span><a href="https://github.com/Naod6473/PlanneRS-MIT">GitHub</a> · <a href="https://github.com/Naod6473/PlanneRS-MIT/tree/main/docs">Documentation</a> · <a href="https://github.com/Naod6473/PlanneRS-MIT/issues">Proposer une idée</a></span>
+  <span lang="en">Free, open-source social media scheduler. Interface in French and English.</span>
+</div></footer>
+</body>
+</html>
