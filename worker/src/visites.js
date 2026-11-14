@@ -52,12 +52,19 @@ export function clean(body, cf, now) {
   }));
 }
 
+// Seules les pages servies par l'instance (site public, démo) peuvent envoyer : un autre site est refusé.
+export function originOk(request, env) {
+  const origin = request.headers.get("origin");
+  if (!origin) return true;
+  let h = ""; try { h = new URL(origin).hostname; } catch {}
+  const ok = [env.PUBLIC_HOST, new URL(request.url).hostname].concat(String(env.STATS_ORIGINS || "").split(",").map((x) => x.trim())).filter(Boolean);
+  return ok.includes(h);
+}
+
 export async function collect(request, env) {
   if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
   if (request.method !== "POST") return new Response("POST", { status: 405, headers: CORS });
-  // Seules les pages servies par l'instance (site public, démo) peuvent envoyer : un autre site est refusé.
-  const origin = request.headers.get("origin");
-  if (origin) { let h = ""; try { h = new URL(origin).hostname; } catch {} const ok = [env.PUBLIC_HOST, new URL(request.url).hostname].concat(String(env.STATS_ORIGINS || "").split(",").map((x) => x.trim())).filter(Boolean); if (!ok.includes(h)) return new Response(null, { status: 403, headers: CORS }); }
+  if (!originOk(request, env)) return new Response(null, { status: 403, headers: CORS });
   if (!allow(request.headers.get("cf-connecting-ip"), Date.now())) return new Response(null, { status: 429, headers: CORS });
   const txt = await request.text();
   if (txt.length > MAX_BODY) return new Response(null, { status: 413, headers: CORS });

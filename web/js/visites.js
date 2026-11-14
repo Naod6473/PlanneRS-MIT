@@ -21,6 +21,7 @@
     const ago = (m) => new Date(Date.now() - m * 6e4).toISOString();
     return {
       days, demo: true, updated: new Date().toISOString(),
+      attente: [{ email: "lea.martin@exemple.fr", at: ago(35), lang: "fr" }, { email: "sam@example.com", at: ago(320), lang: "en" }, { email: "atelier.bois@exemple.fr", at: ago(1500), lang: "fr" }],
       site: { visitors: site, views: Math.round(site * 1.2), avgMs: 96000, medMs: 64000, scroll: 58, demoClick: Math.round(site * 0.41) },
       demo: { visitors: dm, fromSite: Math.round(dm * 0.83), avgMs: 214000, medMs: 151000,
         screens: [{ k: "today", n: dm, ms: dm * 52000 }, { k: "calendar", n: Math.round(dm * 0.71), ms: dm * 61000 }, { k: "contents", n: Math.round(dm * 0.44), ms: dm * 30000 }, { k: "stats", n: Math.round(dm * 0.39), ms: dm * 27000 }, { k: "fabrique", n: Math.round(dm * 0.18), ms: dm * 15000 }],
@@ -47,7 +48,10 @@
     if (S.mode !== "api") { A.visData = demo(); return; }
     if (loading || (!force && A.visData && A.visData.days === A.visDays && Date.now() - A.visAt < 60000)) return;
     loading = true;
-    try { A.visData = await S.call("GET", "visites?days=" + A.visDays); A.visAt = Date.now(); A.visErr = null; }
+    try {
+      const [v, w] = await Promise.all([S.call("GET", "visites?days=" + A.visDays), S.call("GET", "attente").catch(() => ({ list: null }))]);
+      v.attente = w.list; A.visData = v; A.visAt = Date.now(); A.visErr = null;
+    }
     catch (e) { A.visErr = e.message; }
     loading = false;
     if (A.statTab === "site") A.render();
@@ -106,12 +110,26 @@
       '<span class="muted">' + flag(x.country) + " · " + esc(DEV[x.device] || "?") + " · " + esc(x.ref || "Accès direct") + "</span>" +
       '<span class="vis-tags">' + (x.siteMs ? '<span class="chip">Site ' + dur(x.siteMs) + "</span>" : "") + (x.src.includes("demo") ? '<span class="chip ok">Démo ' + dur(x.demoMs) + "</span>" : "") + "</span></summary>" +
       '<ol class="vis-steps">' + x.ev.map((e) => "<li><time>" + esc(new Date(e.at).toTimeString().slice(0, 8)) + "</time>" + evText(e) + "</li>").join("") + "</ol></details></li>").join("") + "</ul>" : none) + "</section>";
-    return head + kpis + chart + '<div class="vis-grid">' + funnel + videos + clicks + scr + "</div>" + from + journal;
+    const att = d.attente == null ? "" : '<section class="panel" id="vis-attente"><h2 class="sec-h"><span>Liste d\'attente de la version hébergée</span><span class="vis-hint">' + d.attente.length + " inscrit" + (d.attente.length > 1 ? "s" : "") + "</span></h2>" +
+      (d.attente.length ? '<ul class="vis-wait">' + d.attente.map((x) => '<li><b data-noi18n>' + esc(x.email) + '</b><span class="muted small">' + esc(new Date(x.at).toLocaleDateString()) + " · " + (x.lang === "en" ? "EN" : "FR") + '</span><button class="btn ghost small" data-wait-del="' + esc(x.email) + '" aria-label="Retirer ' + esc(x.email) + '">Retirer</button></li>').join("") + "</ul>" +
+        '<p style="margin-top:10px"><button class="btn" data-wait-copy>Copier les adresses</button></p>' : '<p class="muted small">Personne pour l\'instant. Le formulaire est dans la partie « Installer » du site vitrine.</p>') +
+      '<p class="muted small">Seulement l\'adresse, la date et la langue. Retire une adresse dès qu\'on te le demande.</p></section>';
+    return head + kpis + att + chart + '<div class="vis-grid">' + funnel + videos + clicks + scr + "</div>" + from + journal;
   };
 
   document.addEventListener("click", (e) => {
     const b = e.target.closest("[data-vis-days]"), r = e.target.closest("[data-vis-refresh]");
     if (b) { A.visDays = +b.dataset.visDays; A.visData = null; if (S.mode !== "api") A.visData = demo(); A.render(); load(true); return; }
-    if (r) { load(true); U.toast("Visites actualisées"); }
+    if (r) { load(true); U.toast("Visites actualisées"); return; }
+    const del = e.target.closest("[data-wait-del]"), cp = e.target.closest("[data-wait-copy]");
+    if (cp && A.visData && A.visData.attente) {
+      const t = A.visData.attente.map((x) => x.email).join(", ");
+      (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => U.toast("Adresses copiées"), () => U.toast(t));
+    }
+    if (del && confirm("Retirer " + del.dataset.waitDel + " de la liste d'attente ?")) {
+      const em = del.dataset.waitDel;
+      if (S.mode !== "api") { A.visData.attente = A.visData.attente.filter((x) => x.email !== em); A.render(); return; }
+      S.call("DELETE", "attente?email=" + encodeURIComponent(em)).then(() => { A.visData.attente = A.visData.attente.filter((x) => x.email !== em); A.render(); U.toast("Adresse retirée"); }, (er) => U.toast(er.message));
+    }
   });
 })();

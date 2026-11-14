@@ -36,6 +36,7 @@ import * as rewriter from "./rewrite.js";
 import * as agent from "./agent.js";
 import * as pepites from "./pepites.js";
 import * as visites from "./visites.js";
+import * as attente from "./attente.js";
 import * as maversion from "./maversion.js";
 import * as metasetup from "./metasetup.js";
 import { suggestAlt } from "./alttext.js";
@@ -521,6 +522,9 @@ async function api(request, env, path, url, auth) {
   if (path === "robot/run" && m === "POST") return json(await robot(env));
   // Pépites : comptes suivis, relevé une fois par jour avec les statistiques, ou à la demande.
   if (path === "visites" && m === "GET") return json(await visites.report(env, url.searchParams.get("days")));
+  // Liste d'attente de la version hébergée (adresses laissées sur le site vitrine).
+  if (path === "attente" && m === "GET") return json({ list: await attente.list(env) });
+  if (path === "attente" && m === "DELETE") return (await attente.remove(env, url.searchParams.get("email"))) ? json({ ok: true }) : err("Adresse invalide", 400);
   if (path === "pepites" && m === "GET") return json((await db.getKV(env, "pepites")) || {});
   if (path === "pepites/refresh" && m === "POST") return json(await refreshPepites(env));
   if (path === "pepites/remix" && m === "POST") {
@@ -817,6 +821,8 @@ export default {
     await db.ensureSchema(env).catch(() => null);
     // Suivi des visites du site vitrine et de la démo : public, anonyme, sans cookie (voir visites.js).
     if (url.pathname === "/t") return visites.collect(request, env).catch(() => new Response(null, { status: 204, headers: visites.CORS }));
+    // Liste d'attente de la version hébergée : formulaire du site vitrine (voir attente.js).
+    if (url.pathname === "/attente") return attente.join(request, env).catch(() => new Response(null, { status: 500, headers: visites.CORS }));
     // Adresse publique (sans Cloudflare Access) : elle ne sert que la page de présentation,
     // demandée par Google et TikTok pour vérifier l'app. Tout le reste y est refusé.
     if (env.PUBLIC_HOST && url.hostname === env.PUBLIC_HOST) {
