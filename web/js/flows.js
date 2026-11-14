@@ -1042,12 +1042,21 @@
 
   // ------------------------------------------------------------ Fiche d'un connecteur
   A.openConn = function (id) {
-    const all = [].concat(window.CONNECTORS.social, window.CONNECTORS.storage, window.CONNECTORS.notify);
+    const all = [].concat(window.CONNECTORS.social, window.CONNECTORS.storage, window.CONNECTORS.notify, window.CONNECTORS.providers || []);
     const c = all.find((x) => x.id === id); if (!c) return;
+    const social = window.CONNECTORS.social.some((x) => x.id === id);
     const a = (S.state.accounts || {})[id];
     const logo = c.logo === undefined ? c.id : c.logo || c.id;
     const fields = S.mode === "api" && S.state.adapters ? S.state.adapters[id] : null;
     const pending = a && a.status === "pending";
+    const expired = a && a.status === "expired";
+    // Autres fournisseurs de connexion (Composio, Postiz) pour ce réseau.
+    const prov = S.state.providers || {}, accs = S.state.accounts || {};
+    const viaC = S.mode === "api" && social && prov.composio && prov.composio.on && (prov.composio.networks || []).includes(id);
+    const viaP = S.mode === "api" && social && accs.postiz && accs.postiz.status === "ok" && prov.postiz && (prov.postiz.networks || []).includes(id);
+    const provBox = viaC || viaP ? '<div class="box" id="provbox"><h4>' + (a ? "Changer de fournisseur" : "Autres façons de se connecter") + "</h4><p class=\"muted\">" +
+      (a && a.provider && a.provider !== "direct" ? "Actuellement : via " + (a.provider === "composio" ? "Composio" : "Postiz") + ". " : "") + "Sans créer ta propre appli développeur : le fournisseur garde la connexion, PlanneRs garde le planning.</p>" +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap">' + (viaC ? '<button class="btn" data-pact="composio">' + icon("open") + "Via Composio</button>" : "") + (viaP ? '<button class="btn" data-pact="postiz">' + icon("send") + "Via Postiz</button>" : "") + '</div><div id="pzlist"></div></div>' : "";
     const form = fields && !(a && (a.status === "ok" || pending)) ? '<form class="box form" id="cf" onsubmit="return false"><h4>Identifiants</h4>' + fields.map((f) =>
       (f.file ? "<label>" + esc(f.label) + '<textarea name="' + esc(f.key) + '" rows="4" autocomplete="off" spellcheck="false" style="font-family:var(--mono,monospace);font-size:12px"' + (f.optional ? "" : " required") + ' placeholder="Choisis le fichier ci-dessous, ou colle son contenu ici"></textarea></label>' +
         '<label class="btn" style="display:flex;justify-content:center;align-items:center;gap:6px;cursor:pointer">' + icon("download") + 'Choisir le fichier<input type="file" accept="' + esc(f.file) + '" data-fill="' + esc(f.key) + '" hidden></label>'
@@ -1061,13 +1070,32 @@
       (window.CONNECTOR_GUIDES && window.CONNECTOR_GUIDES[id] ? '<div class="box"><h4>Guide pas à pas</h4><p><a href="' + safeUrl(window.CONNECTOR_GUIDES.base + window.CONNECTOR_GUIDES[id]) + '" target="_blank" rel="noopener">Configurer ' + esc(c.name) + " " + icon("open") + "</a></p></div>" : "") +
       ((id === "gdrivewrite" || id === "youtube") && S.mode === "api" ? '<div class="box"><h4>URI de redirection à déclarer dans Google Cloud</h4><p class="mono" style="word-break:break-all">' + esc(location.origin + "/api/oauth/google/callback") + "</p></div>" : "") +
       (id === "tiktok" && S.mode === "api" ? '<div class="box"><h4>URI de redirection à déclarer dans l\'app TikTok</h4><p class="mono" style="word-break:break-all">' + esc(location.origin + "/api/oauth/tiktok/callback") + "</p></div>" : "") +
-      form + '</div><div class="sh-foot">' + (pending ? id === "tiktok" ? '<a class="btn primary big" href="api/oauth/tiktok/start">' + icon("open") + 'Autoriser avec TikTok</a><button class="btn danger" data-cact="off">Recommencer</button>' : '<a class="btn primary big" href="api/oauth/google/start' + (id === "youtube" ? "?for=youtube" : "") + '">' + icon("open") + 'Autoriser avec Google</a><button class="btn danger" data-cact="off">Recommencer</button>' : a && a.status !== "error" ? '<button class="btn" data-cact="test">Tester la connexion</button><button class="btn danger" data-cact="off">Déconnecter</button>' :
+      provBox + form + '</div><div class="sh-foot">' + (expired ? (a.provider === "composio" || a.provider === "postiz" ? '<button class="btn primary big" data-pact="' + a.provider + '">' + icon("undo") + "Se reconnecter</button>" : "") + '<button class="btn danger" data-cact="off">Déconnecter</button>' : pending ? id === "tiktok" ? '<a class="btn primary big" href="api/oauth/tiktok/start">' + icon("open") + 'Autoriser avec TikTok</a><button class="btn danger" data-cact="off">Recommencer</button>' : '<a class="btn primary big" href="api/oauth/google/start' + (id === "youtube" ? "?for=youtube" : "") + '">' + icon("open") + 'Autoriser avec Google</a><button class="btn danger" data-cact="off">Recommencer</button>' : a && a.status !== "error" ? '<button class="btn" data-cact="test">Tester la connexion</button><button class="btn danger" data-cact="off">Déconnecter</button>' :
         (S.mode === "api" && !fields ? '<p class="muted" style="margin:0">Ce connecteur n\'est pas encore disponible dans cette version.</p>' : (A.hasWizard && A.hasWizard(id) && !(a && a.status === "ok") ? '<button class="btn primary big" data-cact="wizard">' + icon("spark") + "Me guider pas à pas</button>" : "") + '<button class="btn' + (A.hasWizard && A.hasWizard(id) ? "" : " primary big") + '" data-cact="on">Se connecter à ' + esc(c.name) + "</button>")) + "</div>", c.name);
     layer().querySelectorAll("input[data-fill]").forEach((inp) => inp.addEventListener("change", async () => {
       const file = inp.files && inp.files[0]; if (!file) return;
       const ta = layer().querySelector('[name="' + inp.dataset.fill + '"]'); ta.value = (await file.text()).trim();
       U.toast("Fichier chargé : " + file.name);
     }));
+    // Fournisseurs : Composio part vers sa page d'autorisation ; Postiz liste les chaînes de ce réseau.
+    const onProv = async (e) => {
+      const b = e.target.closest("[data-pact],[data-pzuse],[data-pznew]"); if (!b || S.mode !== "api") return;
+      const box = layer().querySelector("#pzlist");
+      try {
+        if (b.dataset.pact === "composio") { b.disabled = true; U.toast("Ouverture de Composio…"); const r = await S.call("POST", "providers/composio/link", { network: id }); location.href = r.url; return; }
+        if (b.dataset.pact === "postiz") {
+          const r = await S.call("GET", "providers/postiz/integrations");
+          const list = (r.integrations || []).filter((i) => i.network === id);
+          const html = (list.length ? "<p>Choisis la chaîne Postiz à utiliser :</p>" + list.map((i) => '<button class="btn" style="margin:0 6px 6px 0" data-pzuse="' + esc(i.id) + '"' + (i.disabled ? " disabled" : "") + ">" + esc(i.name) + (i.disabled || i.refreshNeeded ? " (à reconnecter dans Postiz)" : "") + "</button>").join("") : "<p>Aucune chaîne " + esc(c.name) + " dans ton Postiz.</p>") +
+            '<p><button class="btn quiet" data-pznew>' + icon("open") + "Connecter une chaîne " + esc(c.name) + " dans Postiz</button></p>";
+          if (box) box.innerHTML = html; else U.toast("Postiz : " + list.length + " chaîne(s)");
+          return;
+        }
+        if (b.dataset.pzuse) { const r = await S.call("POST", "providers/postiz/use", { network: id, integrationId: b.dataset.pzuse }); S.state.accounts[id] = r.info; U.toast(c.name + " publiera via Postiz"); A.closeLayer(); A.render(); return; }
+        if (b.dataset.pznew !== undefined) { const r = await S.call("POST", "providers/postiz/connect-url", { identifier: id }); window.open(r.url, "_blank", "noopener"); U.toast("Connecte la chaîne dans Postiz, puis reviens choisir"); return; }
+      } catch (err) { b.disabled = false; let m = err.message; try { m = JSON.parse(m).error; } catch (e2) { /* texte brut */ } U.toast("Échec : " + m); }
+    };
+    layer().querySelectorAll(".sh-body,.sh-foot").forEach((el) => el.addEventListener("click", onProv));
     layer().querySelector(".sh-foot").addEventListener("click", async (e) => {
       const b = e.target.closest("[data-cact]"); if (!b) return;
       if (b.dataset.cact === "wizard") { A.wizard(id); return; }

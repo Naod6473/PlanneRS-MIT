@@ -854,7 +854,7 @@
 
   A.views.activity = function () {
     const acc = S.state.accounts || {};
-    const all = [].concat(window.CONNECTORS.social, window.CONNECTORS.storage, window.CONNECTORS.notify);
+    const all = [].concat(window.CONNECTORS.social, window.CONNECTORS.storage, window.CONNECTORS.notify, window.CONNECTORS.providers || []);
     const tiles = Object.entries(acc).map(([id, a]) => {
       const c = all.find((x) => x.id === id) || { name: id };
       const st = a.status === "ok" ? '<span class="st st-published">' + icon("check") + "OK</span>" : a.status === "warn" ? '<span class="st st-manual">' + icon("alert") + "À surveiller</span>" :
@@ -907,6 +907,7 @@
   function accRow(c, a) {
     const st = a.status === "ok" ? '<span class="st st-published">' + icon("check") + "Connecté</span>" : a.status === "manual" ? '<span class="st st-scheduled">' + icon("hand") + "À la main</span>" :
       a.status === "pending" ? '<span class="st st-ready">' + icon("clock") + "À autoriser</span>" :
+      a.status === "expired" ? '<span class="st st-failed">' + icon("x") + "Expiré</span>" :
       a.status === "warn" ? '<span class="st st-manual">' + icon("alert") + "À surveiller</span>" : '<span class="st st-failed">' + icon("x") + "À reconnecter</span>";
     const left = a.expires ? Math.round((C.parseYmd(a.expires) - C.parseYmd(C.nowStamp().slice(0, 10))) / 864e5) : null;
     const exp = left == null ? "" : '<small class="' + (left <= 7 ? "exp-warn" : "muted") + '">' + (left < 0 ? "Jeton expiré : reconnecte le compte" : "Jeton valable jusqu'au " + esc(C.longDate(a.expires)) + (left <= 7 ? " : pense à le renouveler" : "")) + "</small>";
@@ -982,7 +983,8 @@
       '<p class="muted" style="margin:0;font-size:12px">Chemin dans le stockage, utilisé quand le fichier n\'est rattaché à aucun post. 95 Mo au plus par fichier envoyé depuis PlanneRs. Dropbox et OneDrive demandent le droit d\'écriture (voir leurs guides).</p></div></section>';
   }
   const SET = {
-    accounts: () => connGroup("social", "Comptes connectés", "Les réseaux sur lesquels PlanneRs publie ou te rappelle de publier."),
+    accounts: () => connGroup("social", "Comptes connectés", "Les réseaux sur lesquels PlanneRs publie ou te rappelle de publier.") +
+      connGroup("providers", "Fournisseurs de connexion", "Une autre façon de relier un réseau : Composio ou ton Postiz publient pour toi, PlanneRs garde le planning. Une fois le fournisseur ajouté, choisis-le dans la fiche du réseau."),
     storage: () => {
       const acc = S.state.accounts || {};
       const sto = window.CONNECTORS.storage.find((c) => acc[c.id] && ["gdrive", "dropbox", "onedrive", "webdav"].includes(c.id));

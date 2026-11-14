@@ -47,6 +47,7 @@ import * as igHistory from "./history.js";
 import * as igComments from "./comments.js";
 import { graph } from "./adapters/meta.js";
 import * as rss from "./rss.js";
+import * as providers from "./providers/index.js";
 import * as plugs from "./plugs.js";
 
 const ADAPTERS = { instagram, facebook, threads, linkedin, x, bluesky, mastodon, pinterest, youtube, tiktok };
@@ -112,7 +113,11 @@ async function state(env) {
     ...Object.entries(ADAPTERS).map(([k, a]) => [k, a.fields.map(({ key, label, secret, optional, file }) => ({ key, label, secret: !!secret, optional: !!optional, file: file || undefined }))]),
     ...Object.entries(STORAGE).map(([k, a]) => [k, a.fields.map(({ key, label, secret, optional, file }) => ({ key, label, secret: !!secret, optional: !!optional, file: file || undefined }))]),
     ...Object.entries(channels).map(([k, c]) => [k, c.fields.map(({ key, label, secret, optional, file }) => ({ key, label, secret: !!secret, optional: !!optional, file: file || undefined }))]),
+    ...Object.entries(providers.CARDS).map(([k, c]) => [k, c.fields.map(({ key, label, secret, optional }) => ({ key, label, secret: !!secret, optional: !!optional }))]),
   ]);
+  s.providers = providers.available(env);
+  // Fournisseur de chaque compte connecté (affiché dans Réglages › Comptes).
+  Object.values(s.accounts || {}).forEach((a) => { if (a && !a.provider) a.provider = "direct"; });
   s.dryRun = env.DRY_RUN !== "false";
   s.rewrite = !!env.ANTHROPIC_API_KEY;
   return s;
@@ -135,7 +140,7 @@ async function notifier(env, settings) {
 
 function robotDeps(env, s) {
   return {
-    env, settings: s.settings, posts: s.posts, now: localNow(s.settings.timezone), adapters: ADAPTERS, dryRun: env.DRY_RUN !== "false",
+    env, settings: s.settings, posts: s.posts, now: localNow(s.settings.timezone), adapters: providers.routed(ADAPTERS, (id) => db.getCred(env, id)), dryRun: env.DRY_RUN !== "false",
     cred: (n) => credFor(env, n), save: (ps) => db.savePosts(env, ps), log: (e) => db.addLog(env, e), saveCred: (n, c) => db.updateCred(env, n, c),
     ensurePublic: async (p) => { if (await ensurePublic(env, p)) await db.savePosts(env, [p]); },
   };
@@ -146,9 +151,17 @@ async function credFor(env, n) {
   const c = await db.getCred(env, n);
   if (n === "facebook" && (!c || !c.token)) {
     const ig = await db.getCred(env, "instagram");
-    if (ig && ig.token && ig.pageId) return { token: ig.token, pageId: ig.pageId };
+    if (ig && typeof ig.token === "string" && ig.token && ig.pageId) return { token: ig.token, pageId: ig.pageId };
   }
   return c;
+}
+
+// Identifiants pour LIRE l'API d'un réseau (stats, pépites) : relais Composio pour Instagram/Facebook, rien via Postiz.
+async function apiCred(env, n) {
+  const c = await credFor(env, n);
+  const p = providers.providerOf(c);
+  if (p === "composio") return n === "instagram" || n === "facebook" ? providers.composio.metaCred(env, c) : null;
+  return p === "direct" ? c : null;
 }
 
 // Si des validateurs sont désignés, seuls eux peuvent valider une légende.
@@ -236,7 +249,7 @@ async function api(request, env, path, url, auth) {
     return json({ post: p });
   }
   if (path === "import/instagram" && m === "POST") {
-    const cred = await db.getCred(env, "instagram");
+    const cred = await igCred(env);
     if (!cred || !cred.token || !cred.accountId) return err("Instagram n'est pas connecté (Réglages › Comptes).", 409);
     const st = Object.assign({}, DEFAULT_SETTINGS, (await db.getKV(env, "settings")) || {});
     let media;
@@ -251,7 +264,7 @@ async function api(request, env, path, url, auth) {
   }
   // Commentaires Instagram : liste (gardée 10 minutes, ?fresh=1 pour relire), réponse, proposition de Claude.
   if (path === "comments" && m === "GET") {
-    const cred = await db.getCred(env, "instagram");
+    const cred = await igCred(env);
     if (!cred || !cred.token || !cred.accountId) return err("Instagram n'est pas connecté (Réglages › Comptes).", 409);
     const cache = await db.getKV(env, "comments");
     const link = async (r) => { const ps = (await db.loadState(env)).posts, k = {}; ps.forEach((p) => { const x = mediaKey(p.url); if (x && !p.parent) k[x] = p.id; }); r.comments.forEach((c) => { c.postId = k[c.key] || null; }); return json(Object.assign({ rewrite: !!env.ANTHROPIC_API_KEY }, r)); };
@@ -262,7 +275,7 @@ async function api(request, env, path, url, auth) {
   if ((r0 = path.match(/^comments\/([0-9]+)\/reply$/)) && m === "POST") {
     const text = String((body && body.text) || "").trim().slice(0, 2200);
     if (!text) return err("Écris une réponse");
-    const cred = await db.getCred(env, "instagram");
+    const cred = await igCred(env);
     if (!cred || !cred.token) return err("Instagram n'est pas connecté.", 409);
     try { await igComments.reply(env, cred, r0[1], text); } catch (e) { return err(e.why || e.message, 502); }
     const cache = await db.getKV(env, "comments");
@@ -406,10 +419,15 @@ async function api(request, env, path, url, auth) {
     if (body.pending && res.info.status !== "error") await db.putKV(env, "oauth-meta", null);
     return json(Object.assign({ ok: res.info.status !== "error", long: found.long, ig: !!pg.igId }, res), res.info.status !== "error" ? 200 : 400);
   }
+  if ((r = path.match(/^providers\//))) { const res = await providerRoutes(env, path, m, body, url, me); if (res) return res; }
   if ((r = path.match(/^connect\/([a-z0-9]+)$/))) {
     const id = r[1];
-    const ad = ADAPTERS[id] || channels[id] || STORAGE[id];
-    if (m === "DELETE") { await db.deleteAccount(env, id); return json({ ok: true }); }
+    const ad = ADAPTERS[id] || channels[id] || STORAGE[id] || providers.CARDS[id];
+    if (m === "DELETE") {
+      const old = ADAPTERS[id] ? await db.getCred(env, id).catch(() => null) : null;
+      if (old) await providers.disconnect(env, id, old);
+      await db.deleteAccount(env, id); return json({ ok: true });
+    }
     if (m !== "POST") return err("Méthode non prise en charge", 405);
     if (!ad) return err("Ce connecteur n'est pas encore disponible.", 404);
     const cred = {};
@@ -418,7 +436,7 @@ async function api(request, env, path, url, auth) {
     return json({ ok: res.info.status !== "error", info: res.info }, res.info.status !== "error" ? 200 : 400);
   }
   if ((r = path.match(/^connect\/([a-z0-9]+)\/test$/)) && m === "POST") {
-    const id = r[1], ad = ADAPTERS[id] || STORAGE[id];
+    const id = r[1], ad = ADAPTERS[id] ? providers.routed({ [id]: ADAPTERS[id] }, (k) => db.getCred(env, k))[id] : STORAGE[id] || providers.CARDS[id];
     if (!ad) return err("Pas de test pour ce connecteur", 404);
     try { const detail = await ad.test(env, await credFor(env, id), (c) => db.updateCred(env, id, c)); return json({ ok: true, detail }); }
     catch (e) { return err(e.why || e.message, 502); }
@@ -576,9 +594,77 @@ async function api(request, env, path, url, auth) {
   return err("Introuvable", 404);
 }
 
+// Identifiants Instagram pour les fonctions qui lisent l'API Meta (stats, commentaires, historique, synchro) :
+// jeton direct, ou relais Composio. Rien via Postiz (pas d'accès à l'API Meta).
+async function igCred(env) {
+  const c = await db.getCred(env, "instagram");
+  if (!c) return null;
+  const p = providers.providerOf(c);
+  if (p === "composio") return providers.composio.metaCred(env, c);
+  return p === "direct" ? c : null;
+}
+
+// Routes des fournisseurs de connexion (Composio, Postiz).
+async function providerRoutes(env, path, m, body, url, me) {
+  const st = (await db.getKV(env, "settings")) || {}, now = localNow(st.timezone);
+  const back = (msg) => Response.redirect(url.origin + "/#settings/" + encodeURIComponent(msg), 302);
+  const NAMES = { instagram: "Instagram", facebook: "Facebook", x: "X", threads: "Threads", linkedin: "LinkedIn", bluesky: "Bluesky", mastodon: "Mastodon", pinterest: "Pinterest", youtube: "YouTube", tiktok: "TikTok" };
+  // Composio, étape 1 : lien d'autorisation. Le compte actuel n'est remplacé qu'une fois l'autorisation donnée.
+  if (path === "providers/composio/link" && m === "POST") {
+    const net = String((body && body.network) || "");
+    if (!providers.composio.TOOLKITS[net]) return err("Ce réseau ne passe pas par Composio dans PlanneRs.", 400);
+    try {
+      const l = await providers.composio.link(env, db, net, url.origin + "/api/providers/composio/callback?net=" + encodeURIComponent(net));
+      await db.putKV(env, "composio-pending:" + net, { cred: l.cred, at: Date.now() });
+      return json({ url: l.url });
+    } catch (e) { return err((e.message + " " + (e.why || "") + " " + (e.todo || "")).trim(), 502); }
+  }
+  // Composio, étape 2 : retour après l'autorisation.
+  if (path === "providers/composio/callback" && m === "GET") {
+    const net = url.searchParams.get("net") || "";
+    const pend = await db.getKV(env, "composio-pending:" + net);
+    if (!pend || !pend.cred || Date.now() - pend.at > 3600e3) return back("Échec : demande Composio introuvable ou trop ancienne, recommence.");
+    try {
+      const s = await providers.composio.status(env, pend.cred);
+      if (s.status !== "ok") return back("Échec : Composio indique « " + (s.raw || s.status) + " ». Recommence la connexion.");
+      const found = await providers.composio.discover(env, net, pend.cred, graph);
+      const cred = Object.assign({}, pend.cred, found);
+      const old = await db.getCred(env, net).catch(() => null);
+      if (old && providers.providerOf(old) === "composio" && old.connectedAccountId !== cred.connectedAccountId) await providers.disconnect(env, net, old);
+      await db.setAccount(env, net, { status: "ok", provider: "composio", account: found.account || "", detail: "Connecté via Composio le " + now.replace("T", " à ") }, cred);
+      await db.putKV(env, "composio-pending:" + net, null);
+      await db.addLog(env, { at: now, level: "change", text: (NAMES[net] || net) + " connecté via Composio" + (me ? " par " + me : "") + "." });
+      return back((NAMES[net] || net) + " connecté via Composio" + (found.account ? " : " + found.account : ""));
+    } catch (e) { return back("Échec : " + (e.why || e.message)); }
+  }
+  // Postiz : chaînes disponibles, lien pour en connecter une nouvelle, choix de la chaîne d'un réseau.
+  const cfg = await db.getCred(env, "postiz").catch(() => null);
+  if (path.startsWith("providers/postiz/") && !(cfg && cfg.apiKey)) return err("Connecte d'abord Postiz (Réglages › Comptes › Fournisseurs).", 409);
+  if (path === "providers/postiz/integrations" && m === "GET") {
+    try { return json({ integrations: await providers.postiz.integrations(cfg) }); } catch (e) { return err(e.message + " " + (e.why || ""), 502); }
+  }
+  if (path === "providers/postiz/connect-url" && m === "POST") {
+    try { return json({ url: await providers.postiz.connectUrl(cfg, String((body && body.identifier) || "")) }); } catch (e) { return err(e.message + " " + (e.why || ""), 502); }
+  }
+  if (path === "providers/postiz/use" && m === "POST") {
+    const net = String((body && body.network) || ""), iid = String((body && body.integrationId) || "");
+    if (!ADAPTERS[net]) return err("Réseau inconnu");
+    let it;
+    try { it = (await providers.postiz.integrations(cfg)).find((i) => i.id === iid); } catch (e) { return err(e.message + " " + (e.why || ""), 502); }
+    if (!it || it.network !== net) return err("Cette chaîne Postiz ne correspond pas à " + (NAMES[net] || net) + ".", 400);
+    const old = await db.getCred(env, net).catch(() => null);
+    if (old) await providers.disconnect(env, net, old);
+    const info = { status: it.disabled || it.refreshNeeded ? "expired" : "ok", provider: "postiz", account: it.name + " (via Postiz)", detail: it.disabled || it.refreshNeeded ? "Postiz demande de reconnecter cette chaîne." : "Publie par Postiz depuis le " + now.replace("T", " à ") };
+    await db.setAccount(env, net, info, { provider: "postiz", integrationId: it.id, identifier: it.identifier });
+    await db.addLog(env, { at: now, level: "change", text: (NAMES[net] || net) + " relié à la chaîne Postiz « " + it.name + " »" + (me ? " par " + me : "") + "." });
+    return json({ ok: true, info });
+  }
+  return null;
+}
+
 // Enregistre une connexion après l'avoir testée (et le relais Facebook pour Instagram).
 async function connectAccount(env, id, cred) {
-  const ad = ADAPTERS[id] || channels[id] || STORAGE[id];
+  const ad = ADAPTERS[id] || channels[id] || STORAGE[id] || providers.CARDS[id];
   if (id === "gdrivewrite" && !cred.rootFolderId) cred.rootFolderId = await defaultRoot(env);
   let info;
   try {
@@ -627,6 +713,14 @@ async function checkConnections(env, today) {
     const cred = await db.getCred(env, id).catch(() => null);
     if (!cred) continue;
     const next = Object.assign({}, a);
+    if (providers.providerOf(cred) !== "direct") {
+      try { const st = await providers.status(env, id, cred, (k) => db.getCred(env, k)); next.status = st.status === "pending" ? "error" : st.status; next.detail = st.detail; next.provider = cred.provider; }
+      catch (e) { next.status = e.code === "composio-expired" ? "expired" : "error"; next.detail = "Vérifié le " + today + " : " + (e.why || e.message); }
+      next.checked = today;
+      if (JSON.stringify(next) !== JSON.stringify(a)) await db.setAccount(env, id, next, null);
+      info[id] = next;
+      continue;
+    }
     try {
       if (id === "threads" && cred.token && (!a.refreshed || daily.daysLeft(a.refreshed, today) <= -7)) {
         try { const t = await daily.refreshThreads(cred.token); await db.updateCred(env, id, Object.assign({}, cred, { token: t.token })); cred.token = t.token; next.expires = t.expires; next.refreshed = today; }
@@ -711,7 +805,7 @@ async function syncInstagram(env, force) {
   const last = await db.getKV(env, "igsync");
   if (!force && last && Date.now() - last.at < 10 * 60000) return { changed: 0 };
   await db.putKV(env, "igsync", { at: Date.now() });
-  const info = (await db.accountsInfo(env)).instagram, cred = await db.getCred(env, "instagram");
+  const info = (await db.accountsInfo(env)).instagram, cred = await igCred(env);
   if (!info || info.status !== "ok" || !cred || !cred.token || !cred.accountId) return { changed: 0 };
   const changed = igHistory.reconcile(await igHistory.fetchRecent(env, cred), s.posts, settings.timezone, now);
   if (changed.length) {
@@ -772,7 +866,7 @@ async function refreshPepites(env) {
   const st = Object.assign({}, DEFAULT_SETTINGS, (await db.getKV(env, "settings")) || {});
   const rivals = pepites.cleanRivals(st.rivals);
   if (!rivals.length) { await db.putKV(env, "pepites", {}); return {}; }
-  const out = await pepites.collect(env, rivals, rivals.some((r) => r.net === "instagram") ? await credFor(env, "instagram") : null, localNow(st.timezone).slice(0, 10));
+  const out = await pepites.collect(env, rivals, rivals.some((r) => r.net === "instagram") ? await apiCred(env, "instagram") : null, localNow(st.timezone).slice(0, 10));
   if (out.accounts.length && out.accounts.every((a) => a.error)) out.day = null; // tout a échoué : on retentera
   await db.putKV(env, "pepites", out);
   return out;
@@ -784,7 +878,7 @@ async function stats(env, onlyIfDue) {
   const now = localNow(settings.timezone), today = now.slice(0, 10);
   const prev = await db.getKV(env, "stats");
   if (onlyIfDue && (now.slice(11, 13) < "07" || (prev && prev.day === today))) return prev;
-  const s = await collectStats(env, (n) => credFor(env, n), prev, today);
+  const s = await collectStats(env, (n) => apiCred(env, n), prev, today);
   s.day = today;
   await db.putKV(env, "stats", s);
   if (onlyIfDue) await runPlugs(env, s).catch(() => null);

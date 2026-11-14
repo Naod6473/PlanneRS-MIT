@@ -66,6 +66,19 @@ window.CONNECTORS = {
      limits:"Pages met 1 à 2 minutes à publier un fichier : PlanneRs attend qu'il réponde. 100 Mo max par fichier. Dépôt public : les médias sont visibles avant publication.",docs:[["Créer un jeton fine-grained","https://github.com/settings/personal-access-tokens/new"],["GitHub Pages","https://docs.github.com/pages"]]},
     {id:"webdav",logo:"nextcloud",name:"NAS ou Nextcloud (WebDAV)",auth:"Adresse WebDAV + identifiant + mot de passe d'application",can:["Ouvrir le dossier d'un post","Copie automatique vers l'hébergement public"],perms:["Accès WebDAV en lecture"],limits:"Lecture seule. Le serveur doit être joignable depuis Internet.",docs:[["WebDAV dans Nextcloud","https://docs.nextcloud.com/server/latest/user_manual/en/files/access_webdav.html"]]}
   ],
+  // Fournisseurs de connexion : une autre façon de relier un réseau, sans créer sa propre appli développeur.
+  providers: [
+    {id:"composio",logo:null,name:"Composio",auth:"Clé de projet Composio (secret Worker COMPOSIO_API_KEY)",
+     can:["Connecter Instagram, une Page Facebook ou X sans créer d'appli Meta ou X","Composio garde les jetons et les renouvelle"],
+     perms:["Clé de projet « ak_… » : lecture + écriture sur les comptes connectés, lecture sur les toolkits"],
+     limits:"Instagram : compte Business ou Créateur seulement. X via Composio : texte et fils seulement, pour l'instant. PlanneRs garde sa file : Composio ne planifie rien.",
+     docs:[["Comptes connectés","https://docs.composio.dev/docs/auth-configuration/connected-accounts"],["Toolkit Instagram","https://docs.composio.dev/toolkits/instagram"]]},
+    {id:"postiz",logo:null,name:"Postiz",auth:"Adresse de ton Postiz + clé d'API publique",
+     can:["Publier via les chaînes déjà connectées dans ton Postiz (cloud ou auto-hébergé)","Tous les réseaux que Postiz gère"],
+     perms:["Clé d'API (Postiz › Réglages › API publique)"],
+     limits:"L'API publique de Postiz accepte 30 appels par heure. Pas de premier commentaire ni de stats via Postiz. PlanneRs garde sa file et demande à Postiz de publier à l'heure prévue.",
+     docs:[["API publique Postiz","https://docs.postiz.com/public-api/introduction"]]}
+  ],
   notify: [
     {id:"telegram",name:"Telegram",auth:"Jeton de bot",can:["Rappels « à poster à la main »","Alertes d'échec"],perms:["Créer un bot avec @BotFather"],limits:"",docs:[["Bot API","https://core.telegram.org/bots/api"]]},
     {id:"ntfy",name:"ntfy",auth:"Nom de sujet",can:["Notifications push sur téléphone"],perms:["Aucun compte nécessaire"],limits:"Auto-hébergeable.",docs:[["Documentation","https://docs.ntfy.sh/"]]},
@@ -81,5 +94,6 @@ window.CONNECTOR_GUIDES = {
   tiktok: "reseaux/tiktok.md", youtube: "reseaux/youtube.md", pinterest: "reseaux/pinterest.md", buffer: "reseaux/a-venir.md",
   gdrive: "stockage/google-drive-lecture.md", gdrivewrite: "stockage/google-drive-envoi.md", dropbox: "stockage/dropbox.md",
   onedrive: "stockage/onedrive.md", r2: "stockage/cloudflare-r2.md", ghpages: "stockage/github-pages.md", webdav: "stockage/webdav.md",
+  composio: "reseaux/fournisseurs.md", postiz: "reseaux/fournisseurs.md",
   telegram: "notifications/telegram.md", ntfy: "notifications/ntfy.md", webhook: "notifications/webhook.md",
 };

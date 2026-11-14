@@ -27,6 +27,7 @@ export function connectionAlerts(accounts, today) {
   const out = [];
   Object.entries(accounts || {}).forEach(([id, a]) => {
     if (!NAMES[id] || !a) return;
+    if (a.status === "expired") { out.push({ net: id, level: "error", text: nm(id) + " : la connexion " + (a.provider === "postiz" ? "Postiz" : a.provider === "composio" ? "Composio" : "") + " a expiré. Reconnecte-toi dans Réglages › Comptes (bouton « Se reconnecter »)." }); return; }
     if (a.status === "error") { out.push({ net: id, level: "error", text: nm(id) + " : connexion cassée. Reconnecte le compte dans Réglages › Comptes." }); return; }
     if (a.missing && a.missing.length) out.push({ net: id, level: "warn", text: nm(id) + " : il manque " + (a.missing.length > 1 ? "les droits " : "le droit ") + a.missing.join(", ") + ". Refais l'assistant dans Réglages › Comptes." });
     const da = daysLeft(a.dataAccess, today);

@@ -32,6 +32,8 @@ export function explain(err) {
 }
 
 export async function graph(env, method, path, params, token) {
+  // Connexion tenue par un fournisseur (ex. Composio) : il relaie l'appel avec son propre jeton.
+  if (token && typeof token === "object" && typeof token.call === "function") return token.call(method, path, params);
   const url = new URL(graphBase(env) + "/" + path.replace(/^\//, ""));
   const body = new URLSearchParams();
   for (const [k, v] of Object.entries(params || {})) if (v != null) (method === "GET" ? url.searchParams : body).set(k, String(v));

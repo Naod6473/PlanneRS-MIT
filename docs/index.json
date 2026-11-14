@@ -1536,6 +1536,40 @@
       ]
     },
     {
+      "path": "reseaux/fournisseurs.md",
+      "title": "Fournisseurs de connexion (Composio, Postiz)",
+      "description": "Relier un réseau sans créer sa propre appli développeur, en passant par Composio ou par un Postiz existant. PlanneRs garde le planning.",
+      "category": "Réseaux sociaux",
+      "tags": [
+        "composio",
+        "postiz",
+        "connexion",
+        "fournisseur",
+        "instagram",
+        "x",
+        "expiration"
+      ],
+      "order": 10,
+      "updated": "2026-11-13",
+      "headings": [
+        {
+          "level": 2,
+          "text": "Composio",
+          "anchor": "composio"
+        },
+        {
+          "level": 2,
+          "text": "Postiz",
+          "anchor": "postiz"
+        },
+        {
+          "level": 2,
+          "text": "Changer de fournisseur",
+          "anchor": "changer-de-fournisseur"
+        }
+      ]
+    },
+    {
       "path": "stockage/README.md",
       "title": "Stockage : vue d'ensemble",
       "description": "Différence entre stockage source et hébergement public, ce dont les réseaux ont besoin pour lire un média, et quelle combinaison choisir.",
