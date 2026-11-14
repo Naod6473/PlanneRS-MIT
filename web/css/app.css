@@ -1791,3 +1791,4 @@ input:user-invalid,textarea:user-invalid,select:user-invalid{border-color:var(--
 .vis-steps time{display:inline-block;min-width:68px;color:var(--ink3);font-variant-numeric:tabular-nums}
 .panel .sec-h{gap:4px 12px;flex-wrap:wrap}
 .vis-hint{text-transform:none;letter-spacing:0;font-weight:500}
+@media (max-width: 480px) { #tools [data-vis-refresh] .lbl { display: none; } #tools .seg button { padding-left: 8px; padding-right: 8px; } }
